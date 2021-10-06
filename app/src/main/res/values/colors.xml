@@ -1,10 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
+    <color name="purple_200">#3073D1</color>
+    <color name="purple_500">#3073D1</color>
+    <color name="purple_700">#3073D1</color>
     <color name="teal_200">#FF03DAC5</color>
     <color name="teal_700">#FF018786</color>
-    <color name="black">#FF000000</color>
+    <color name="black">#000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="blue_color">#3073D1</color>
+
+    <color name="dvault_color">#FFFFFFFF</color>
+    <color name="dashboard_bg">#FFFFFFFF</color>
+    <color name="profile_bg_stroke">#C1C1C1</color>
+    <color name="dashboard_ln_bg">#FAFAFA</color>
+    <color name="settings_icon_border">#EEEEEE</color>
+    <color name="settings_card_bg">#FFFFFF</color>
+    <color name="hello_color">#000000</color>
+    <color name="card_bg_color">#FFFFFFFF</color>
+
+
+
+
 </resources>
