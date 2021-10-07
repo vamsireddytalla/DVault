@@ -5,22 +5,22 @@ import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.view.View
-import android.view.Window
-import android.view.WindowManager
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.content.ContextCompat
 import com.talla.dvault.R
 import com.talla.dvault.databinding.ActivityDashBoardBinding
-import android.app.Activity
-import android.graphics.Color
+import androidx.activity.viewModels
+import com.talla.dvault.viewmodels.MainViewModel
+import dagger.hilt.android.AndroidEntryPoint
 
 
 private const val TAG = "DashBoardActivity"
 
-class DashBoardActivity : AppCompatActivity() {
+@AndroidEntryPoint
+class DashBoardActivity : AppCompatActivity()
+{
     private lateinit var binding: ActivityDashBoardBinding
+    private val viewModel:MainViewModel by viewModels()
+
     var isNightMode = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -28,6 +28,7 @@ class DashBoardActivity : AppCompatActivity() {
         binding = ActivityDashBoardBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        viewModel
 
         val appSettingsPrefs = getSharedPreferences("settings", 0)
         val prefEdit = appSettingsPrefs.edit()
