@@ -3,5 +3,6 @@
     <string name="d_vault">D-Vault</string>
     <string name="hello">Hello!</string>
     <string name="vault">Vault</string>
+    <string name="date_format">yyyy-MM-dd-HH-mm-ss</string>
     <string name="welcome_to_dvault">Welcome to D-Vault!</string>
 </resources>

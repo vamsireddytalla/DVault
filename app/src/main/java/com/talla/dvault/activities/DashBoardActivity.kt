@@ -9,8 +9,17 @@ import androidx.appcompat.app.AppCompatDelegate
 import com.talla.dvault.R
 import com.talla.dvault.databinding.ActivityDashBoardBinding
 import androidx.activity.viewModels
+import androidx.lifecycle.lifecycleScope
+import com.bumptech.glide.RequestManager
+import com.talla.dvault.database.entities.User
+import com.talla.dvault.preferences.UserPreferences
 import com.talla.dvault.viewmodels.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
 
 private const val TAG = "DashBoardActivity"
@@ -19,6 +28,10 @@ private const val TAG = "DashBoardActivity"
 class DashBoardActivity : AppCompatActivity()
 {
     private lateinit var binding: ActivityDashBoardBinding
+    @Inject
+    lateinit var appSettingsPrefs:UserPreferences
+    @Inject
+    lateinit var glide: RequestManager
     private val viewModel:MainViewModel by viewModels()
 
     var isNightMode = false
@@ -28,31 +41,48 @@ class DashBoardActivity : AppCompatActivity()
         binding = ActivityDashBoardBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        viewModel
+        lifecycleScope.launch(Dispatchers.Default) {
 
-        val appSettingsPrefs = getSharedPreferences("settings", 0)
-        val prefEdit = appSettingsPrefs.edit()
-        isNightMode = appSettingsPrefs.getBoolean("NightMode", false)
+            withContext(Dispatchers.Main){
+                var user=viewModel.getUserObj()
+                binding.userName.text=user.userName
+                glide.load(user.userImage).into(binding.userProfilePic)
+            }
+        }
 
 
-        if (isNightMode) {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-            checkDarkMode()
-        } else {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-            checkDarkMode()
+        lifecycleScope.launch(Dispatchers.IO) {
+            appSettingsPrefs.getBooleanData(UserPreferences.NIGHT_MODE).collect { value ->
+                withContext(Dispatchers.Main){
+                    if (value is Boolean)
+                    {
+                        isNightMode=value
+                    }else{
+                        isNightMode=false
+                    }
+                    if (isNightMode) {
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                        checkDarkMode()
+                    } else {
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                        checkDarkMode()
+                    }
+                }
+            }
         }
 
 
         binding.themeBtn.setOnClickListener {
             if (isNightMode) {
+                 lifecycleScope.launch(Dispatchers.Default) {
+                     appSettingsPrefs.saveBooleanData(UserPreferences.NIGHT_MODE, false)
+                 }
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-                prefEdit.putBoolean("NightMode", false)
-                prefEdit.apply()
             } else {
+                lifecycleScope.launch(Dispatchers.Default) {
+                    appSettingsPrefs.saveBooleanData(UserPreferences.NIGHT_MODE, true)
+                }
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-                prefEdit.putBoolean("NightMode", true)
-                prefEdit.apply()
             }
 
         }
@@ -62,10 +92,10 @@ class DashBoardActivity : AppCompatActivity()
     fun checkDarkMode() {
         if (isNightMode) {
             binding.themeBtn.setImageResource(R.drawable.moon)
-            Log.d(TAG, "onCreate: Light")
+            Log.d(TAG, "onCreate: Night")
         } else {
             binding.themeBtn.setImageResource(R.drawable.sun)
-            Log.d(TAG, "onCreate: Night")
+            Log.d(TAG, "onCreate: Light")
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             val brightTODark = binding.themeBtn.drawable as AnimatedVectorDrawable

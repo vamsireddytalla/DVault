@@ -11,7 +11,7 @@ interface DVaultDao
     suspend fun insertUserDetails(userDetails:User):Long
 
     @Query("SELECT * FROM User ORDER BY userloginTime DESC LIMIT 1")
-    fun getUserDetails():User
+    suspend fun getUserDetails():User
 
     @Query("SELECT * FROM User WHERE userloginTime = (SELECT MAX(userloginTime) FROM User) ")
     fun getUserLastLogin():User

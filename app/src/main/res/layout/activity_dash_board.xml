@@ -47,6 +47,7 @@
         <ImageView
             android:layout_width="39dp"
             android:layout_height="match_parent"
+            android:id="@+id/userProfilePic"
             android:src="@drawable/image" />
     </LinearLayout>
 

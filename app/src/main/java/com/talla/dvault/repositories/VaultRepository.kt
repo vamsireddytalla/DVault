@@ -8,7 +8,7 @@ import javax.inject.Inject
 class VaultRepository @Inject constructor(private val appDao:DVaultDao)
 {
 
-   fun getUserData():User
+   suspend fun getUserData():User
    {
        return appDao.getUserDetails()
    }
