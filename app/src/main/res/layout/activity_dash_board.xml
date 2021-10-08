@@ -48,6 +48,7 @@
         <ImageView
             android:layout_width="39dp"
             android:layout_height="match_parent"
+            android:background="@drawable/image_corner_radius"
             android:id="@+id/userProfilePic"
             android:src="@drawable/image" />
     </LinearLayout>
@@ -107,7 +108,9 @@
             android:layout_marginLeft="10dp"
             android:layout_marginBottom="1dp"
             android:fontFamily="@font/montserrat_bold"
-            android:text="John"
+            android:text=""
+            android:maxLines="1"
+            android:maxEms="1"
             android:textAppearance="@style/TextAppearance.AppCompat.Large"
             android:textColor="@color/blue_color"
             android:textSize="30dp"
@@ -360,13 +363,13 @@
         android:text="General"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
         android:textColor="@color/blue_color"
-        app:layout_constraintBottom_toTopOf="@+id/myview"
+        app:layout_constraintBottom_toTopOf="@+id/settingsBtn"
         app:layout_constraintEnd_toStartOf="@+id/guideline2"
         app:layout_constraintStart_toStartOf="@+id/guideline1"
         app:layout_constraintTop_toTopOf="@+id/guideline8" />
 
     <androidx.cardview.widget.CardView
-        android:id="@+id/myview"
+        android:id="@+id/settingsBtn"
         android:layout_width="0dp"
         android:layout_height="70dp"
         android:background="@drawable/card_elevation"

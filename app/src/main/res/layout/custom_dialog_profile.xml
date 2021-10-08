@@ -6,7 +6,7 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:background="@drawable/ic_pro_dialog_bg"
-    android:padding="50dp">
+    android:padding="40dp">
 
 
     <LinearLayout
@@ -14,7 +14,7 @@
         android:layout_width="90dp"
         android:layout_height="90dp"
         android:layout_alignParentLeft="true"
-        android:layout_marginBottom="40dp"
+        android:layout_marginBottom="10dp"
         android:background="@drawable/ic_profile_bg_card"
         android:gravity="center"
         android:padding="10dp"
@@ -27,6 +27,7 @@
             android:id="@+id/userProfilePic"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:background="@drawable/image_corner_radius"
             android:src="@drawable/image" />
     </LinearLayout>
 
@@ -34,10 +35,10 @@
         android:id="@+id/user_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp"
+        android:layout_marginBottom="5dp"
         android:fontFamily="@font/montserrat_bold"
         android:text="Jonathion Kerlinda"
-        android:textAppearance="@style/TextAppearance.AppCompat.Small"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
         android:textColor="@color/blue_color"
         app:layout_constraintBottom_toTopOf="@+id/user_email"
         app:layout_constraintEnd_toEndOf="parent"
@@ -51,7 +52,7 @@
         android:layout_marginBottom="10dp"
         android:text="testemail@gmail.com"
         android:textAppearance="@style/TextAppearance.AppCompat.Small"
-        android:fontFamily="@font/montserrat_medium"
+        android:fontFamily="@font/montserrat_regular"
         android:textColor="@color/hello_color"
         app:layout_constraintBottom_toTopOf="@+id/login"
         app:layout_constraintEnd_toEndOf="parent"
@@ -62,11 +63,11 @@
         android:id="@+id/login"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="20dp"
         android:layout_marginBottom="10dp"
-        android:text="Logout"
         android:background="@drawable/ic_button"
         android:fontFamily="@font/montserrat_bold"
+        android:text="Logout"
         app:layout_constraintBottom_toTopOf="@+id/lastLoggedin"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -79,7 +80,6 @@
         android:layout_marginTop="10dp"
         android:fontFamily="@font/montserrat_regular"
         android:textColor="@color/profile_bg_stroke"
-        android:textAppearance="@style/TextAppearance.AppCompat.Small"
         android:text="Last login 28 sept 12:14 pm"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

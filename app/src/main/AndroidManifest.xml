@@ -20,13 +20,19 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.DVault.LightMode">
         <activity
+            android:name=".activities.AppLockActivity"
+            android:exported="true" />
+        <activity
+            android:name=".activities.SettingsActivity"
+            android:exported="true" />
+        <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:screenOrientation="portrait"/>
+            android:screenOrientation="portrait" />
         <activity
             android:name=".activities.DashBoardActivity"
             android:exported="true"
-            android:screenOrientation="portrait"/>
+            android:screenOrientation="portrait" />
 
         <uses-library
             android:name="org.apache.http.legacy"

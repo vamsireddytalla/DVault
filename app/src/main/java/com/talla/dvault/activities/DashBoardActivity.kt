@@ -76,6 +76,9 @@ class DashBoardActivity : AppCompatActivity()
                 user=viewModel.getUserObj()
                 binding.userName.text=user.userName
                 glide.load(user.userImage).into(binding.userProfilePic)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    binding.userProfilePic.clipToOutline=true
+                }
             }
         }
 
@@ -101,7 +104,7 @@ class DashBoardActivity : AppCompatActivity()
         }
 
 
-        binding.themeBtn.setOnClickListener {
+        binding.linearLayout.setOnClickListener {
             if (isNightMode) {
                  lifecycleScope.launch(Dispatchers.Default) {
                      appSettingsPrefs.saveBooleanData(UserPreferences.NIGHT_MODE, false)
@@ -123,6 +126,11 @@ class DashBoardActivity : AppCompatActivity()
                 var result=ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 Log.d(TAG, "Permission: Denied ${result}")
             }
+        }
+
+        binding.settingsBtn.setOnClickListener {
+            val intent: Intent = Intent(this, SettingsActivity::class.java)
+            startActivity(intent)
         }
 
     }
@@ -166,6 +174,9 @@ class DashBoardActivity : AppCompatActivity()
         dialog.setContentView(customDialogProfileBinding.getRoot())
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         dialog.show()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            customDialogProfileBinding.userProfilePic.clipToOutline=true
+        }
         customDialogProfileBinding.userName.text=user.userName
         customDialogProfileBinding.userEmail.text=user.userEmail
         customDialogProfileBinding.lastLoggedin.text=user.userloginTime
