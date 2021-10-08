@@ -18,6 +18,7 @@ class UserPreferences(val context: Context)
         val EMAIL="EMAIL"
         val USER_IMAGE="USER_IMAGE"
         val NIGHT_MODE="NIGHT_MODE"
+        val FIRST_TIME="FIRST_TIME"
     }
 
     suspend fun storeStringData(key: String, value: String) {

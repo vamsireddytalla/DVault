@@ -24,8 +24,10 @@
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/linear_layout_border.xml" value="0.2703125" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/moon.xml" value="0.2703125" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/sun.xml" value="0.2703125" />
+        <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/warning_icon.xml" value="0.2546875" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/layout/activity_dash_board.xml" value="0.176" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/layout/activity_main.xml" value="0.2" />
+        <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/layout/activity_splash.xml" value="0.23854166666666668" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/layout/custom_dialog_profile.xml" value="0.264" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/xml/network_security.xml" value="0.23854166666666668" />
       </map>

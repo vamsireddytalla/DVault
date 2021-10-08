@@ -1,8 +1,10 @@
 package com.talla.dvault.activities
 
+import android.Manifest
 import android.app.Dialog
 import android.content.DialogInterface
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.drawable.AnimatedVectorDrawable
 import android.graphics.drawable.ColorDrawable
@@ -14,17 +16,22 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.ArrayAdapter
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatDelegate
 import com.talla.dvault.R
 import com.talla.dvault.databinding.ActivityDashBoardBinding
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.RequestManager
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.Task
+import com.google.android.material.snackbar.Snackbar
 import com.talla.dvault.MainActivity
 import com.talla.dvault.database.entities.User
 import com.talla.dvault.databinding.CustomDialogProfileBinding
@@ -53,6 +60,7 @@ class DashBoardActivity : AppCompatActivity()
     private lateinit var dialog:Dialog
     private lateinit var user:User
     private lateinit var customDialogProfileBinding:CustomDialogProfileBinding
+    private lateinit var requestPermissionLauncher:ActivityResultLauncher<String>
     private val viewModel:MainViewModel by viewModels()
 
     var isNightMode = false
@@ -106,6 +114,15 @@ class DashBoardActivity : AppCompatActivity()
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
             }
 
+        }
+
+        requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+            if (isGranted) {
+                Log.d(TAG, "Permission: Granted")
+            } else {
+                var result=ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                Log.d(TAG, "Permission: Denied ${result}")
+            }
         }
 
     }
@@ -170,11 +187,25 @@ class DashBoardActivity : AppCompatActivity()
         showPofileDialog()
     }
 
-
     private fun openIntent() {
         val intent: Intent = Intent(this, MainActivity::class.java)
         startActivity(intent)
         finish()
     }
+
+
+    fun View.showSnackbar(view: View, msg: String, length: Int, actionMessage: CharSequence?, action: (View) -> Unit)
+    {
+        val snackbar = Snackbar.make(view, msg, length)
+        if (actionMessage != null) {
+            snackbar.setAction(actionMessage) {
+                action(this)
+            }.show()
+        } else {
+            snackbar.show()
+        }
+    }
+
+
 
 }

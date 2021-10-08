@@ -25,7 +25,9 @@ import com.talla.dvault.viewmodels.MainViewModel
 import dagger.Provides
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -44,9 +46,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        if (isUserSignedIn()) {
-            openIntent()
-        } else {
+        if (!isUserSignedIn()) {
             Handler().postDelayed({
                 binding.motion1.transitionToEnd()
             }, 1000)
@@ -59,15 +59,18 @@ class MainActivity : AppCompatActivity() {
                     handleSignData(result.data)
                 } else {
                     Log.d(TAG, "googleSignIn error: ${result.data.toString()}")
+                    showSnackBar(result.data.toString())
                 }
             }
 
     }
 
 
+
     private fun openIntent() {
         Log.d(TAG, "openIntent: Called")
         val intent: Intent = Intent(this, DashBoardActivity::class.java)
+//        intent.flags= Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
         startActivity(intent)
         finish()
     }
@@ -108,7 +111,7 @@ class MainActivity : AppCompatActivity() {
                     var userEmail = it.result?.email
                     var userProfilePic: Uri? = it.result?.photoUrl
                     var currentDT: String? = DateUtills.getSystemTime(this)
-                    lifecycleScope.launch {
+                    var job: Job = lifecycleScope.launch {
                         val user = User(
                             userName.toString(),
                             userEmail.toString(),
@@ -117,8 +120,12 @@ class MainActivity : AppCompatActivity() {
                         )
                         var result = viewModel.insertData(user)
                         Log.d(TAG, "Result of User Insertion :  ${result}")
+                    }
+                    runBlocking {
+                        job.join()
                         openIntent()
                     }
+
                 } else {
                     Log.d(TAG, "handleSignData: ${it.exception.toString()}")
                     Toast.makeText(this, it.exception.toString(), Toast.LENGTH_SHORT).show()
