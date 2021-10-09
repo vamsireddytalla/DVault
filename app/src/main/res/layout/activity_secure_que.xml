@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/dashboard_bg"
-    tools:context=".activities.AppLockActivity">
+    tools:context=".activities.SecureQueActivity">
 
 
     <androidx.constraintlayout.widget.Guideline
@@ -60,10 +60,9 @@
             android:fontFamily="@font/poppins_bold"
             android:includeFontPadding="false"
             android:gravity="center"
-            android:textColorHint="@color/hello_color"
-            android:textColor="@color/hello_color"
-            android:text="App Lock"
-            android:textAppearance="@style/TextAppearance.AppCompat.Large" />
+            android:text="Security Question"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:textColor="@color/hello_color" />
 
 
     </LinearLayout>
@@ -73,9 +72,9 @@
         android:layout_width="0dp"
         android:layout_height="80dp"
         android:layout_marginTop="100dp"
-        android:background="@drawable/card_elevation"
         android:elevation="3dp"
         android:padding="10dp"
+        android:background="@drawable/card_elevation"
         app:cardBackgroundColor="@color/card_bg_color"
         app:cardCornerRadius="8dp"
         app:cardElevation="5dp"
@@ -84,18 +83,26 @@
         app:layout_constraintStart_toStartOf="@+id/guideline1"
         app:layout_constraintTop_toBottomOf="@+id/linearLayout2">
 
-            <EditText
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:hint="Password"
-                android:paddingRight="20dp"
-                android:paddingLeft="15dp"
-                android:id="@+id/password"
-                android:background="@color/card_bg_color"
-                android:fontFamily="@font/poppins_regular"
-                android:textColorHint="@color/hello_color"
-                android:textColor="@color/hello_color"
-                android:textAppearance="@style/TextAppearance.AppCompat.Small"/>
+        <!--        android:dropDownVerticalOffset="70dp"-->
+<!--        android:overlapAnchor="false"-->
+       <LinearLayout
+           android:layout_width="match_parent"
+           android:layout_height="match_parent"
+           android:weightSum="1">
+           <Spinner
+               android:id="@+id/spinner"
+               android:layout_width="0dp"
+               android:layout_height="match_parent"
+               android:layout_weight="0.90"
+               android:background="@drawable/custom_spinner"
+               android:overlapAnchor="false" />
+
+           <ImageView
+               android:layout_width="0dp"
+               android:layout_height="match_parent"
+               android:layout_weight="0.05"
+               app:srcCompat="@drawable/down_arrow"/>
+       </LinearLayout>
 
     </androidx.cardview.widget.CardView>
 
@@ -114,36 +121,59 @@
         app:layout_constraintStart_toStartOf="@+id/guideline1"
         app:layout_constraintTop_toBottomOf="@+id/settingsBtn">
 
-            <EditText
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@color/card_bg_color"
-                android:hint="Confirm Password"
-                android:paddingRight="20dp"
-                android:paddingLeft="15dp"
-                android:id="@+id/cnf_password"
-                android:textColorHint="@color/hello_color"
-                android:textColor="@color/hello_color"
-                android:fontFamily="@font/poppins_regular"
-                android:textAppearance="@style/TextAppearance.AppCompat.Small"/>
+        <EditText
+            android:id="@+id/answer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:background="@color/card_bg_color"
+            android:fontFamily="@font/poppins_medium"
+            android:gravity="center"
+            android:textColor="@color/hello_color"
+            android:textColorHint="@color/hello_color"
+            android:inputType="text"
+            android:ems="1"
+            android:lines="1"
+            android:hint="Puppy"
+            android:includeFontPadding="false"
+            android:paddingLeft="15dp"
+            android:paddingRight="20dp"
+            android:textAppearance="@style/TextAppearance.AppCompat.Small" />
 
     </androidx.cardview.widget.CardView>
 
+    <TextView
+        android:id="@+id/textView13"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:fontFamily="@font/poppins_regular"
+        android:gravity="center"
+        android:includeFontPadding="false"
+        android:text="@string/remember"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:textAppearance="@style/TextAppearance.AppCompat.Small"
+        android:textColor="@color/profile_bg_stroke"
+        app:layout_constraintEnd_toStartOf="@+id/guideline2"
+        app:layout_constraintStart_toStartOf="@+id/guideline1"
+        app:layout_constraintTop_toBottomOf="@+id/cardView" />
 
     <Button
         android:id="@+id/button"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
         android:background="@drawable/ic_next_btn_bg"
         android:fontFamily="@font/poppins_medium"
         android:includeFontPadding="false"
         android:text="Next"
-        android:onClick="nextBtn"
+        android:onClick="next"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
         app:layout_constraintBottom_toTopOf="@+id/guideline3"
         app:layout_constraintEnd_toStartOf="@+id/guideline2"
         app:layout_constraintStart_toStartOf="@+id/guideline1"
-        app:layout_constraintTop_toBottomOf="@+id/cardView"
+        app:layout_constraintTop_toBottomOf="@+id/textView13"
         app:layout_constraintVertical_bias="0.0" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -20,6 +20,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.DVault.LightMode">
         <activity
+            android:name=".activities.PasswordActivity"
+            android:exported="true" />
+        <activity
+            android:name=".activities.SecureQueActivity"
+            android:exported="true" />
+        <activity
             android:name=".activities.AppLockActivity"
             android:exported="true" />
         <activity

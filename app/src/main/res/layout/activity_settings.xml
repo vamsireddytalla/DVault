@@ -50,6 +50,7 @@
         <ImageView
             android:layout_width="30dp"
             android:layout_height="30dp"
+            android:id="@+id/backBtn"
             app:srcCompat="@drawable/ic_back_icon" />
 
         <TextView
@@ -57,7 +58,8 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="30dp"
             android:layout_marginRight="30dp"
-            android:fontFamily="@font/montserrat_bold"
+            android:fontFamily="@font/poppins_bold"
+            android:includeFontPadding="false"
             android:gravity="center"
             android:text="@string/settings"
             android:textAppearance="@style/TextAppearance.AppCompat.Large"
@@ -82,7 +84,8 @@
             android:id="@+id/backupHeading"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:fontFamily="@font/montserrat_bold"
+            android:fontFamily="@font/poppins_medium"
+            android:includeFontPadding="false"
             android:text="@string/backup"
             android:textAppearance="@style/TextAppearance.AppCompat.Medium"
             android:textColor="@color/blue_color"
@@ -97,8 +100,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:fontFamily="@font/montserrat_medium"
-            android:lineSpacingExtra="3dp"
+            android:fontFamily="@font/poppins_regular"
             android:text="@string/backup_desc"
             android:textAppearance="@style/TextAppearance.AppCompat.Small"
             android:textColor="@color/hello_color"
@@ -123,10 +125,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
-                android:fontFamily="@font/montserrat_regular"
-                android:lineSpacingExtra="3dp"
+                android:fontFamily="@font/poppins_regular"
                 android:text="Last sync\nat 28 Septembet 2021 8:32pm"
-                android:textColor="@color/hello_color"
+                android:textColor="@color/profile_bg_stroke"
                 android:textSize="12sp"
                 app:layout_constraintBottom_toBottomOf="@+id/restoreBtn"
                 app:layout_constraintEnd_toStartOf="@+id/backupBtn"
@@ -139,7 +140,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@drawable/ic_button"
-                android:fontFamily="@font/montserrat_regular"
+                android:fontFamily="@font/poppins_medium"
+                android:includeFontPadding="false"
                 android:text="@string/backup"
                 android:textAppearance="@style/TextAppearance.AppCompat.Small"
                 android:textColor="@color/white"
@@ -194,14 +196,16 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/montserrat_regular"
+                        android:fontFamily="@font/poppins_regular"
                         android:text="40"
+                        android:includeFontPadding="false"
                         android:textColor="@color/hello_color" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/montserrat_regular"
+                        android:fontFamily="@font/poppins_regular"
+                        android:includeFontPadding="false"
                         android:text="/100 Mb"
                         android:textColor="@color/hello_color" />
                 </LinearLayout>
@@ -218,7 +222,8 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/montserrat_regular"
+                        android:fontFamily="@font/poppins_regular"
+                        android:includeFontPadding="false"
                         android:text="40%"
                         android:textColor="@color/hello_color" />
                 </LinearLayout>
@@ -270,7 +275,8 @@
             android:id="@+id/restoreHeading"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:fontFamily="@font/montserrat_bold"
+            android:fontFamily="@font/poppins_medium"
+            android:includeFontPadding="false"
             android:text="@string/restore"
             android:textAppearance="@style/TextAppearance.AppCompat.Medium"
             android:textColor="@color/blue_color"
@@ -285,9 +291,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:fontFamily="@font/montserrat_medium"
+            android:fontFamily="@font/poppins_regular"
             android:text="@string/restore_desc"
-            android:lineSpacingExtra="3dp"
             android:textAppearance="@style/TextAppearance.AppCompat.Small"
             android:textColor="@color/hello_color"
             app:layout_constraintEnd_toEndOf="parent"
@@ -314,6 +319,7 @@
                 android:layout_height="wrap_content"
                 android:background="@drawable/ic_button"
                 android:fontFamily="@font/montserrat_regular"
+                android:includeFontPadding="false"
                 android:text="@string/restore"
                 android:textAppearance="@style/TextAppearance.AppCompat.Small"
                 android:textColor="@color/white"
@@ -368,14 +374,16 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/montserrat_regular"
+                        android:fontFamily="@font/poppins_regular"
+                        android:includeFontPadding="false"
                         android:text="40"
                         android:textColor="@color/hello_color" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/montserrat_regular"
+                        android:fontFamily="@font/poppins_regular"
+                        android:includeFontPadding="false"
                         android:text="/100 Mb"
                         android:textColor="@color/hello_color" />
                 </LinearLayout>
@@ -392,7 +400,8 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/montserrat_regular"
+                        android:fontFamily="@font/poppins_regular"
+                        android:includeFontPadding="false"
                         android:text="40%"
                         android:textColor="@color/hello_color" />
                 </LinearLayout>
@@ -443,7 +452,8 @@
             android:layout_alignParentStart="true"
             android:layout_alignParentLeft="true"
             android:layout_centerVertical="true"
-            android:fontFamily="@font/montserrat_bold"
+            android:fontFamily="@font/poppins_medium"
+            android:includeFontPadding="false"
             android:text="@string/app_lock"
             android:textAppearance="@style/TextAppearance.AppCompat.Medium"
             android:textColor="@color/blue_color"
@@ -457,12 +467,15 @@
             android:layout_height="40dp"
             android:layout_alignParentRight="true"
             android:gravity="center"
+            android:layout_alignParentTop="true"
+            android:id="@+id/setPin"
             android:orientation="horizontal">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:fontFamily="@font/montserrat_bold"
+                android:fontFamily="@font/poppins_regular"
+                android:includeFontPadding="false"
                 android:text="@string/set_pin"
                 android:textAppearance="@style/TextAppearance.AppCompat.Small"
                 android:textColor="@color/hello_color" />

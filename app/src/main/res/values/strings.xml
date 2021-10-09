@@ -13,4 +13,15 @@ You can restore them when you reinstall.</string>
     <string name="restore_desc">You have backup files in your Google Drive. Press Restore button to restore your files</string>
     <string name="app_lock">App Lock</string>
     <string name="set_pin">Set Pin</string>
+    <string name="remember">Remember this Question &amp; Answer.\nThis can helpful when you forgot your pin.</string>
+
+
+    <string-array name="security_questions">
+        <item>What is your Pet Name ?</item>
+        <item>What is your Date of Birth ?</item>
+        <item>What is your First Mobile Number ?</item>
+        <item>What is your Nick Name ?</item>
+        <item>What is your First Gift ?</item>
+    </string-array>
+
 </resources>

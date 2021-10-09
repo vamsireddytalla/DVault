@@ -13,4 +13,5 @@ You can restore them when you reinstall.</string>
     <string name="restore_desc">You have backup files in your Google Drive. Press Restore button to restore your files</string>
     <string name="app_lock">App Lock</string>
     <string name="set_pin">Set Pin</string>
+    <string name="remember">Remember this Question &amp; Answer.\nThis can helpful when you forgot your pin.</string>
 </resources>

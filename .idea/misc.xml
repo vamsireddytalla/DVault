@@ -7,6 +7,8 @@
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable-v21/sun.xml" value="0.2703125" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/card_elevation.xml" value="0.2703125" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/custom.xml" value="0.2703125" />
+        <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/custom_spinner.xml" value="0.2546875" />
+        <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/down_arrow.xml" value="0.2546875" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/ic_audio_card.xml" value="0.2703125" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/ic_audio_card_test.xml" value="0.2703125" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/ic_avout_icon.xml" value="0.2703125" />
@@ -26,14 +28,20 @@
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/linear_layout_border.xml" value="0.2703125" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/moon.xml" value="0.2703125" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/right_arrow.xml" value="0.1707236842105263" />
+        <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/spinner_bg.xml" value="0.2546875" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/sun.xml" value="0.2703125" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/warning_icon.xml" value="0.2546875" />
-        <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/layout/activity_app_lock.xml" value="0.25416666666666665" />
-        <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/layout/activity_dash_board.xml" value="0.2" />
+        <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/white_bg.xml" value="0.2703125" />
+        <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/layout/activity_app_lock.xml" value="0.264" />
+        <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/layout/activity_dash_board.xml" value="0.264" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/layout/activity_main.xml" value="0.2" />
+        <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/layout/activity_password.xml" value="0.25416666666666665" />
+        <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/layout/activity_secure_que.xml" value="0.25416666666666665" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/layout/activity_settings.xml" value="0.264" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/layout/activity_splash.xml" value="0.23854166666666668" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/layout/custom_dialog_profile.xml" value="0.264" />
+        <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/layout/custom_spinner.xml" value="0.23854166666666668" />
+        <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/layout/view_drop_down_menu.xml" value="0.264" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.2703125" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/xml/network_security.xml" value="0.23854166666666668" />
       </map>
