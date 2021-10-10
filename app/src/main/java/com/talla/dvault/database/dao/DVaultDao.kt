@@ -2,6 +2,8 @@ package com.talla.dvault.database.dao
 
 import androidx.lifecycle.LiveData
 import androidx.room.*
+import androidx.room.OnConflictStrategy.REPLACE
+import com.talla.dvault.database.entities.AppLockModel
 import com.talla.dvault.database.entities.User
 
 @Dao
@@ -18,5 +20,9 @@ interface DVaultDao
 
     @Delete
     suspend fun deleteUserData(user: User)
+
+    @Insert(onConflict = REPLACE)
+    suspend fun insertUserSecurity(appLockModel: AppLockModel):Long
+
 
 }

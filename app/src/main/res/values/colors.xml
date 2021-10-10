@@ -8,6 +8,8 @@
     <color name="black">#000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="blue_color">#3073D1</color>
+    <color name="track_color">#B5D4FF</color>
+    <color name="thumb_color">#3073D1</color>
 
     <color name="dvault_color">#FFFFFFFF</color>
     <color name="dashboard_bg">#FFFFFFFF</color>

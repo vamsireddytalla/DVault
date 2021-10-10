@@ -137,8 +137,8 @@
 
             <Button
                 android:id="@+id/backupBtn"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="100dp"
+                android:layout_height="40dp"
                 android:background="@drawable/ic_button"
                 android:fontFamily="@font/poppins_medium"
                 android:includeFontPadding="false"
@@ -462,31 +462,16 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <LinearLayout
+        <Switch
+            android:id="@+id/appLock"
+            android:theme="@style/MySwitch"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:layout_alignParentRight="true"
-            android:gravity="center"
+            android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
-            android:id="@+id/setPin"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:fontFamily="@font/poppins_regular"
-                android:includeFontPadding="false"
-                android:text="@string/set_pin"
-                android:textAppearance="@style/TextAppearance.AppCompat.Small"
-                android:textColor="@color/hello_color" />
-
-            <ImageView
-                android:layout_width="15dp"
-                android:layout_height="15dp"
-                android:layout_gravity="center_vertical"
-                android:layout_marginLeft="10dp"
-                app:srcCompat="@drawable/right_arrow" />
-        </LinearLayout>
+            android:layout_alignParentRight="true"
+            android:checked="true"
+            android:switchMinWidth="55dp"
+            tools:ignore="UseSwitchCompatOrMaterialXml" />
 
     </RelativeLayout>
 
