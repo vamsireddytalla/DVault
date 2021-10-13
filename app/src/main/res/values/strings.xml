@@ -14,6 +14,14 @@ You can restore them when you reinstall.</string>
     <string name="app_lock">App Lock</string>
     <string name="set_pin">Set Pin</string>
     <string name="remember">Remember this Question &amp; Answer.\nThis can helpful when you forgot your pin.</string>
+    <string name="question">Question</string>
+    <string name="answer">Answer</string>
+    <string name="ok">Ok</string>
+    <string name="password_set_sucess">Password set successfully</string>
+    <string name="go_to_dashboard">Click OK to Go to dashBoard.</string>
+    <string name="fill_both_fields">Fill both fields.</string>
+    <string name="both_pass_not_same">Both passwords are not same.</string>
+    <string name="check_pass_length">Password length atleast 4 characters.</string>
 
 
     <string-array name="security_questions">

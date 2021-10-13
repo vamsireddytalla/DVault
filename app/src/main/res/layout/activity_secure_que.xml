@@ -130,7 +130,7 @@
             android:fontFamily="@font/poppins_medium"
             android:gravity="center"
             android:textColor="@color/hello_color"
-            android:textColorHint="@color/hello_color"
+            android:textColorHint="@color/profile_bg_stroke"
             android:inputType="text"
             android:ems="1"
             android:lines="1"

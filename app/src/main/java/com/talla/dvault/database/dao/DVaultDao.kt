@@ -24,5 +24,29 @@ interface DVaultDao
     @Insert(onConflict = REPLACE)
     suspend fun insertUserSecurity(appLockModel: AppLockModel):Long
 
+    //settings screen quries
+    @Query("Select * from AppLockModel order by timeStamp Desc Limit 1")
+    fun getApplockState():LiveData<AppLockModel>
+
+    @Query("Select * from AppLockModel order by timeStamp Desc Limit 1")
+    suspend fun getAppLockModel():AppLockModel
+
+    @Query("Select isLocked from AppLockModel ORDER BY timeStamp DESC LIMIT 1")
+    fun isLockedOrNot():Boolean
+
+    @Query("Update AppLockModel Set isLocked=:vales")
+    suspend fun lockChange(vales:Boolean):Int
+
+    @Insert(onConflict = REPLACE)
+    suspend fun saveAppLockData(appLockModel: AppLockModel):Long
+
+    @Query("SELECT count(*) FROM AppLockModel WHERE userPin=:password")
+    suspend fun checkPassword(password:String):Int
+
+    @Query("Select count(*) FROM AppLockModel Where hintQuestion=:question AND hintAnswer=:answer")
+    suspend fun checkQuesAndAns(question:String,answer:String):Int
+
+    @Query("Delete from AppLockModel")
+    suspend fun deleteAppLock():Int
 
 }

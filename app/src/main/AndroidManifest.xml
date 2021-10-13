@@ -21,7 +21,8 @@
         android:theme="@style/Theme.DVault.LightMode">
         <activity
             android:name=".activities.PasswordActivity"
-            android:exported="true" />
+            android:exported="true"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".activities.SecureQueActivity"
             android:exported="true" />

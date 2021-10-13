@@ -81,6 +81,7 @@ dependencies {
     // Coroutine Lifecycle Scopes
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.2.0"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.2.0"
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.2.0"
 
     //drive
     implementation 'com.google.http-client:google-http-client-gson:1.26.0'
@@ -111,8 +112,17 @@ dependencies {
     implementation "net.zetetic:android-database-sqlcipher:4.4.3"
     implementation "androidx.sqlite:sqlite:2.0.1"
 
+    // Import the BoM for the Firebase platform
+    implementation platform('com.google.firebase:firebase-bom:28.4.2')
+
+    // Declare the dependencies for the Crashlytics and Analytics libraries
+    // When using the BoM, you don't specify versions in Firebase library dependencies
+    implementation 'com.google.firebase:firebase-crashlytics'
+    implementation 'com.google.firebase:firebase-analytics'
+
 }
 // Allow references to generated code
 kapt {
     correctErrorTypes true
 }
+apply plugin: 'com.google.firebase.crashlytics'

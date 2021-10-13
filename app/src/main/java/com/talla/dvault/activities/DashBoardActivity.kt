@@ -62,7 +62,6 @@ class DashBoardActivity : AppCompatActivity()
     private lateinit var customDialogProfileBinding:CustomDialogProfileBinding
     private lateinit var requestPermissionLauncher:ActivityResultLauncher<String>
     private val viewModel:MainViewModel by viewModels()
-
     var isNightMode = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -216,6 +215,9 @@ class DashBoardActivity : AppCompatActivity()
             snackbar.show()
         }
     }
+
+
+
 
 
 

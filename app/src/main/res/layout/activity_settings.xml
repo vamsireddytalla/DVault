@@ -143,6 +143,7 @@
                 android:fontFamily="@font/poppins_medium"
                 android:includeFontPadding="false"
                 android:text="@string/backup"
+                android:onClick="backUp"
                 android:textAppearance="@style/TextAppearance.AppCompat.Small"
                 android:textColor="@color/white"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -469,7 +470,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
             android:layout_alignParentRight="true"
-            android:checked="true"
+            android:checked="false"
             android:switchMinWidth="55dp"
             tools:ignore="UseSwitchCompatOrMaterialXml" />
 

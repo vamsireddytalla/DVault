@@ -9,6 +9,7 @@ import com.talla.dvault.R
 import com.talla.dvault.database.VaultDatabase
 import com.talla.dvault.database.dao.DVaultDao
 import com.talla.dvault.preferences.UserPreferences
+import com.talla.dvault.repositories.AppLockRepository
 import com.talla.dvault.repositories.VaultRepository
 import dagger.Module
 import dagger.Provides
@@ -37,6 +38,12 @@ object AppModule {
     @Singleton
     fun provideMainRepository(appDao: DVaultDao): VaultRepository {
         return VaultRepository(appDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAppLockRepository(appDao: DVaultDao): AppLockRepository {
+        return AppLockRepository(appDao)
     }
 
     @Provides

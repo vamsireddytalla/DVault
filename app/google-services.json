@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "912043129941",
+    "project_id": "dvault-1633423802518",
+    "storage_bucket": "dvault-1633423802518.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:912043129941:android:bc2c1ca86a6b526239a8dc",
+        "android_client_info": {
+          "package_name": "com.talla.dvault"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "912043129941-ecsh6o84ub66p75ql1qoktqdbme2tr51.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAvJmOqEyIE-Ay7D1tjBjifk51HQeyeJJ0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "912043129941-ecsh6o84ub66p75ql1qoktqdbme2tr51.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

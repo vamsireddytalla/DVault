@@ -13,6 +13,7 @@ import android.util.Log
 import android.view.View
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -21,13 +22,13 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.talla.dvault.activities.DashBoardActivity
+import com.talla.dvault.activities.PasswordActivity
 import com.talla.dvault.databinding.ActivitySplashBinding
 import com.talla.dvault.preferences.UserPreferences
+import com.talla.dvault.viewmodels.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.math.log
 
@@ -37,6 +38,7 @@ private const val TAG = "SplashActivity"
 class SplashActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySplashBinding
     lateinit var launchIntent: ActivityResultLauncher<Intent>
+    private val viewModel: MainViewModel by viewModels()
 
     @Inject
     lateinit var userPreference: UserPreferences
@@ -46,24 +48,8 @@ class SplashActivity : AppCompatActivity() {
         binding = ActivitySplashBinding.inflate(layoutInflater)
         setContentView(binding.root)
         requestPermissions()
-//        launchIntent =
-//            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-//                if (result.resultCode == Activity.RESULT_OK) {
-//                    Log.d(TAG, "onCreate: Permission Accepted")
-//                } else {
-//                    if (hasExternalStoragePermission())
-//                    {
-//                        openLoginScreen()
-//                    }else{
-//                        requestPermissions()
-//                        Log.d(TAG, "onCreate: Permission Denied")
-//                    }
-//
-//                }
-//            }
 
     }
-
 
 
     fun isUserSignedIn(): Boolean {
@@ -77,10 +63,20 @@ class SplashActivity : AppCompatActivity() {
         finish()
     }
 
-    private fun openDashBoard() {
-        val intent: Intent = Intent(this, DashBoardActivity::class.java)
-        startActivity(intent)
-        finish()
+    private fun openDashBoard()
+    {
+        runBlocking {
+            val res=viewModel.isLockedOrNot()
+            if (res) {
+                val intent: Intent = Intent(this@SplashActivity, PasswordActivity::class.java)
+                startActivity(intent)
+                finish()
+            } else {
+                val intent: Intent = Intent(this@SplashActivity, DashBoardActivity::class.java)
+                startActivity(intent)
+                finish()
+            }
+        }
     }
 
     private fun showDialog() {
