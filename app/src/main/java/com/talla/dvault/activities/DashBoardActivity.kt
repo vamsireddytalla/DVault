@@ -132,6 +132,11 @@ class DashBoardActivity : AppCompatActivity()
             startActivity(intent)
         }
 
+        binding.imageSelection.setOnClickListener {
+            val intent: Intent = Intent(this, FoldersActivity::class.java)
+            startActivity(intent)
+        }
+
     }
 
     fun checkDarkMode() {

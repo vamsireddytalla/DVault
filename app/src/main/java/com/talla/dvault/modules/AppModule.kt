@@ -58,7 +58,7 @@ object AppModule {
         @ApplicationContext context: Context
     ) = Glide.with(context).setDefaultRequestOptions(
         RequestOptions()
-//            .placeholder(R.drawable.ic_image)
+            .placeholder(R.drawable.skeleton_icon)
 //            .error(R.drawable.ic_image)
             .diskCacheStrategy(DiskCacheStrategy.DATA)
     )

@@ -22,5 +22,6 @@
     <color name="dialog_bg_color">#FFFFFFFF</color>
     <color name="line_color">#D2D2D2</color>
     <color name="edit_text_bg_color">#000000</color>
+    <color name="white_black">#FFFFFFFF</color>
 
 </resources>

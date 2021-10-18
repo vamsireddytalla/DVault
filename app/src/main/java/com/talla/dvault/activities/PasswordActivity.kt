@@ -68,6 +68,7 @@ class PasswordActivity : AppCompatActivity() {
                {
                    var intent=Intent(this@PasswordActivity,DashBoardActivity::class.java)
                    startActivity(intent)
+                   finish()
                }else{
                    showSnackBar("wrong")
                    Log.d(TAG, "checkPassword: Wrong pass")

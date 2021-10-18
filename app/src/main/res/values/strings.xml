@@ -22,6 +22,7 @@ You can restore them when you reinstall.</string>
     <string name="fill_both_fields">Fill both fields.</string>
     <string name="both_pass_not_same">Both passwords are not same.</string>
     <string name="check_pass_length">Password length atleast 4 characters.</string>
+    <string name="three_dots">&#8942;</string>
 
 
     <string-array name="security_questions">
