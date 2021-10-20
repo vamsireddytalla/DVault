@@ -25,6 +25,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.RequestManager
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -33,6 +34,7 @@ import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.Task
 import com.google.android.material.snackbar.Snackbar
 import com.talla.dvault.MainActivity
+import com.talla.dvault.database.entities.CategoriesModel
 import com.talla.dvault.database.entities.User
 import com.talla.dvault.databinding.CustomDialogProfileBinding
 import com.talla.dvault.preferences.UserPreferences
@@ -41,6 +43,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -81,6 +84,16 @@ class DashBoardActivity : AppCompatActivity()
             }
         }
 
+        viewModel.getLiveData().observe(this, Observer{
+            it?.let {
+                it.forEach { catModel->
+                    if (catModel.catId.equals("Img")) binding.totalImages.setText(catModel.totalItems.toString())
+                    if (catModel.catId.equals("Vdo")) binding.totalVIdeos.setText(catModel.totalItems.toString())
+                    if (catModel.catId.equals("Doc")) binding.totalDocs.setText(catModel.totalItems.toString())
+                    if (catModel.catId.equals("Aud")) binding.totalAudios.setText(catModel.totalItems.toString())
+                }
+            }
+        })
 
         lifecycleScope.launch(Dispatchers.IO) {
             appSettingsPrefs.getBooleanData(UserPreferences.NIGHT_MODE).collect { value ->
@@ -132,8 +145,24 @@ class DashBoardActivity : AppCompatActivity()
             startActivity(intent)
         }
 
+        binding.audioSelection.setOnClickListener {
+            val intent: Intent = Intent(this, FoldersActivity::class.java)
+            intent.putExtra(getString(R.string.cat_key),"Aud")
+            startActivity(intent)
+        }
+        binding.docSelection.setOnClickListener {
+            val intent: Intent = Intent(this, FoldersActivity::class.java)
+            intent.putExtra(getString(R.string.cat_key),"Doc")
+            startActivity(intent)
+        }
+        binding.videoSelection.setOnClickListener {
+            val intent: Intent = Intent(this, FoldersActivity::class.java)
+            intent.putExtra(getString(R.string.cat_key),"Vdo")
+            startActivity(intent)
+        }
         binding.imageSelection.setOnClickListener {
             val intent: Intent = Intent(this, FoldersActivity::class.java)
+            intent.putExtra(getString(R.string.cat_key),"Img")
             startActivity(intent)
         }
 

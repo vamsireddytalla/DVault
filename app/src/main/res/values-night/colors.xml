@@ -23,5 +23,9 @@
     <color name="line_color">#D2D2D2</color>
     <color name="edit_text_bg_color">#000000</color>
     <color name="white_black">#FFFFFFFF</color>
+    <color name="light_pink">#FFADAD</color>
+    <color name="light_yellow">#FFDB76</color>
+    <color name="light_blue">#96C1FF</color>
+    <color name="light_violet">#B4ADFF</color>
 
 </resources>

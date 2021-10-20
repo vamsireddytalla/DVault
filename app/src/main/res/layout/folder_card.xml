@@ -5,6 +5,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="80dp"
+    android:id="@+id/folderCard"
+    android:layout_marginTop="15dp"
     android:background="@drawable/folder_btn_bg">
 
     <LinearLayout
@@ -24,6 +26,8 @@
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:id="@+id/folderLogo"
             app:srcCompat="@drawable/ic_image_icon" />
 
     </LinearLayout>
@@ -35,11 +39,12 @@
         android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/threeDots"
-        app:layout_constraintHorizontal_bias="0.22"
+        app:layout_constraintHorizontal_bias="0.12"
         app:layout_constraintStart_toEndOf="@+id/linearLayout6"
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
+            android:id="@+id/folderName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:fontFamily="@font/poppins_medium"
@@ -49,13 +54,14 @@
             android:textColor="@color/white" />
 
         <TextView
+            android:id="@+id/folderCreatedAt"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:fontFamily="@font/poppins_regular"
             android:includeFontPadding="false"
             android:text="Created on 26 Feb 2021"
-            android:textSize="10sp"
-            android:textColor="@color/white" />
+            android:textColor="@color/white"
+            android:textSize="10sp" />
 
     </LinearLayout>
 

@@ -23,6 +23,15 @@ You can restore them when you reinstall.</string>
     <string name="both_pass_not_same">Both passwords are not same.</string>
     <string name="check_pass_length">Password length atleast 4 characters.</string>
     <string name="three_dots">&#8942;</string>
+    <string name="cat_key">CatKey</string>
+    <string name="create_folder">Create Folder</string>
+    <string name="create">Create</string>
+    <string name="rename">Rename</string>
+    <string name="delete">Delete</string>
+    <string name="update">Update</string>
+    <string name="rename_folder">Rename Folder</string>
+    <string name="folderName">folderName</string>
+    <string name="catType">catType</string>
 
 
     <string-array name="security_questions">

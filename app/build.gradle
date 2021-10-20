@@ -124,5 +124,8 @@ dependencies {
 // Allow references to generated code
 kapt {
     correctErrorTypes true
+    arguments {
+        arg("room.schemaLocation", "$projectDir/schemas".toString())
+    }
 }
 apply plugin: 'com.google.firebase.crashlytics'

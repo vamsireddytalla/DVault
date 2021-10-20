@@ -20,6 +20,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.DVault.LightMode">
         <activity
+            android:name=".activities.ItemsActivity"
+            android:exported="true" />
+        <activity
             android:name=".activities.FoldersActivity"
             android:exported="true" />
         <activity
