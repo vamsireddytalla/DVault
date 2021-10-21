@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.activity.viewModels
 import com.talla.dvault.databinding.ActivityFoldersBinding
 import androidx.core.graphics.drawable.DrawableCompat
@@ -120,13 +121,31 @@ class FoldersActivity : AppCompatActivity() ,FolderItemClick {
                     var btnType=b1.text.toString()
                     if (btnType.equals(this@FoldersActivity.resources.getString(R.string.create)))
                     {
-                        viewModel.createNewFolder(foldertable)
+//                        viewModel.createNewFolder(foldertable)
+                        var res: Long =viewModel.checkDataANdCreateFolder(folderName,createdTime.toString(),catType.toString())
+                        if (res==-1L){
+                            Toast.makeText(this@FoldersActivity, "ALready Existed", Toast.LENGTH_SHORT).show()
+                            et1.error = "Already Existed!"
+                            et1.requestFocus()
+                        }else{
+                            bsd.dismiss()
+                            showSnackBar("Created")
+                        }
+                        Log.d(TAG, "showBottomSheetDialog: ${res}")
                     }else{
-                        viewModel.renameFolder(folderName,folderId)
+                        var res: Int =viewModel.renameFolder(folderName,folderId)
+                        if(res==2067){
+                            Toast.makeText(this@FoldersActivity, "ALready Existed", Toast.LENGTH_SHORT).show()
+                            et1.error = "Already Existed!"
+                            et1.requestFocus()
+                        }else{
+                            bsd.dismiss()
+                            showSnackBar("Updated Successfully!")
+                        }
                     }
 
                 }
-                bsd.dismiss()
+
             }
 
         }

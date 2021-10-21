@@ -1,8 +1,9 @@
 package com.talla.dvault.database.entities
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
-@Entity
+@Entity(indices = [Index(value = ["folderName", "folderCatType"], unique = true)])
 data class FolderTable(
     @PrimaryKey(autoGenerate = true)
     var folderId:Int=0,

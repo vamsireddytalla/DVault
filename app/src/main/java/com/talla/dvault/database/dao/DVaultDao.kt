@@ -64,11 +64,17 @@ interface DVaultDao
     @Insert
     suspend fun createNewFolder(folderTable: FolderTable)
 
+    @Query("INSERT INTO FolderTable (folderName, folderCreatedAt, folderCatType) SELECT * FROM (SELECT :folderName, :folderCreatedAt, :catType) AS tmp WHERE NOT EXISTS (SELECT :folderName FROM FolderTable WHERE folderName = :folderName and folderCatType=:catType) LIMIT 1;")
+    suspend fun checkDataANdCreateFolder(folderName: String,folderCreatedAt:String,catType: String):Long
+
     @Query("Select * from FolderTable where folderCatType=:catType")
     fun getFoldersData(catType:String):LiveData<List<FolderTable>>
 
     @Query("Update FolderTable Set folderName=:folderName where folderId=:FolderId")
-    suspend fun renameFolderName(folderName:String,FolderId:Int)
+    suspend fun renameFolderName(folderName:String,FolderId:Int):Int
+
+    @Query("Update FolderTable Set folderName = :folderName Where Not Exists (Select folderName from FolderTable  Where folderId=:folderId);")
+    suspend fun updateFolderIfNotExists(folderName: String,folderId: Int):Int
 
     @Query("Delete from FolderTable where folderId=:folderId")
     suspend fun deleteFolder(folderId: Int)

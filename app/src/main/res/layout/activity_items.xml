@@ -5,6 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/dashboard_bg"
     tools:context=".activities.ItemsActivity">
 
     <androidx.constraintlayout.widget.Guideline
@@ -89,5 +90,6 @@
             android:layout_centerInParent="true"
             app:srcCompat="@drawable/white_plus" />
     </RelativeLayout>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

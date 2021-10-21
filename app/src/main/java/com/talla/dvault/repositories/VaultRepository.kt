@@ -5,6 +5,7 @@ import com.talla.dvault.database.dao.DVaultDao
 import com.talla.dvault.database.entities.AppLockModel
 import com.talla.dvault.database.entities.FolderTable
 import com.talla.dvault.database.entities.User
+import java.lang.Exception
 import javax.inject.Inject
 
 class VaultRepository @Inject constructor(private val appDao:DVaultDao)
@@ -39,10 +40,24 @@ class VaultRepository @Inject constructor(private val appDao:DVaultDao)
         appDao.createNewFolder(folderTable)
     }
 
+    suspend fun checkDataANdCreateFolder(folderName: String,folderCreatedAt:String,catType: String):Long
+    {
+       return appDao.checkDataANdCreateFolder(folderName,folderCreatedAt,catType)
+    }
+
     fun getFoldersData(catType:String)=appDao.getFoldersData(catType)
 
 
-    suspend fun renameFolder(folderName:String,folderId:Int)=appDao.renameFolderName(folderName,folderId)
+    suspend fun renameFolder(folderName:String,folderId:Int):Int
+    {
+        try {
+           return appDao.renameFolderName(folderName,folderId)
+        }catch (ee:Exception){
+            return 2067
+        }
+    }
+
+    suspend fun updateFolderIfNotExists(folderName:String,folderId:Int)=appDao.updateFolderIfNotExists(folderName,folderId)
 
     suspend fun deleteFolder(folderId: Int)=appDao.deleteFolder(folderId)
 

@@ -6,9 +6,6 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.talla.dvault.database.dao.DVaultDao
-import com.talla.dvault.database.entities.AppLockModel
-import com.talla.dvault.database.entities.CategoriesModel
-import com.talla.dvault.database.entities.User
 import com.talla.dvault.utills.DataGenerator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -16,9 +13,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.Executors
 import androidx.room.migration.Migration
-import com.talla.dvault.database.entities.FolderTable
+import com.talla.dvault.database.entities.*
 
-@Database(entities = [User::class,AppLockModel::class,CategoriesModel::class, FolderTable::class],version = 1,exportSchema = false)
+@Database(entities = [User::class,AppLockModel::class,CategoriesModel::class, FolderTable::class,ItemModel::class],version = 1,exportSchema = false)
 abstract class VaultDatabase: RoomDatabase()
 {
     abstract fun vaulDao():DVaultDao

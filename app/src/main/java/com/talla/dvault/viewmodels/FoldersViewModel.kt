@@ -26,6 +26,11 @@ class FoldersViewModel @Inject constructor(private val repository: VaultReposito
         repository.createNewFolder(folderTable)
     }
 
+    suspend fun checkDataANdCreateFolder(folderName: String,folderCreatedAt:String,catType: String):Long
+    {
+       return repository.checkDataANdCreateFolder(folderName,folderCreatedAt,catType)
+    }
+
     fun getFoldersData(catType:String):LiveData<List<FolderTable>>
     {
         foldersMutableData=repository.getFoldersData(catType)
@@ -33,9 +38,14 @@ class FoldersViewModel @Inject constructor(private val repository: VaultReposito
     }
 
 
-    suspend fun renameFolder(folderName:String,folderId:Int)
+    suspend fun renameFolder(folderName:String,folderId:Int):Int
     {
-        repository.renameFolder(folderName,folderId)
+       return repository.renameFolder(folderName,folderId)
+    }
+
+    suspend fun updateFolderIfNotExists(folderName:String,folderId:Int):Int
+    {
+       return repository.updateFolderIfNotExists(folderName,folderId)
     }
 
     suspend fun deleteFolder(folderId: Int)
