@@ -69,6 +69,7 @@ class FoldersAdapter(val folderCat:String,val mContext:Context,val onOptionClick
                 var io=Intent(mContext,ItemsActivity::class.java)
                 io.putExtra(mContext.getString(R.string.folderName),folderObj.folderName)
                 io.putExtra(mContext.getString(R.string.catType),folderCat)
+                io.putExtra(mContext.getString(R.string.folderId),folderObj.folderId)
                 mContext.startActivity(io)
             }
 

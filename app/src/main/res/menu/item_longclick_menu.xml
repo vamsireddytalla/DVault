@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/unlockFile"
+        android:title="Unlock"
+        android:icon="@drawable/unlock_icon"
+        app:showAsAction="always"/>
+
+    <item
+        android:id="@+id/selectAll"
+        android:title="Select All"
+        android:icon="@drawable/select_all_icon"
+        app:showAsAction="always"/>
+
+</menu>

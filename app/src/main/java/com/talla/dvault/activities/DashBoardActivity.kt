@@ -11,6 +11,8 @@ import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.Contacts.Intents.Insert.ACTION
+import android.provider.ContactsContract.Intents.Insert.ACTION
 import android.util.Log
 import android.view.View
 import android.view.WindowManager
@@ -38,6 +40,7 @@ import com.talla.dvault.database.entities.CategoriesModel
 import com.talla.dvault.database.entities.User
 import com.talla.dvault.databinding.CustomDialogProfileBinding
 import com.talla.dvault.preferences.UserPreferences
+import com.talla.dvault.services.FileCopyService
 import com.talla.dvault.viewmodels.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
@@ -46,6 +49,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import android.app.ActivityManager
+import android.content.Context
+import com.talla.dvault.utills.FileSize
 
 
 private const val TAG = "DashBoardActivity"
@@ -164,6 +170,8 @@ class DashBoardActivity : AppCompatActivity()
             val intent: Intent = Intent(this, FoldersActivity::class.java)
             intent.putExtra(getString(R.string.cat_key),"Img")
             startActivity(intent)
+
+
         }
 
     }
@@ -249,7 +257,6 @@ class DashBoardActivity : AppCompatActivity()
             snackbar.show()
         }
     }
-
 
 
 

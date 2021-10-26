@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="1dp">
+
+    <TextView
+        android:id="@+id/addingVaultTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="10dp"
+        android:fontFamily="@font/poppins_regular"
+        android:includeFontPadding="false"
+        android:text="Adding to Vault"
+        android:textAppearance="@style/TextAppearance.AppCompat.Small"
+        android:textColor="@color/hello_color" />
+
+    <ProgressBar
+        android:id="@+id/progressFile"
+        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/addingVaultTitle"
+        android:layout_marginTop="5dp"
+        android:indeterminate="true"
+        android:indeterminateTint="@color/blue_color"
+        android:progressTint="@color/blue_color" />
+
+    <TextView
+        android:id="@+id/totalElapsed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="10dp"
+        android:fontFamily="@font/poppins_regular"
+        android:includeFontPadding="false"
+        android:textAppearance="@style/TextAppearance.AppCompat.Small"
+        android:textColor="@color/profile_bg_stroke" />
+
+    <TextView
+        android:id="@+id/totalCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="10dp"
+        android:layout_below="@+id/progressFile"
+        android:fontFamily="@font/poppins_regular"
+        android:includeFontPadding="false"
+        android:textAppearance="@style/TextAppearance.AppCompat.Small"
+        android:textColor="@color/profile_bg_stroke" />
+
+    <TextView
+        android:id="@+id/cancelFileProcess"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/progressFile"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_marginTop="10dp"
+        android:fontFamily="@font/poppins_regular"
+        android:includeFontPadding="false"
+        android:text="Cancel"
+        android:textAppearance="@style/TextAppearance.AppCompat.Small"
+        android:textColor="@color/hello_color" />
+
+
+</RelativeLayout>

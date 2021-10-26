@@ -3,10 +3,7 @@ package com.talla.dvault.database.dao
 import androidx.lifecycle.LiveData
 import androidx.room.*
 import androidx.room.OnConflictStrategy.REPLACE
-import com.talla.dvault.database.entities.AppLockModel
-import com.talla.dvault.database.entities.CategoriesModel
-import com.talla.dvault.database.entities.FolderTable
-import com.talla.dvault.database.entities.User
+import com.talla.dvault.database.entities.*
 
 @Dao
 interface DVaultDao
@@ -78,5 +75,15 @@ interface DVaultDao
 
     @Query("Delete from FolderTable where folderId=:folderId")
     suspend fun deleteFolder(folderId: Int)
+
+    //Items Data
+    @Insert
+    suspend fun insertItemsData(itemsList: List<ItemModel>)
+
+    @Insert
+    suspend fun insertSingleItem(itemsList: ItemModel)
+
+    @Query("Select * from ItemModel Where itemMimeType=:catType")
+    fun getItemsBasedOnCatType(catType:String):LiveData<List<ItemModel>>
 
 }

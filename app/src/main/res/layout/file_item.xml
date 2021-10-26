@@ -5,33 +5,51 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="80dp"
-    android:layout_marginTop="15dp">
+    android:id="@+id/item"
+    android:layout_marginTop="10dp">
 
-    <LinearLayout
+
+    <androidx.cardview.widget.CardView
         android:id="@+id/linearLayout6"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="20dp"
-        android:layout_marginLeft="20dp"
-        android:background="@drawable/ic_card"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginRight="10dp"
+        app:cardCornerRadius="5dp"
+        android:background="@drawable/image_corner_radius"
         android:gravity="center"
         android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/linearLayout5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.53">
 
         <ImageView
+            android:id="@+id/thumbNail"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:id="@+id/thumbNail"/>
+            android:background="@drawable/image_corner_radius"
+            android:scaleType="fitXY"/>
 
-    </LinearLayout>
+        <ImageView
+            android:id="@+id/checkBox"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            android:background="@drawable/check_icon"
+            android:scaleType="fitXY"/>
+    </androidx.cardview.widget.CardView>
+
 
     <LinearLayout
         android:id="@+id/linearLayout5"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginLeft="8dp"
         android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/threeDots"
@@ -43,8 +61,10 @@
             android:id="@+id/itemName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:ellipsize="end"
             android:fontFamily="@font/poppins_medium"
             android:includeFontPadding="false"
+            android:maxLines="1"
             android:text="Family Memories"
             android:textAppearance="@style/TextAppearance.AppCompat.Medium"
             android:textColor="@color/hello_color" />
@@ -55,6 +75,7 @@
             android:layout_height="wrap_content"
             android:fontFamily="@font/poppins_regular"
             android:includeFontPadding="false"
+            android:layout_marginTop="5dp"
             android:text="26th Feb 2021 - 2.4Mb"
             android:textColor="@color/hello_color"
             android:textSize="10sp" />
@@ -66,6 +87,8 @@
         android:layout_width="50dp"
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
+        android:layout_marginStart="16dp"
+        android:layout_marginLeft="16dp"
         android:gravity="center_horizontal"
         android:text="@string/three_dots"
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
@@ -73,6 +96,16 @@
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/linearLayout5"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:background="@color/profile_bg_stroke"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

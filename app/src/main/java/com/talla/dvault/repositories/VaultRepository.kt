@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import com.talla.dvault.database.dao.DVaultDao
 import com.talla.dvault.database.entities.AppLockModel
 import com.talla.dvault.database.entities.FolderTable
+import com.talla.dvault.database.entities.ItemModel
 import com.talla.dvault.database.entities.User
 import java.lang.Exception
 import javax.inject.Inject
@@ -60,5 +61,11 @@ class VaultRepository @Inject constructor(private val appDao:DVaultDao)
     suspend fun updateFolderIfNotExists(folderName:String,folderId:Int)=appDao.updateFolderIfNotExists(folderName,folderId)
 
     suspend fun deleteFolder(folderId: Int)=appDao.deleteFolder(folderId)
+
+    suspend fun insertItemsData(itemsList:List<ItemModel>)=appDao.insertItemsData(itemsList)
+
+    suspend fun insertSingleItem(itemsList:ItemModel)=appDao.insertSingleItem(itemsList)
+
+    fun getItemsBasedOnCatType(catType:String)=appDao.getItemsBasedOnCatType(catType)
 
 }

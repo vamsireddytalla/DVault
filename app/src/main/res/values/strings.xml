@@ -31,7 +31,9 @@ You can restore them when you reinstall.</string>
     <string name="update">Update</string>
     <string name="rename_folder">Rename Folder</string>
     <string name="folderName">folderName</string>
+    <string name="folderId">folderId</string>
     <string name="catType">catType</string>
+    <string name="fileCopy">FileCopy</string>
 
 
     <string-array name="security_questions">
