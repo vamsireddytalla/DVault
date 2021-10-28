@@ -222,7 +222,7 @@ class FileCopyService : Service() {
             val outStream: OutputStream = FileOutputStream(to)
 
             val lenghtOfFile: Int = inStream.available()
-            val buf = ByteArray(512
+            val buf = ByteArray(1024*1024
             )
             var len: Int
             var total: Long = 0

@@ -18,6 +18,6 @@ data class ItemModel(
     val serverId:String="",
     val folderId:String=""
 ){
-    @Transient
-    var isSelected=false
+    @Ignore
+    var isSelected:Boolean=false
 }

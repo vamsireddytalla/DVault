@@ -83,6 +83,7 @@ interface DVaultDao
     @Insert
     suspend fun insertSingleItem(itemsList: ItemModel)
 
+
     @Query("Select * from ItemModel Where itemMimeType=:catType")
     fun getItemsBasedOnCatType(catType:String):LiveData<List<ItemModel>>
 

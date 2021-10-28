@@ -19,6 +19,7 @@ import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.lifecycle.Observer
+import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.RequestManager
 import com.talla.dvault.R
 import com.talla.dvault.databinding.ActivityItemsBinding
@@ -28,27 +29,29 @@ import com.talla.dvault.adapters.FoldersAdapter
 import com.talla.dvault.adapters.ItemsAdapter
 import com.talla.dvault.database.entities.ItemModel
 import com.talla.dvault.database.entities.SourcesModel
+import com.talla.dvault.interfaces.ItemAdapterClick
 import com.talla.dvault.services.FileCopyService
 import java.text.DecimalFormat
 import com.talla.dvault.utills.DateUtills
+import com.talla.dvault.utills.FileSize
 import com.talla.dvault.viewmodels.ItemViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import javax.inject.Inject
 import java.io.*
 import javax.xml.transform.Source
 
-
 private const val TAG = "ItemsActivity"
 
 @AndroidEntryPoint
-class ItemsActivity : AppCompatActivity() {
+class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
     private lateinit var binding: ActivityItemsBinding
     private var catType: String = ""
     private var folderName: String = ""
     private var folderId: Int? = null
     private lateinit var itemsAdapter: ItemsAdapter
     private lateinit var mService: FileCopyService
+    private var itemsList: List<ItemModel> = ArrayList()
     private var mBound: Boolean = false
 
     @Inject
@@ -73,7 +76,6 @@ class ItemsActivity : AppCompatActivity() {
                 if (result.resultCode == Activity.RESULT_OK) {
                     var receivedData: Intent? = result.data
                     Log.d(TAG, "onCreate: ${receivedData?.data?.path.toString()}")
-//                    moveFile(RealPathUtill.getRealPath(this,receivedData?.data!!)+"")
                     if (null != receivedData) {
                         if (null != receivedData.clipData) {
                             var itemsList = ArrayList<ItemModel>()
@@ -84,14 +86,8 @@ class ItemsActivity : AppCompatActivity() {
                                     SourcesModel(uri.toString(), folderId!!, catType)
                                 sourceModelList.add(sourceModel)
 
-//                                var itemModel=fromUriGetRealPath(uri!!)
-//                                itemsList.add(itemModel)
                             }
                             startFileCopyService(sourceModelList)
-//                            runBlocking {
-//                                Log.d(TAG, "Inserting Data Befor Log ${itemsList.toString()}")
-//                                viewModel.insertItemsData(itemsList)
-//                            }
                         } else {
                             val uri: Uri? = receivedData.data
                             var sourceList = ArrayList<SourcesModel>()
@@ -99,14 +95,6 @@ class ItemsActivity : AppCompatActivity() {
                                 SourcesModel(uri.toString(), folderId!!, catType)
                             sourceList.add(sourceModel)
                             startFileCopyService(sourceList)
-
-//                            var itemModel=fromUriGetRealPath(uri!!)
-//                            var itemsList=ArrayList<ItemModel>()
-//                            itemsList.add(itemModel)
-//                            runBlocking {
-//                                Log.d(TAG, "Inserting Data Befor Log ${itemsList.toString()}")
-//                                viewModel.insertItemsData(itemsList)
-//                            }
                         }
                     } else {
                         showSnackBar("No File Selected !")
@@ -148,14 +136,14 @@ class ItemsActivity : AppCompatActivity() {
                 openFileIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
                 openFileIntent.setAction(Intent.ACTION_GET_CONTENT)
                 res.launch(Intent.createChooser(openFileIntent, "Select Multiple Items"))
-            }else{
+            } else {
                 showSnackBar("Already files in Processing...")
             }
 
         }
 
         binding.apply {
-            itemsAdapter = ItemsAdapter(this@ItemsActivity, glide)
+            itemsAdapter = ItemsAdapter(this@ItemsActivity, itemsList, glide, this@ItemsActivity)
             itemRCV.adapter = itemsAdapter
 
             backbtn.setOnClickListener {
@@ -165,18 +153,45 @@ class ItemsActivity : AppCompatActivity() {
         }
 
         viewModel.getItemsBasedOnCatType(catType).observe(this, Observer {
+            Log.d(TAG, "ItemsActivty Observer")
             if (it.isEmpty()) {
                 binding.nofolderFound.visibility = View.VISIBLE
                 binding.itemRCV.visibility = View.GONE
             } else {
                 binding.nofolderFound.visibility = View.GONE
                 binding.itemRCV.visibility = View.VISIBLE
-                binding.itemRCV.isNestedScrollingEnabled=false
-                itemsAdapter.setData(it)
-                itemsAdapter.differ.submitList(it)
+                binding.itemRCV.isNestedScrollingEnabled = false
+                Log.d(TAG, "onCreate: ${it.toString()}")
+                itemsList = it
+                itemsAdapter.setListData(itemsList)
             }
         })
 
+        binding.selectAll.setOnClickListener {
+           lifecycleScope.async {
+
+               FileSize.SelectAll = !FileSize.SelectAll
+               FileSize.OnLongItemClick = FileSize.SelectAll
+
+               for (itemModel in itemsList) {
+                   itemModel.isSelected = FileSize.SelectAll
+                   if (FileSize.SelectAll) FileSize.selectedItemIds.add(itemModel.itemId) else{
+                       FileSize.selectedItemIds.clear()
+                       withContext(Dispatchers.Main){
+                           binding.plus.visibility=View.VISIBLE
+                           binding.unlock.visibility=View.GONE
+                           binding.selectAll.visibility=View.GONE
+                       }
+                   }
+               }
+
+               itemsAdapter.setListData(itemsList)
+               Log.d(TAG, "Select ALl Clicked Select All Value  ${FileSize.SelectAll}")
+               Log.d(TAG, "Select ALl Clicked OnLon Value   ${FileSize.OnLongItemClick}")
+               Log.d(TAG, "Select ALl CLicked MyItems Ids ${FileSize.selectedItemIds.toString()}")
+           }
+
+        }
     }
 
     fun startFileCopyService(sourceList: List<SourcesModel>) {
@@ -189,7 +204,6 @@ class ItemsActivity : AppCompatActivity() {
             startService(fileService)
         }
     }
-
 
 
     fun showSnackBar(message: String) {
@@ -254,8 +268,7 @@ class ItemsActivity : AppCompatActivity() {
         )
     }
 
-    private fun isMyServiceRunning(serviceClass: Class<*>): Boolean
-    {
+    private fun isMyServiceRunning(serviceClass: Class<*>): Boolean {
         val manager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         for (service in manager.getRunningServices(Int.MAX_VALUE)) {
             if (serviceClass.name == service.service.className) {
@@ -280,20 +293,18 @@ class ItemsActivity : AppCompatActivity() {
         }
     }
 
-//    override fun onStart() {
-//        super.onStart()
-//        // Bind to LocalService
-//        Intent(this, FileCopyService::class.java).also { intent ->
-//            bindService(intent, connection, Context.BIND_AUTO_CREATE)
-//        }
-//    }
-//
-//    override fun onStop() {
-//        super.onStop()
-//        unbindService(connection)
-//        mBound = false
-//    }
-
-
+    override fun onItemClick(myItemIdsSet: MutableSet<Int>) {
+        if (FileSize.OnLongItemClick)
+        {
+            binding.plus.visibility=View.GONE
+            binding.unlock.visibility=View.VISIBLE
+            binding.selectAll.visibility=View.VISIBLE
+        }else{
+            binding.plus.visibility=View.VISIBLE
+            binding.unlock.visibility=View.GONE
+            binding.selectAll.visibility=View.GONE
+        }
+        showSnackBar(myItemIdsSet.toString())
+    }
 
 }

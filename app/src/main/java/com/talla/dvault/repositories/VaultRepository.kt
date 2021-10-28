@@ -66,6 +66,7 @@ class VaultRepository @Inject constructor(private val appDao:DVaultDao)
 
     suspend fun insertSingleItem(itemsList:ItemModel)=appDao.insertSingleItem(itemsList)
 
+
     fun getItemsBasedOnCatType(catType:String)=appDao.getItemsBasedOnCatType(catType)
 
 }

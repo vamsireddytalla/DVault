@@ -12,6 +12,9 @@ object FileSize {
         return DecimalFormat("#.##").format(d)
     }
 
+    var OnLongItemClick:Boolean=false
+    var SelectAll:Boolean=false
+    var selectedItemIds: MutableSet<Int> = mutableSetOf<Int>()
 
     fun bytesToHuman(size: Long): String? {
         val Kb = (1 * 1024).toLong()

@@ -2,7 +2,9 @@ package com.talla.dvault.adapters
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.res.ColorStateList
 import android.graphics.Color
+import android.os.Build
 import android.util.Log
 import android.view.*
 import androidx.activity.viewModels
@@ -17,17 +19,26 @@ import com.google.common.collect.Lists
 import com.talla.dvault.R
 import com.talla.dvault.database.entities.ItemModel
 import com.talla.dvault.databinding.FileItemBinding
+import com.talla.dvault.interfaces.ItemAdapterClick
 import com.talla.dvault.viewmodels.ItemViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import android.graphics.drawable.GradientDrawable
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.DrawableCompat
+import com.talla.dvault.utills.FileSize
+
 
 private const val TAG = "ItemsAdapter"
-class ItemsAdapter(val mContext: Context, var glide: RequestManager) :
+
+class ItemsAdapter(
+    val mContext: Context,
+    var itemModelList: List<ItemModel>,
+    var glide: RequestManager,
+    val onclickListner: ItemAdapterClick
+) :
     RecyclerView.Adapter<ItemsAdapter.MyViewHolder>() {
 
-    private var isSelectMode: Boolean = false
-    private var selectedItems = ArrayList<ItemModel>()
-    private var oldItemsList = emptyList<ItemModel>()
 
     inner class MyViewHolder(binding: FileItemBinding) : RecyclerView.ViewHolder(binding.root) {
         var mbinding: FileItemBinding? = null
@@ -36,23 +47,25 @@ class ItemsAdapter(val mContext: Context, var glide: RequestManager) :
             this.mbinding = binding
             mbinding?.item?.setOnLongClickListener(object : View.OnLongClickListener {
                 override fun onLongClick(v: View?): Boolean {
-                    isSelectMode = true
+                    FileSize.OnLongItemClick = true
 
-                    var itemPosition=adapterPosition
-                    var obj: ItemModel = differ.currentList.get(itemPosition)
-                    if (selectedItems.get(itemPosition).isSelected) {
+                    var itemPosition = adapterPosition
+                    var obj: ItemModel = itemModelList.get(itemPosition)
+                    if (obj.isSelected) {
                         obj.isSelected = false
-                        selectedItems.set(adapterPosition,obj)
+                        FileSize.selectedItemIds.remove(obj.itemId)
                     } else {
                         obj.isSelected = true
-                        selectedItems.set(adapterPosition,obj)
+                        FileSize.selectedItemIds.add(obj.itemId)
                     }
 
-                    differ.submitList(selectedItems)
-
-                    if (selectedItems.size == 0) {
-                        isSelectMode = false
+                    if (FileSize.selectedItemIds.size == 0) {
+                        FileSize.OnLongItemClick = false
+                        FileSize.SelectAll = false
                     }
+
+                    notifyItemChanged(itemPosition, obj)
+                    onclickListner.onItemClick(FileSize.selectedItemIds)
 
                     return true
                 }
@@ -60,40 +73,32 @@ class ItemsAdapter(val mContext: Context, var glide: RequestManager) :
 
 
             mbinding?.item?.setOnClickListener {
-                if (isSelectMode) {
-                    var itemPosition=adapterPosition
-                    var obj: ItemModel = differ.currentList.get(itemPosition)
-                    if (selectedItems.get(itemPosition).isSelected) {
+                if (FileSize.OnLongItemClick) {
+                    var itemPosition = adapterPosition
+                    var obj: ItemModel = itemModelList.get(itemPosition)
+                    if (obj.isSelected) {
                         obj.isSelected = false
-                        selectedItems.set(adapterPosition,obj)
+                        FileSize.selectedItemIds.remove(obj.itemId)
                     } else {
                         obj.isSelected = true
-                        selectedItems.set(adapterPosition,obj)
+                        FileSize.selectedItemIds.add(obj.itemId)
                     }
 
-                    differ.submitList(selectedItems)
-
-                    if (selectedItems.size == 0) {
-                        isSelectMode = false
+                    if (FileSize.selectedItemIds.size == 0) {
+                        FileSize.OnLongItemClick = false
+                        FileSize.SelectAll = false
                     }
+
+                    notifyItemChanged(itemPosition, obj)
+                    onclickListner.onItemClick(FileSize.selectedItemIds)
 
                 }
             }
 
+
         }
     }
 
-    private val diffCallback = object : DiffUtil.ItemCallback<ItemModel>() {
-        override fun areItemsTheSame(oldItem: ItemModel, newItem: ItemModel): Boolean {
-            return oldItem.itemId == newItem.itemId
-        }
-
-        override fun areContentsTheSame(oldItem: ItemModel, newItem: ItemModel): Boolean {
-            return oldItem == newItem
-        }
-    }
-
-    var differ = AsyncListDiffer(this, diffCallback)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
         var inflater = LayoutInflater.from(parent.context)
@@ -105,18 +110,55 @@ class ItemsAdapter(val mContext: Context, var glide: RequestManager) :
         holder: MyViewHolder,
         @SuppressLint("RecyclerView") position: Int
     ) {
-        val itemObj = differ.currentList.get(position)
+        val itemObj = itemModelList.get(position)
         holder.mbinding?.apply {
             itemName.text = itemObj.itemName
             createdAndSize.text = itemObj.itemCreatedAt + " - " + itemObj.itemSize
             glide.load(itemObj.itemCurrentPath).into(thumbNail)
 
             if (!itemObj.isSelected) {
-                Log.d(TAG, "Selected")
-                item.setBackgroundColor(Color.TRANSPARENT)
-            } else {
                 Log.d(TAG, "Unselected")
-                item.setBackgroundColor(Color.LTGRAY)
+                item.setBackgroundColor(Color.TRANSPARENT)
+                checkBoxe.visibility = View.GONE
+                threeDots.visibility = View.VISIBLE
+            } else {
+                checkBoxe.visibility = View.VISIBLE
+                threeDots.visibility = View.GONE
+                Log.d(TAG, "Selected")
+                var intColorCode: Int = 0
+                when (itemObj.itemMimeType) {
+                    "Img" -> {
+                        intColorCode = mContext.resources.getColor(R.color.light_pink)
+                    }
+                    "Aud" -> {
+                        intColorCode = mContext.resources.getColor(R.color.light_yellow)
+                    }
+                    "Doc" -> {
+                        intColorCode = mContext.resources.getColor(R.color.light_blue)
+                    }
+                    "Vdo" -> {
+                        intColorCode = mContext.resources.getColor(R.color.light_violet)
+                    }
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    checkBoxe.buttonTintList = ColorStateList.valueOf(intColorCode)
+                } else {
+                    checkBoxe.setBackgroundColor(intColorCode)
+                }
+
+                //use a GradientDrawable with only one color set, to make it a solid color
+                val border = GradientDrawable()
+                border.setColor(-0x1) //white background
+                border.cornerRadius = 20F
+                border.setColor(mContext.resources.getColor(R.color.card_bg_color))
+                border.setStroke(5, intColorCode) //black border with full opacity
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
+                    item.setBackgroundDrawable(border)
+                } else {
+                    item.setBackground(border)
+                }
+                checkBoxe.isChecked = true
+                item.alpha = 0.8F
             }
             Log.d(TAG, "onBindViewHolder: Called")
         }
@@ -125,12 +167,12 @@ class ItemsAdapter(val mContext: Context, var glide: RequestManager) :
 
 
     override fun getItemCount(): Int {
-        return differ.currentList.size
+        return itemModelList.size
     }
 
-    fun setData(newItemModelList:List<ItemModel>)
-    {
-       selectedItems.addAll(newItemModelList)
+    fun setListData(list: List<ItemModel>) {
+        itemModelList = list
+        notifyDataSetChanged()
     }
 
 

@@ -70,6 +70,28 @@
             android:textAppearance="@style/TextAppearance.AppCompat.Large"
             android:textColor="@color/hello_color" />
 
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_centerVertical="true"
+            android:layout_alignParentRight="true">
+            <ImageView
+                android:id="@+id/unlock"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="20dp"
+                android:visibility="gone"
+                app:srcCompat="@drawable/unlock_icon" />
+            <ImageView
+                android:id="@+id/select_all"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="10dp"
+                android:visibility="gone"
+                app:srcCompat="@drawable/select_all_icon" />
+        </LinearLayout>
+
     </RelativeLayout>
 
     <RelativeLayout
