@@ -63,9 +63,7 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
     private var itemsList: List<ItemModel> = ArrayList()
     private var mBound: Boolean = false
     private lateinit var dialog: Dialog
-    private var copyProgress: Int = 0
-    private var mbCopied: String = "0/0"
-    private var totalCount: String = "0"
+    private lateinit var binder: FileCopyService.LocalBinder
     private lateinit var copyDialog: CopyingFileDialogBinding
     private var serviceBinder: FileCopyService? = null
 
@@ -117,6 +115,7 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
                                 bindService(intent, connection, Context.BIND_AUTO_CREATE)
                             }
                         }
+
                     } else {
                         showSnackBar("No File Selected !")
                     }
@@ -127,7 +126,6 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
 
         binding.plus.setOnClickListener {
             if (!isMyServiceRunning(FileCopyService::class.java)) {
-
 
                 val openFileIntent = Intent()
                 when (catType) {
@@ -162,8 +160,10 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
 
 
             } else {
-                showFileCopyDialog()
                 showSnackBar("Already files in Processing...")
+                if (mBound) {
+                    showFileCopyDialog()
+                }
             }
 
         }
@@ -232,27 +232,50 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
         }
     }
 
-
     fun showSnackBar(message: String) {
         Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).show()
     }
 
     private fun showFileCopyDialog() {
-        dialog = Dialog(this, R.style.ThemeOverlay_MaterialComponents_Dialog)
+        dialog = Dialog(this, R.style.Theme_MaterialComponents_DayNight_Dialog_MinWidth)
         dialog.setCancelable(true)
         copyDialog = CopyingFileDialogBinding.inflate(layoutInflater)
         dialog.setContentView(copyDialog.getRoot())
 //        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        dialog.show()
-        copyDialog.progressFile.setProgress(copyProgress)
-        copyDialog.totalElapsed.text = mbCopied
-        copyDialog.totalCount.text = totalCount
+        copyDialog.progressFile.max = 100
 
         copyDialog.cancelFileProcess.setOnClickListener(View.OnClickListener {
-
+            serviceBinder?.stopServiceAndUnBind()
+            mBound = false
             dialog.dismiss()
         })
+
+        binder.copyFileCallBack(object : FileCopyService.FileCopyCallback {
+
+            override fun fileCopyCallBack(
+                progress: Int,
+                mbCount: String,
+                totalItems: String,
+                isBinded: Boolean
+            ) {
+                Log.d(TAG, "fileCopyCallBack: $progress $mbCount $totalItems $isBinded")
+                mBound = isBinded
+                if (!isBinded) {
+                    unbindService(connection)
+                    dialog.dismiss()
+                }
+                lifecycleScope.launch(Dispatchers.Main) {
+                    copyDialog.progressFile.progress = progress
+                    copyDialog.totalElapsed.text = mbCount
+                    copyDialog.totalCount.text = totalItems
+                }
+            }
+        })
+
+        dialog.show()
+
     }
+
 
     fun getFolderNameBasedOnCat(): String {
         var folderName: String? = null
@@ -327,19 +350,9 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
 
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             // We've bound to LocalService, cast the IBinder and get LocalService instance
-            val binder = service as FileCopyService.LocalBinder
+            binder = service as FileCopyService.LocalBinder
             serviceBinder = binder.getService()
-            mBound = true
-
-            binder.copyFileCallBack(object : FileCopyService.FileCopyCallback {
-                override fun fileCopyCallBack(progress: Int, mbCount: String, totalItems: String) {
-                    copyProgress = progress
-                    mbCopied = mbCount
-                    totalCount = totalItems
-                    Log.d(TAG, "fileCopyCallBack: $copyProgress")
-                }
-            })
-
+            showFileCopyDialog()
             serviceBinder?.randomNumberLiveData?.observe(this@ItemsActivity, Observer {
                 Log.d(TAG, "onServiceConnected: $it")
             })
@@ -348,6 +361,8 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
 
         override fun onServiceDisconnected(arg0: ComponentName) {
             mBound = false
+            serviceBinder = null
+            Log.d(TAG, "onServiceDisconnected: Called")
         }
     }
 
@@ -387,13 +402,16 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
         }
     }
 
-    override fun onStop() {
-        super.onStop()
-        if (mBound) {
-            unbindService(connection)
-            mBound = false
+    override fun onStart() {
+        super.onStart()
+        if (isMyServiceRunning(FileCopyService::class.java)) {
+            if (!mBound) {
+                // Bind to LocalService
+                Intent(this, FileCopyService::class.java).also { intent ->
+                    bindService(intent, connection, Context.BIND_AUTO_CREATE)
+                }
+            }
         }
-
     }
 
 }
