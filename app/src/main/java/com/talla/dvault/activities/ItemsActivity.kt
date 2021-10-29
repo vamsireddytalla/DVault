@@ -2,10 +2,13 @@ package com.talla.dvault.activities
 
 import android.app.Activity
 import android.app.ActivityManager
+import android.app.Dialog
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
@@ -13,6 +16,7 @@ import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -21,6 +25,9 @@ import androidx.core.graphics.drawable.DrawableCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.RequestManager
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.android.gms.tasks.Task
 import com.talla.dvault.R
 import com.talla.dvault.databinding.ActivityItemsBinding
 import com.talla.dvault.utills.RealPathUtill
@@ -29,6 +36,9 @@ import com.talla.dvault.adapters.FoldersAdapter
 import com.talla.dvault.adapters.ItemsAdapter
 import com.talla.dvault.database.entities.ItemModel
 import com.talla.dvault.database.entities.SourcesModel
+import com.talla.dvault.databinding.CollapsedItemProgressBinding
+import com.talla.dvault.databinding.CopyingFileDialogBinding
+import com.talla.dvault.databinding.CustomDialogProfileBinding
 import com.talla.dvault.interfaces.ItemAdapterClick
 import com.talla.dvault.services.FileCopyService
 import java.text.DecimalFormat
@@ -50,9 +60,14 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
     private var folderName: String = ""
     private var folderId: Int? = null
     private lateinit var itemsAdapter: ItemsAdapter
-    private lateinit var mService: FileCopyService
     private var itemsList: List<ItemModel> = ArrayList()
     private var mBound: Boolean = false
+    private lateinit var dialog: Dialog
+    private var copyProgress: Int = 0
+    private var mbCopied: String = "0/0"
+    private var totalCount: String = "0"
+    private lateinit var copyDialog: CopyingFileDialogBinding
+    private var serviceBinder: FileCopyService? = null
 
     @Inject
     lateinit var glide: RequestManager
@@ -96,6 +111,12 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
                             sourceList.add(sourceModel)
                             startFileCopyService(sourceList)
                         }
+                        if (!mBound) {
+                            // Bind to LocalService
+                            Intent(this, FileCopyService::class.java).also { intent ->
+                                bindService(intent, connection, Context.BIND_AUTO_CREATE)
+                            }
+                        }
                     } else {
                         showSnackBar("No File Selected !")
                     }
@@ -106,6 +127,8 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
 
         binding.plus.setOnClickListener {
             if (!isMyServiceRunning(FileCopyService::class.java)) {
+
+
                 val openFileIntent = Intent()
                 when (catType) {
                     "Img" -> {
@@ -136,7 +159,10 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
                 openFileIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
                 openFileIntent.setAction(Intent.ACTION_GET_CONTENT)
                 res.launch(Intent.createChooser(openFileIntent, "Select Multiple Items"))
+
+
             } else {
+                showFileCopyDialog()
                 showSnackBar("Already files in Processing...")
             }
 
@@ -168,30 +194,31 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
         })
 
         binding.selectAll.setOnClickListener {
-           lifecycleScope.async {
+            lifecycleScope.async {
 
-               FileSize.SelectAll = !FileSize.SelectAll
-               FileSize.OnLongItemClick = FileSize.SelectAll
+                FileSize.SelectAll = !FileSize.SelectAll
+                FileSize.OnLongItemClick = FileSize.SelectAll
 
-               for (itemModel in itemsList) {
-                   itemModel.isSelected = FileSize.SelectAll
-                   if (FileSize.SelectAll) FileSize.selectedItemIds.add(itemModel.itemId) else{
-                       FileSize.selectedItemIds.clear()
-                       withContext(Dispatchers.Main){
-                           binding.plus.visibility=View.VISIBLE
-                           binding.unlock.visibility=View.GONE
-                           binding.selectAll.visibility=View.GONE
-                       }
-                   }
-               }
+                for (itemModel in itemsList) {
+                    itemModel.isSelected = FileSize.SelectAll
+                    if (FileSize.SelectAll) FileSize.selectedItemIds.add(itemModel.itemId) else {
+                        FileSize.selectedItemIds.clear()
+                        withContext(Dispatchers.Main) {
+                            binding.plus.visibility = View.VISIBLE
+                            binding.unlock.visibility = View.GONE
+                            binding.selectAll.visibility = View.GONE
+                        }
+                    }
+                }
 
-               itemsAdapter.setListData(itemsList)
-               Log.d(TAG, "Select ALl Clicked Select All Value  ${FileSize.SelectAll}")
-               Log.d(TAG, "Select ALl Clicked OnLon Value   ${FileSize.OnLongItemClick}")
-               Log.d(TAG, "Select ALl CLicked MyItems Ids ${FileSize.selectedItemIds.toString()}")
-           }
+                itemsAdapter.setListData(itemsList)
+                Log.d(TAG, "Select ALl Clicked Select All Value  ${FileSize.SelectAll}")
+                Log.d(TAG, "Select ALl Clicked OnLon Value   ${FileSize.OnLongItemClick}")
+                Log.d(TAG, "Select ALl CLicked MyItems Ids ${FileSize.selectedItemIds.toString()}")
+            }
 
         }
+
     }
 
     fun startFileCopyService(sourceList: List<SourcesModel>) {
@@ -208,6 +235,23 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
 
     fun showSnackBar(message: String) {
         Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).show()
+    }
+
+    private fun showFileCopyDialog() {
+        dialog = Dialog(this, R.style.ThemeOverlay_MaterialComponents_Dialog)
+        dialog.setCancelable(true)
+        copyDialog = CopyingFileDialogBinding.inflate(layoutInflater)
+        dialog.setContentView(copyDialog.getRoot())
+//        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.show()
+        copyDialog.progressFile.setProgress(copyProgress)
+        copyDialog.totalElapsed.text = mbCopied
+        copyDialog.totalCount.text = totalCount
+
+        copyDialog.cancelFileProcess.setOnClickListener(View.OnClickListener {
+
+            dialog.dismiss()
+        })
     }
 
     fun getFolderNameBasedOnCat(): String {
@@ -284,8 +328,22 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             // We've bound to LocalService, cast the IBinder and get LocalService instance
             val binder = service as FileCopyService.LocalBinder
-            mService = binder.getService()
+            serviceBinder = binder.getService()
             mBound = true
+
+            binder.copyFileCallBack(object : FileCopyService.FileCopyCallback {
+                override fun fileCopyCallBack(progress: Int, mbCount: String, totalItems: String) {
+                    copyProgress = progress
+                    mbCopied = mbCount
+                    totalCount = totalItems
+                    Log.d(TAG, "fileCopyCallBack: $copyProgress")
+                }
+            })
+
+            serviceBinder?.randomNumberLiveData?.observe(this@ItemsActivity, Observer {
+                Log.d(TAG, "onServiceConnected: $it")
+            })
+
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
@@ -294,17 +352,48 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
     }
 
     override fun onItemClick(myItemIdsSet: MutableSet<Int>) {
-        if (FileSize.OnLongItemClick)
-        {
-            binding.plus.visibility=View.GONE
-            binding.unlock.visibility=View.VISIBLE
-            binding.selectAll.visibility=View.VISIBLE
-        }else{
-            binding.plus.visibility=View.VISIBLE
-            binding.unlock.visibility=View.GONE
-            binding.selectAll.visibility=View.GONE
+        if (FileSize.OnLongItemClick) {
+            binding.plus.visibility = View.GONE
+            binding.unlock.visibility = View.VISIBLE
+            binding.selectAll.visibility = View.VISIBLE
+        } else {
+            binding.plus.visibility = View.VISIBLE
+            binding.unlock.visibility = View.GONE
+            binding.selectAll.visibility = View.GONE
         }
         showSnackBar(myItemIdsSet.toString())
+    }
+
+    override fun deleteParticularItem(itemModel: ItemModel) {
+        deleteItem(itemModel)
+    }
+
+    override fun unlockParticularItem(itemModel: ItemModel) {
+        lifecycleScope.async {
+            var fromLoc = File(itemModel.itemCurrentPath)
+            var toLoc = File(itemModel.itemOriPath)
+            fromLoc.renameTo(toLoc)
+            var file = File(itemModel.itemCurrentPath)
+            if (file.exists()) {
+                var isDeleted = file.delete()
+                if (isDeleted) viewModel.deleteItem(itemModel)
+            }
+        }
+    }
+
+    fun deleteItem(itemModel: ItemModel) {
+        runBlocking {
+            viewModel.deleteItem(itemModel)
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        if (mBound) {
+            unbindService(connection)
+            mBound = false
+        }
+
     }
 
 }

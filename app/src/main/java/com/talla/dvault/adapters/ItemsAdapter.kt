@@ -24,6 +24,7 @@ import com.talla.dvault.viewmodels.ItemViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import android.graphics.drawable.GradientDrawable
+import android.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import com.talla.dvault.utills.FileSize
@@ -161,7 +162,23 @@ class ItemsAdapter(
                 item.alpha = 0.8F
             }
             Log.d(TAG, "onBindViewHolder: Called")
+
+            threeDots.setOnClickListener{
+                val popupMenu = PopupMenu(mContext, threeDots)
+                popupMenu.inflate(R.menu.item_menu)
+                popupMenu.setOnMenuItemClickListener { menuItem ->
+                    when (menuItem.itemId) {
+                        R.id.delete -> onclickListner.deleteParticularItem(itemObj)
+                    }
+                    false
+                }
+                popupMenu.show()
+            }
+
+
         }
+
+
 
     }
 

@@ -11,6 +11,7 @@ import com.talla.dvault.repositories.VaultRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import java.io.File
 import javax.inject.Inject
 
 private const val TAG = "ItemViewModel"
@@ -52,6 +53,18 @@ class ItemViewModel @Inject constructor(private val repository:VaultRepository) 
     {
         itemsMutableLiveData=repository.getItemsBasedOnCatType(catType)
         return itemsMutableLiveData
+    }
+
+
+    suspend fun deleteItem(itemModel:ItemModel)
+    {
+        var respo=viewModelScope.async(Dispatchers.Default) {
+            var file=File(itemModel.itemCurrentPath)
+            if (file.exists()){
+                var isDeleted=file.delete()
+                if (isDeleted) repository.deleteItem(itemModel.itemId)
+            }
+        }
     }
 
 

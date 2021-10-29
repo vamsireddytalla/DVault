@@ -65,7 +65,9 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".services.FileCopyService"/>
+        <service android:name=".services.FileCopyService"
+            android:exported="true"
+            android:enabled="true"/>
 
         <receiver android:name=".BroadcastReceiver.FIleProcessingReceiver"/>
 

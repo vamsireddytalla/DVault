@@ -87,4 +87,7 @@ interface DVaultDao
     @Query("Select * from ItemModel Where itemMimeType=:catType")
     fun getItemsBasedOnCatType(catType:String):LiveData<List<ItemModel>>
 
+    @Query("Delete from ItemModel where itemId=:itemId")
+    suspend fun deleteItem(itemId: Int)
+
 }
