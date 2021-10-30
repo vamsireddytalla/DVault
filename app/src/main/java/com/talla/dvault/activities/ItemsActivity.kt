@@ -49,6 +49,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import javax.inject.Inject
 import java.io.*
+import java.lang.Exception
 import javax.xml.transform.Source
 
 private const val TAG = "ItemsActivity"
@@ -64,8 +65,9 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
     private var mBound: Boolean = false
     private lateinit var dialog: Dialog
     private lateinit var binder: FileCopyService.LocalBinder
-    private lateinit var copyDialog: CopyingFileDialogBinding
     private var serviceBinder: FileCopyService? = null
+    private lateinit var copyDialog: CopyingFileDialogBinding
+
 
     @Inject
     lateinit var glide: RequestManager
@@ -80,8 +82,8 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
             catType = bundle.getString(resources.getString(R.string.catType))!!
             folderName = bundle.getString(resources.getString(R.string.folderName))!!
             folderId = bundle.getInt(resources.getString(R.string.folderId))
-            binding.screenTitle.setText(folderName)
-            changeFolderColor(catType!!)
+            binding.screenTitle.text = folderName
+            changeFolderColor(catType)
         }
 
         var res: ActivityResultLauncher<Intent> =
@@ -90,31 +92,26 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
                     var receivedData: Intent? = result.data
                     Log.d(TAG, "onCreate: ${receivedData?.data?.path.toString()}")
                     if (null != receivedData) {
+                        var sourceList = ArrayList<SourcesModel>()
+                        val appPrivatePath: File = this.getDir(folderName, Context.MODE_PRIVATE)
                         if (null != receivedData.clipData) {
-                            var itemsList = ArrayList<ItemModel>()
-                            var sourceModelList = ArrayList<SourcesModel>()
                             for (i in 0 until receivedData.clipData!!.itemCount) {
                                 val uri = receivedData.clipData!!.getItemAt(i).uri
-                                var sourceModel: SourcesModel =
-                                    SourcesModel(uri.toString(), folderId!!, catType)
-                                sourceModelList.add(sourceModel)
+                                var sourceModel = SourcesModel(uri.toString(), folderId!!, catType)
+                                sourceList.add(sourceModel)
 
                             }
-                            startFileCopyService(sourceModelList)
                         } else {
                             val uri: Uri? = receivedData.data
-                            var sourceList = ArrayList<SourcesModel>()
-                            var sourceModel: SourcesModel =
-                                SourcesModel(uri.toString(), folderId!!, catType)
+                            var sourceModel = SourcesModel(uri.toString(), folderId!!, catType)
                             sourceList.add(sourceModel)
-                            startFileCopyService(sourceList)
                         }
-                        if (!mBound) {
-                            // Bind to LocalService
-                            Intent(this, FileCopyService::class.java).also { intent ->
-                                bindService(intent, connection, Context.BIND_AUTO_CREATE)
-                            }
+                        if (binder != null) {
+                            binder.startFileCopyingService(sourceList)
                         }
+                        //                        else{
+//                            startFileCopyService(sourceList)
+//                        }
 
                     } else {
                         showSnackBar("No File Selected !")
@@ -125,16 +122,16 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
             }
 
         binding.plus.setOnClickListener {
-            if (!isMyServiceRunning(FileCopyService::class.java)) {
+            if (!FileSize.FILE_COPYING) {
 
                 val openFileIntent = Intent()
                 when (catType) {
                     "Img" -> {
-                        openFileIntent.setType("image/*")
+                        openFileIntent.type = "image/*"
                         Log.d(TAG, "Img")
                     }
                     "Aud" -> {
-                        openFileIntent.setType("audio/*")
+                        openFileIntent.type = "audio/*"
                         Log.d(TAG, "Aud")
                     }
                     "Doc" -> {
@@ -145,11 +142,11 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
                             "text/plain"
                         )
                         openFileIntent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes)
-                        openFileIntent.setType("*/*")
+                        openFileIntent.type = "*/*"
                         Log.d(TAG, "Doc")
                     }
                     "Vdo" -> {
-                        openFileIntent.setType("video/*")
+                        openFileIntent.type = "video/*"
                         Log.d(TAG, "Vdo")
                     }
                 }
@@ -178,7 +175,7 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
 
         }
 
-        viewModel.getItemsBasedOnCatType(catType).observe(this, Observer {
+        viewModel.getItemsBasedOnCatType(catType, folderId!!).observe(this, Observer {
             Log.d(TAG, "ItemsActivty Observer")
             if (it.isEmpty()) {
                 binding.nofolderFound.visibility = View.VISIBLE
@@ -219,12 +216,16 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
 
         }
 
+        binding.unlock.setOnClickListener {
+
+        }
+
     }
 
     fun startFileCopyService(sourceList: List<SourcesModel>) {
         var fileService = Intent(this@ItemsActivity, FileCopyService::class.java)
         fileService.putExtra(getString(R.string.fileCopy), sourceList as Serializable)
-        fileService.action = "ACTION_START_FOREGROUND_SERVICE"
+        fileService.action = FileSize.ACTION_START_FOREGROUND_SERVICE
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(fileService)
         } else {
@@ -255,19 +256,18 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
             override fun fileCopyCallBack(
                 progress: Int,
                 mbCount: String,
-                totalItems: String,
-                isBinded: Boolean
+                totalItems: String
             ) {
-                Log.d(TAG, "fileCopyCallBack: $progress $mbCount $totalItems $isBinded")
-                mBound = isBinded
-                if (!isBinded) {
-                    unbindService(connection)
+                Log.d(TAG, "fileCopyCallBack: $progress $mbCount $totalItems")
+                mBound = true
+                if (!FileSize.FILE_COPYING) {
                     dialog.dismiss()
                 }
                 lifecycleScope.launch(Dispatchers.Main) {
                     copyDialog.progressFile.progress = progress
                     copyDialog.totalElapsed.text = mbCount
                     copyDialog.totalCount.text = totalItems
+                    if (mbCount == "Completed") dialog.dismiss()
                 }
             }
         })
@@ -275,7 +275,6 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
         dialog.show()
 
     }
-
 
     fun getFolderNameBasedOnCat(): String {
         var folderName: String? = null
@@ -352,7 +351,7 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
             // We've bound to LocalService, cast the IBinder and get LocalService instance
             binder = service as FileCopyService.LocalBinder
             serviceBinder = binder.getService()
-            showFileCopyDialog()
+            mBound = true
             serviceBinder?.randomNumberLiveData?.observe(this@ItemsActivity, Observer {
                 Log.d(TAG, "onServiceConnected: $it")
             })
@@ -397,19 +396,24 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
     }
 
     fun deleteItem(itemModel: ItemModel) {
+        Log.d(TAG, "deleteItem: ${itemModel.toString()}")
         runBlocking {
-            viewModel.deleteItem(itemModel)
+            try {
+                viewModel.deleteItem(itemModel)
+            }catch (e:Exception){
+                e.printStackTrace()
+                Log.d(TAG, "deleteItem: ${e.message}")
+            }
         }
     }
 
     override fun onStart() {
         super.onStart()
-        if (isMyServiceRunning(FileCopyService::class.java)) {
-            if (!mBound) {
-                // Bind to LocalService
-                Intent(this, FileCopyService::class.java).also { intent ->
-                    bindService(intent, connection, Context.BIND_AUTO_CREATE)
-                }
+
+        if (!mBound) {
+            // Bind to LocalService
+            Intent(this, FileCopyService::class.java).also { intent ->
+                bindService(intent, connection, Context.BIND_AUTO_CREATE)
             }
         }
     }

@@ -49,9 +49,9 @@ class ItemViewModel @Inject constructor(private val repository:VaultRepository) 
     }
 
 
-    fun getItemsBasedOnCatType(catType:String):LiveData<List<ItemModel>>
+    fun getItemsBasedOnCatType(catType:String,folderId:Int):LiveData<List<ItemModel>>
     {
-        itemsMutableLiveData=repository.getItemsBasedOnCatType(catType)
+        itemsMutableLiveData=repository.getItemsBasedOnCatType(catType,folderId)
         return itemsMutableLiveData
     }
 
@@ -63,6 +63,8 @@ class ItemViewModel @Inject constructor(private val repository:VaultRepository) 
             if (file.exists()){
                 var isDeleted=file.delete()
                 if (isDeleted) repository.deleteItem(itemModel.itemId)
+            }else{
+              repository.deleteItem(itemModel.itemId)
             }
         }
     }

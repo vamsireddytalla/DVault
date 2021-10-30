@@ -24,7 +24,8 @@
         android:theme="@style/Theme.DVault.LightMode">
         <activity
             android:name=".activities.ItemsActivity"
-            android:exported="true" />
+            android:exported="true"
+            android:hardwareAccelerated="true" />
         <activity
             android:name=".activities.FoldersActivity"
             android:exported="true" />
@@ -65,9 +66,7 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".services.FileCopyService"
-            android:exported="true"
-            android:enabled="true"/>
+        <service android:name=".services.FileCopyService" />
 
         <receiver android:name=".BroadcastReceiver.FIleProcessingReceiver"/>
 

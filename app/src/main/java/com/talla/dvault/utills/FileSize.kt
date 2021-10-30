@@ -15,6 +15,11 @@ object FileSize {
     var OnLongItemClick:Boolean=false
     var SelectAll:Boolean=false
     var selectedItemIds: MutableSet<Int> = mutableSetOf<Int>()
+    const val ACTION_START_FOREGROUND_SERVICE = "ACTION_START_FOREGROUND_SERVICE"
+    const val ACTION_STOP_FOREGROUND_SERVICE = "ACTION_STOP_FOREGROUND_SERVICE"
+    const val FILE_NOTIFY_ID = 100
+    const val UNLOCK_FILE_NOTIFY_ID = 99
+    var FILE_COPYING:Boolean = false
 
     fun bytesToHuman(size: Long): String? {
         val Kb = (1 * 1024).toLong()
