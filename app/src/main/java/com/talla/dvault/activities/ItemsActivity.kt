@@ -7,8 +7,6 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
@@ -25,24 +23,15 @@ import androidx.core.graphics.drawable.DrawableCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.RequestManager
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.tasks.OnCompleteListener
-import com.google.android.gms.tasks.Task
 import com.talla.dvault.R
 import com.talla.dvault.databinding.ActivityItemsBinding
-import com.talla.dvault.utills.RealPathUtill
 import com.google.android.material.snackbar.Snackbar
-import com.talla.dvault.adapters.FoldersAdapter
 import com.talla.dvault.adapters.ItemsAdapter
 import com.talla.dvault.database.entities.ItemModel
 import com.talla.dvault.database.entities.SourcesModel
-import com.talla.dvault.databinding.CollapsedItemProgressBinding
 import com.talla.dvault.databinding.CopyingFileDialogBinding
-import com.talla.dvault.databinding.CustomDialogProfileBinding
 import com.talla.dvault.interfaces.ItemAdapterClick
 import com.talla.dvault.services.FileCopyService
-import java.text.DecimalFormat
-import com.talla.dvault.utills.DateUtills
 import com.talla.dvault.utills.FileSize
 import com.talla.dvault.viewmodels.ItemViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -50,7 +39,6 @@ import kotlinx.coroutines.*
 import javax.inject.Inject
 import java.io.*
 import java.lang.Exception
-import javax.xml.transform.Source
 
 private const val TAG = "ItemsActivity"
 
@@ -62,9 +50,9 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
     private var folderId: Int? = null
     private lateinit var itemsAdapter: ItemsAdapter
     private var itemsList: List<ItemModel> = ArrayList()
-    private var mBound: Boolean = false
+//    private var mBound: Boolean = false
     private lateinit var dialog: Dialog
-    private lateinit var binder: FileCopyService.LocalBinder
+    private var binder: FileCopyService.LocalBinder?=null
     private var serviceBinder: FileCopyService? = null
     private lateinit var copyDialog: CopyingFileDialogBinding
 
@@ -106,9 +94,9 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
                             var sourceModel = SourcesModel(uri.toString(), folderId!!, catType)
                             sourceList.add(sourceModel)
                         }
-                        if (binder != null) {
-                            binder.startFileCopyingService(sourceList)
-                        }
+
+                        binder?.startFileCopyingService(sourceList)
+
                         //                        else{
 //                            startFileCopyService(sourceList)
 //                        }
@@ -158,9 +146,7 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
 
             } else {
                 showSnackBar("Already files in Processing...")
-                if (mBound) {
-                    showFileCopyDialog()
-                }
+                binder?.let { showFileCopyDialog() }
             }
 
         }
@@ -198,8 +184,8 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
 
                 for (itemModel in itemsList) {
                     itemModel.isSelected = FileSize.SelectAll
-                    if (FileSize.SelectAll) FileSize.selectedItemIds.add(itemModel.itemId) else {
-                        FileSize.selectedItemIds.clear()
+                    if (FileSize.SelectAll) FileSize.selectedUnlockItems.add(itemModel) else {
+                        FileSize.selectedUnlockItems.clear()
                         withContext(Dispatchers.Main) {
                             binding.plus.visibility = View.VISIBLE
                             binding.unlock.visibility = View.GONE
@@ -211,13 +197,16 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
                 itemsAdapter.setListData(itemsList)
                 Log.d(TAG, "Select ALl Clicked Select All Value  ${FileSize.SelectAll}")
                 Log.d(TAG, "Select ALl Clicked OnLon Value   ${FileSize.OnLongItemClick}")
-                Log.d(TAG, "Select ALl CLicked MyItems Ids ${FileSize.selectedItemIds.toString()}")
+                Log.d(
+                    TAG,
+                    "Select ALl CLicked MyItems Ids ${FileSize.selectedUnlockItems.toString()}"
+                )
             }
 
         }
 
         binding.unlock.setOnClickListener {
-
+            binder?.unlockFilesService(FileSize.selectedUnlockItems)
         }
 
     }
@@ -247,19 +236,13 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
 
         copyDialog.cancelFileProcess.setOnClickListener(View.OnClickListener {
             serviceBinder?.stopServiceAndUnBind()
-            mBound = false
             dialog.dismiss()
         })
 
-        binder.copyFileCallBack(object : FileCopyService.FileCopyCallback {
+        binder?.copyFileCallBack(object : FileCopyService.FileCopyCallback {
 
-            override fun fileCopyCallBack(
-                progress: Int,
-                mbCount: String,
-                totalItems: String
-            ) {
+            override fun fileCopyCallBack(progress: Int, mbCount: String, totalItems: String) {
                 Log.d(TAG, "fileCopyCallBack: $progress $mbCount $totalItems")
-                mBound = true
                 if (!FileSize.FILE_COPYING) {
                     dialog.dismiss()
                 }
@@ -269,6 +252,10 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
                     copyDialog.totalCount.text = totalItems
                     if (mbCount == "Completed") dialog.dismiss()
                 }
+            }
+
+            override fun fileUnlockingCallBack(progress: Int, mbCount: String, totalItems: String) {
+                Log.d(TAG, "fileUnlockingCallBack : $progress $mbCount $totalItems")
             }
         })
 
@@ -350,8 +337,7 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             // We've bound to LocalService, cast the IBinder and get LocalService instance
             binder = service as FileCopyService.LocalBinder
-            serviceBinder = binder.getService()
-            mBound = true
+            serviceBinder = binder?.getService()
             serviceBinder?.randomNumberLiveData?.observe(this@ItemsActivity, Observer {
                 Log.d(TAG, "onServiceConnected: $it")
             })
@@ -359,13 +345,12 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
-            mBound = false
             serviceBinder = null
             Log.d(TAG, "onServiceDisconnected: Called")
         }
     }
 
-    override fun onItemClick(myItemIdsSet: MutableSet<Int>) {
+    override fun onItemClick(myItemIdsSet: MutableSet<ItemModel>) {
         if (FileSize.OnLongItemClick) {
             binding.plus.visibility = View.GONE
             binding.unlock.visibility = View.VISIBLE
@@ -400,7 +385,7 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
         runBlocking {
             try {
                 viewModel.deleteItem(itemModel)
-            }catch (e:Exception){
+            } catch (e: Exception) {
                 e.printStackTrace()
                 Log.d(TAG, "deleteItem: ${e.message}")
             }
@@ -410,7 +395,7 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
     override fun onStart() {
         super.onStart()
 
-        if (!mBound) {
+        if (binder==null) {
             // Bind to LocalService
             Intent(this, FileCopyService::class.java).also { intent ->
                 bindService(intent, connection, Context.BIND_AUTO_CREATE)

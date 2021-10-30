@@ -61,9 +61,9 @@ class FileCopyService : Service() {
     private lateinit var notification: Notification
     private lateinit var builder: NotificationCompat.Builder
     private var job: Job? = null
-    private var totalItemsDone: Int = 1
     private var sourceModelList: ArrayList<SourcesModel>? = null
     private var isInterrupted: Boolean? = false
+    private var UNLOCK_INTERRUPT: Boolean? = false
 
     val randomNumberLiveData: MutableLiveData<Int> = MutableLiveData()
     private val binder: IBinder = LocalBinder()
@@ -89,19 +89,21 @@ class FileCopyService : Service() {
                     createNotification()
                     if (intent.extras != null) {
                         sourceModelList?.clear()
-                        sourceModelList =
-                            intent.getSerializableExtra(this.resources.getString(R.string.fileCopy)) as ArrayList<SourcesModel>
+                        sourceModelList = intent.getSerializableExtra(this.resources.getString(R.string.fileCopy)) as ArrayList<SourcesModel>
                         Log.d(TAG, "Hash Code -> : ${sourceModelList.hashCode()}")
                         isInterrupted=false
                         job = GlobalScope.launch(Dispatchers.IO) {
-                            sourceModelList?.forEach { sourceModel ->
-                                try {
-                                    var itemModel = fromUriGetRealPath(sourceModel)
-                                    repository.insertSingleItem(itemModel)
-                                } catch (e: Exception) {
-                                    Log.d(TAG, "onStartCommand: ${e.message}")
-                                }
-
+                            sourceModelList?.let { sourceModel ->
+                               for ((index,source) in sourceModel.withIndex()){
+                                   try {
+                                       var itemModel = fromUriGetRealPath(source,index)
+                                      if (!isInterrupted!!){
+                                          repository.insertSingleItem(itemModel)
+                                      }
+                                   } catch (e: Exception) {
+                                       Log.d(TAG, "onStartCommand: ${e.message}")
+                                   }
+                            }
                             }
                             fileCopyCallBack?.fileCopyCallBack(0, "Completed", "")
                             FileSize.FILE_COPYING = false
@@ -113,14 +115,25 @@ class FileCopyService : Service() {
                 FileSize.ACTION_STOP_FOREGROUND_SERVICE -> {
                     Log.d(TAG, "onStartCommand: Stopped Foreground Service")
                     job?.let {
-                        it.cancel()
                         isInterrupted = true
                     }
                     fileCopyCallBack?.fileCopyCallBack(0, "Cancelled", "0/0")
-//                    stopForegroundService()
                     FileSize.FILE_COPYING = false
                     this.stopForeground(false)
                     notificationManager.cancel(FileSize.FILE_NOTIFY_ID)
+                }
+                FileSize.ACTION_UNLOCK_START_FOREGROUND_SERVICE->{
+
+                }
+                FileSize.ACTION_UNLOCK_STOP_FOREGROUND_SERVICE->{
+                    Log.d(TAG, "onStartCommand: Stopped Foreground Service of Unlocking Files")
+                    job?.let {
+                        UNLOCK_INTERRUPT = true
+                    }
+                    fileCopyCallBack?.fileUnlockingCallBack(0, "Cancelled", "0/0")
+                    FileSize.UNLOCK_FILE_COPYING = false
+                    this.stopForeground(false)
+                    notificationManager.cancel(FileSize.UNLOCK_FILE_NOTIFY_ID)
                 }
             }
         }
@@ -157,6 +170,14 @@ class FileCopyService : Service() {
             clickIntent.action = FileSize.ACTION_START_FOREGROUND_SERVICE
             clickIntent.putExtra(getString(R.string.fileCopy), sourceItemList as Serializable)
             Log.d(TAG, "startFileCopyingService: ${sourceModelList?.size}")
+            startService(clickIntent)
+        }
+
+        fun unlockFilesService(itemModelList: MutableSet<ItemModel>){
+            var clickIntent = Intent(this@FileCopyService, FileCopyService::class.java)
+            clickIntent.action = FileSize.ACTION_UNLOCK_START_FOREGROUND_SERVICE
+            clickIntent.putExtra(getString(R.string.fileCopy), itemModelList as Serializable)
+            Log.d(TAG, "Start UnlockingFile Service : ${sourceModelList?.size}")
             startService(clickIntent)
         }
 
@@ -254,7 +275,7 @@ class FileCopyService : Service() {
         oldFileLoc: String,
         fileName: String,
         catFolderName: String,
-        contentUri: Uri
+        contentUri: Uri,itemNo:Int
     ): String {
 
         val newdir: File = this.getDir(catFolderName, Context.MODE_PRIVATE) //Don't do
@@ -272,7 +293,7 @@ class FileCopyService : Service() {
             val outStream: OutputStream = FileOutputStream(to)
 
             val lenghtOfFile: Int = inStream.available()
-            val buf = ByteArray(1024*1024)
+            val buf = ByteArray(1024*8)
             var len: Int
             var total: Long = 0
             var fileTotalSize = getFileSize(from)
@@ -286,7 +307,7 @@ class FileCopyService : Service() {
                 updateNotification(
                     bytes,
                     res + " / " + fileTotalSize.toString(),
-                    totalItemsDone.toString() + "/" + totalItemsList
+                    itemNo.toString() + "/" + totalItemsList
                 )
                 if (isInterrupted!!) {
                     break
@@ -305,7 +326,6 @@ class FileCopyService : Service() {
 //                    this.contentResolver.notifyChange(contentUri, null)
 //                }
             }
-            totalItemsDone += 1
             inStream.close()
             outStream.flush()
             outStream.close()
@@ -331,7 +351,7 @@ class FileCopyService : Service() {
         return !file.exists()
     }
 
-    private fun fromUriGetRealPath(sourcesModel: SourcesModel): ItemModel {
+    private fun fromUriGetRealPath(sourcesModel: SourcesModel,itemNo:Int): ItemModel {
         val fileRealPath: String? = RealPathUtill.getRealPath(this, sourcesModel.source.toUri())
         var file = File(fileRealPath)
         var filesize = getFileSize(file)
@@ -341,7 +361,7 @@ class FileCopyService : Service() {
             fileRealPath.toString(),
             file.name,
             sourcesModel.catType,
-            sourcesModel.source.toUri())
+            sourcesModel.source.toUri(),itemNo)
         Log.d(TAG, "File New Path : ${newFilePath}")
 
         return ItemModel(
@@ -384,6 +404,8 @@ class FileCopyService : Service() {
 
     interface FileCopyCallback {
         fun fileCopyCallBack(progress: Int, mbCount: String, totalItems: String)
+
+        fun fileUnlockingCallBack(progress: Int, mbCount: String, totalItems: String)
     }
 
     override fun onDestroy() {

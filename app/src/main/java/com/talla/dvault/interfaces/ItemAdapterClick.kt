@@ -4,7 +4,7 @@ import com.talla.dvault.database.entities.ItemModel
 
 interface ItemAdapterClick
 {
-    fun onItemClick(myItemIdsSet: MutableSet<Int>)
+    fun onItemClick(myItemIdsSet: MutableSet<ItemModel>)
 
     fun deleteParticularItem(itemModel:ItemModel)
 

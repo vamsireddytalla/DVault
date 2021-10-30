@@ -54,19 +54,19 @@ class ItemsAdapter(
                     var obj: ItemModel = itemModelList.get(itemPosition)
                     if (obj.isSelected) {
                         obj.isSelected = false
-                        FileSize.selectedItemIds.remove(obj.itemId)
+                        FileSize.selectedUnlockItems.remove(obj)
                     } else {
                         obj.isSelected = true
-                        FileSize.selectedItemIds.add(obj.itemId)
+                        FileSize.selectedUnlockItems.add(obj)
                     }
 
-                    if (FileSize.selectedItemIds.size == 0) {
+                    if (FileSize.selectedUnlockItems.size == 0) {
                         FileSize.OnLongItemClick = false
                         FileSize.SelectAll = false
                     }
 
                     notifyItemChanged(itemPosition, obj)
-                    onclickListner.onItemClick(FileSize.selectedItemIds)
+                    onclickListner.onItemClick(FileSize.selectedUnlockItems)
 
                     return true
                 }
@@ -79,19 +79,19 @@ class ItemsAdapter(
                     var obj: ItemModel = itemModelList.get(itemPosition)
                     if (obj.isSelected) {
                         obj.isSelected = false
-                        FileSize.selectedItemIds.remove(obj.itemId)
+                        FileSize.selectedUnlockItems.remove(obj)
                     } else {
                         obj.isSelected = true
-                        FileSize.selectedItemIds.add(obj.itemId)
+                        FileSize.selectedUnlockItems.add(obj)
                     }
 
-                    if (FileSize.selectedItemIds.size == 0) {
+                    if (FileSize.selectedUnlockItems.size == 0) {
                         FileSize.OnLongItemClick = false
                         FileSize.SelectAll = false
                     }
 
                     notifyItemChanged(itemPosition, obj)
-                    onclickListner.onItemClick(FileSize.selectedItemIds)
+                    onclickListner.onItemClick(FileSize.selectedUnlockItems)
 
                 }
             }
