@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import java.io.Serializable
 
 @Entity
 data class ItemModel(
@@ -17,7 +18,7 @@ data class ItemModel(
     val itemCurrentPath:String="",
     val serverId:String="",
     val folderId:String=""
-){
+):Serializable{
     @Ignore
     var isSelected:Boolean=false
 }

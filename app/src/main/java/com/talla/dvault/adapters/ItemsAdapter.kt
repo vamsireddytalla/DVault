@@ -60,7 +60,7 @@ class ItemsAdapter(
                         FileSize.selectedUnlockItems.add(obj)
                     }
 
-                    if (FileSize.selectedUnlockItems.size == 0) {
+                    if (FileSize.selectedUnlockItems.isEmpty()) {
                         FileSize.OnLongItemClick = false
                         FileSize.SelectAll = false
                     }
@@ -85,7 +85,7 @@ class ItemsAdapter(
                         FileSize.selectedUnlockItems.add(obj)
                     }
 
-                    if (FileSize.selectedUnlockItems.size == 0) {
+                    if (FileSize.selectedUnlockItems.isEmpty()) {
                         FileSize.OnLongItemClick = false
                         FileSize.SelectAll = false
                     }

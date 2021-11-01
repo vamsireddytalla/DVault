@@ -16,7 +16,7 @@
         android:layout_marginTop="10dp"
         android:fontFamily="@font/poppins_regular"
         android:includeFontPadding="false"
-        android:text="Adding to Vault"
+        android:text="D-Vault Initializing"
         android:textAppearance="@style/TextAppearance.AppCompat.Small"
         android:textColor="@color/hello_color" />
 

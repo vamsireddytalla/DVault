@@ -50,8 +50,6 @@ import androidx.core.app.NotificationCompat.PRIORITY_MIN
 
 
 private const val TAG = "FileCopyService"
-private const val CHANNEl_ID = "101"
-private const val CHANNEL_NAME = "FILE_PROCESSING_NOTIFICATION"
 
 @AndroidEntryPoint
 class FileCopyService : Service() {
@@ -60,8 +58,10 @@ class FileCopyService : Service() {
     private lateinit var notificationManager: NotificationManager
     private lateinit var notification: Notification
     private lateinit var builder: NotificationCompat.Builder
-    private var job: Job? = null
+    private var lockJob: Job? = null
+    private var unlockJob: Job? = null
     private var sourceModelList: ArrayList<SourcesModel>? = null
+    private var itemModelList: MutableSet<ItemModel>? = null
     private var isInterrupted: Boolean? = false
     private var UNLOCK_INTERRUPT: Boolean? = false
 
@@ -86,24 +86,31 @@ class FileCopyService : Service() {
             val action = intent.action
             when (action) {
                 FileSize.ACTION_START_FOREGROUND_SERVICE -> {
-                    createNotification()
                     if (intent.extras != null) {
+                        Log.d(TAG, "onStartCommand: ACTION_START_FOREGROUND_SERVICE")
                         sourceModelList?.clear()
-                        sourceModelList = intent.getSerializableExtra(this.resources.getString(R.string.fileCopy)) as ArrayList<SourcesModel>
+                        sourceModelList =
+                            intent.getSerializableExtra(this.resources.getString(R.string.fileCopy)) as ArrayList<SourcesModel>
                         Log.d(TAG, "Hash Code -> : ${sourceModelList.hashCode()}")
-                        isInterrupted=false
-                        job = GlobalScope.launch(Dispatchers.IO) {
+                        isInterrupted = false
+                        createNotification(
+                            FileSize.FILE_ADD_CHANNEl_ID,
+                            FileSize.FILE_ADD_CHANNEL_NAME,
+                            FileSize.FILE_NOTIFY_ID,
+                            FileSize.ACTION_STOP_FOREGROUND_SERVICE
+                        )
+                        lockJob = GlobalScope.launch(Dispatchers.IO) {
                             sourceModelList?.let { sourceModel ->
-                               for ((index,source) in sourceModel.withIndex()){
-                                   try {
-                                       var itemModel = fromUriGetRealPath(source,index)
-                                      if (!isInterrupted!!){
-                                          repository.insertSingleItem(itemModel)
-                                      }
-                                   } catch (e: Exception) {
-                                       Log.d(TAG, "onStartCommand: ${e.message}")
-                                   }
-                            }
+                                for ((index, source) in sourceModel.withIndex()) {
+                                    try {
+                                        var itemModel = fromUriGetRealPath(source, index)
+                                        if (!isInterrupted!!) {
+                                            repository.insertSingleItem(itemModel)
+                                        }
+                                    } catch (e: Exception) {
+                                        Log.d(TAG, "onStartCommand: ${e.message}")
+                                    }
+                                }
                             }
                             fileCopyCallBack?.fileCopyCallBack(0, "Completed", "")
                             FileSize.FILE_COPYING = false
@@ -113,8 +120,8 @@ class FileCopyService : Service() {
                     }
                 }
                 FileSize.ACTION_STOP_FOREGROUND_SERVICE -> {
-                    Log.d(TAG, "onStartCommand: Stopped Foreground Service")
-                    job?.let {
+                    Log.d(TAG, "onStartCommand: ACTION_STOP_FOREGROUND_SERVICE")
+                    lockJob?.let {
                         isInterrupted = true
                     }
                     fileCopyCallBack?.fileCopyCallBack(0, "Cancelled", "0/0")
@@ -122,12 +129,51 @@ class FileCopyService : Service() {
                     this.stopForeground(false)
                     notificationManager.cancel(FileSize.FILE_NOTIFY_ID)
                 }
-                FileSize.ACTION_UNLOCK_START_FOREGROUND_SERVICE->{
-
+                FileSize.ACTION_UNLOCK_START_FOREGROUND_SERVICE -> {
+                    Log.d(TAG, "onStartCommand: ACTION_UNLOCK_START_FOREGROUND_SERVICE")
+                    if (intent.extras != null) {
+                        itemModelList?.clear()
+                        itemModelList =
+                            intent.getSerializableExtra(this.resources.getString(R.string.unlockedList)) as MutableSet<ItemModel>
+                        Log.d(TAG, "Hash Code -> : ${itemModelList.hashCode()}")
+                        UNLOCK_INTERRUPT = false
+                        createNotification(
+                            FileSize.FILE_UNLOCK_CHANNEl_ID,
+                            FileSize.FILE_UNLOCK_CHANNEL_NAME,
+                            FileSize.UNLOCK_FILE_NOTIFY_ID,
+                            FileSize.ACTION_UNLOCK_STOP_FOREGROUND_SERVICE
+                        )
+                        unlockJob = GlobalScope.launch(Dispatchers.IO) {
+                            itemModelList?.let { itemModel ->
+                                for ((index, source) in itemModel.withIndex()) {
+                                    try {
+                                        Log.d(
+                                            TAG,
+                                            "onStartCommand: Action Unlock  ${itemModel.size}"
+                                        )
+                                        unlockingFile(
+                                            source.itemCurrentPath,
+                                            source.itemName,
+                                            index
+                                        )
+                                        if (!UNLOCK_INTERRUPT!!) {
+                                            repository.deleteItem(source.itemId)
+                                        }
+                                    } catch (e: Exception) {
+                                        Log.d(TAG, "onStartCommand: ${e.message}")
+                                    }
+                                }
+                            }
+                            fileCopyCallBack?.fileUnlockingCallBack(0, "Completed", "")
+                            FileSize.UNLOCK_FILE_COPYING = false
+                            stopForeground(false)
+                            notificationManager.cancel(FileSize.UNLOCK_FILE_NOTIFY_ID)
+                        }
+                    }
                 }
-                FileSize.ACTION_UNLOCK_STOP_FOREGROUND_SERVICE->{
-                    Log.d(TAG, "onStartCommand: Stopped Foreground Service of Unlocking Files")
-                    job?.let {
+                FileSize.ACTION_UNLOCK_STOP_FOREGROUND_SERVICE -> {
+                    Log.d(TAG, "onStartCommand: ACTION_UNLOCK_STOP_FOREGROUND_SERVICE")
+                    unlockJob?.let {
                         UNLOCK_INTERRUPT = true
                     }
                     fileCopyCallBack?.fileUnlockingCallBack(0, "Cancelled", "0/0")
@@ -165,6 +211,7 @@ class FileCopyService : Service() {
             fileCopyCallBack = callback
         }
 
+
         fun startFileCopyingService(sourceItemList: List<SourcesModel>) {
             var clickIntent = Intent(this@FileCopyService, FileCopyService::class.java)
             clickIntent.action = FileSize.ACTION_START_FOREGROUND_SERVICE
@@ -173,12 +220,23 @@ class FileCopyService : Service() {
             startService(clickIntent)
         }
 
-        fun unlockFilesService(itemModelList: MutableSet<ItemModel>){
-            var clickIntent = Intent(this@FileCopyService, FileCopyService::class.java)
-            clickIntent.action = FileSize.ACTION_UNLOCK_START_FOREGROUND_SERVICE
-            clickIntent.putExtra(getString(R.string.fileCopy), itemModelList as Serializable)
-            Log.d(TAG, "Start UnlockingFile Service : ${sourceModelList?.size}")
-            startService(clickIntent)
+        fun stopFileProcessing(flagType: String) {
+
+            var unLockIntent = Intent(this@FileCopyService, FileCopyService::class.java)
+            if (flagType == "Unlock") {
+                unLockIntent.action = FileSize.ACTION_UNLOCK_STOP_FOREGROUND_SERVICE
+            } else {
+                unLockIntent.action = FileSize.ACTION_STOP_FOREGROUND_SERVICE
+            }
+            startService(unLockIntent)
+        }
+
+        fun unlockFilesService(itemModelList: MutableSet<ItemModel>) {
+            var unLockIntent = Intent(this@FileCopyService, FileCopyService::class.java)
+            unLockIntent.action = FileSize.ACTION_UNLOCK_START_FOREGROUND_SERVICE
+            unLockIntent.putExtra(getString(R.string.unlockedList), itemModelList as Serializable)
+            Log.d(TAG, "Start UnlockingFile Service : ${itemModelList.size}")
+            startService(unLockIntent)
         }
 
     }
@@ -195,12 +253,16 @@ class FileCopyService : Service() {
     }
 
     @SuppressLint("RemoteViewLayout")
-    private fun createNotification() {
+    private fun createNotification(
+        channelId: String,
+        channelName: String,
+        file_notify_id: Int,
+        cancelAction: String
+    ) {
         Log.d(TAG, "createNotification: Called")
-        var channelId: String? = null
         //createNotificationChannel
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            channelId = createNotificationChannel(CHANNEl_ID, CHANNEL_NAME)
+            createNotificationChannel(channelId, channelName)
         }
         // Create notification default intent.
         val intent = Intent()
@@ -213,13 +275,13 @@ class FileCopyService : Service() {
 //        val notificationLayoutExpanded = RemoteViews(packageName, R.layout.notification_large)
 
         var clickIntent = Intent(this, FileCopyService::class.java)
-        clickIntent.action = FileSize.ACTION_STOP_FOREGROUND_SERVICE;
+        clickIntent.action = cancelAction
         var filePendingIntent =
             PendingIntent.getService(this, 0, clickIntent, PendingIntent.FLAG_UPDATE_CURRENT)
         notificationLayout.setOnClickPendingIntent(R.id.cancelFileProcess, filePendingIntent)
 
         // Create notification builder.
-        builder = NotificationCompat.Builder(this, channelId.toString())
+        builder = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.drawable.notification_icon)
             .setStyle(NotificationCompat.DecoratedCustomViewStyle())
             .setCustomContentView(notificationLayout)
@@ -233,7 +295,7 @@ class FileCopyService : Service() {
 
         // Build the notification.
         notification = builder.build()
-        startForeground(FileSize.FILE_NOTIFY_ID, notification)
+        startForeground(file_notify_id, notification)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -247,7 +309,12 @@ class FileCopyService : Service() {
     }
 
     // use this method to update the Notification's UI
-    private fun updateNotification(progress: Int, mbCopied: String, totalCount: String) {
+    private fun updateNotification(
+        progress: Int,
+        mbCopied: String,
+        totalCount: String,
+        flag: String
+    ) {
         val api = Build.VERSION.SDK_INT
         // update the icon
         notificationLayout.setProgressBar(R.id.progressFile, 100, progress, false)
@@ -261,13 +328,30 @@ class FileCopyService : Service() {
             totalCount
         )
         randomNumberLiveData.postValue(progress)
-        fileCopyCallBack?.fileCopyCallBack(progress, mbCopied, totalCount)
-        // update the notification
-        if (api < VERSION_CODES.HONEYCOMB) {
-            notificationManager.notify(FileSize.FILE_NOTIFY_ID, notification)
-        } else if (api >= VERSION_CODES.HONEYCOMB) {
-            notificationManager.notify(FileSize.FILE_NOTIFY_ID, builder.build())
+        if (flag == "Unlock") {
+            fileCopyCallBack?.fileUnlockingCallBack(progress, mbCopied, totalCount)
+            notificationLayout.setTextViewText(
+                R.id.addingVaultTitle,
+                "Unlocking Files to \n/storage/emulated/0/Download"
+            )
+            // update the notification
+            if (api < VERSION_CODES.HONEYCOMB) {
+                notificationManager.notify(FileSize.UNLOCK_FILE_NOTIFY_ID, notification)
+            } else if (api >= VERSION_CODES.HONEYCOMB) {
+                notificationManager.notify(FileSize.UNLOCK_FILE_NOTIFY_ID, builder.build())
+            }
+        } else {
+            fileCopyCallBack?.fileCopyCallBack(progress, mbCopied, totalCount)
+            notificationLayout.setTextViewText(R.id.addingVaultTitle, "Adding To D-Vault")
+            // update the notification
+            if (api < VERSION_CODES.HONEYCOMB) {
+                notificationManager.notify(FileSize.FILE_NOTIFY_ID, notification)
+            } else if (api >= VERSION_CODES.HONEYCOMB) {
+                notificationManager.notify(FileSize.FILE_NOTIFY_ID, builder.build())
+            }
         }
+
+
     }
 
     //copying file from one place to other
@@ -275,7 +359,7 @@ class FileCopyService : Service() {
         oldFileLoc: String,
         fileName: String,
         catFolderName: String,
-        contentUri: Uri,itemNo:Int
+        contentUri: Uri, itemNo: Int
     ): String {
 
         val newdir: File = this.getDir(catFolderName, Context.MODE_PRIVATE) //Don't do
@@ -293,7 +377,7 @@ class FileCopyService : Service() {
             val outStream: OutputStream = FileOutputStream(to)
 
             val lenghtOfFile: Int = inStream.available()
-            val buf = ByteArray(1024*8)
+            val buf = ByteArray(1024 * 1024)
             var len: Int
             var total: Long = 0
             var fileTotalSize = getFileSize(from)
@@ -307,7 +391,7 @@ class FileCopyService : Service() {
                 updateNotification(
                     bytes,
                     res + " / " + fileTotalSize.toString(),
-                    itemNo.toString() + "/" + totalItemsList
+                    itemNo.toString() + "/" + totalItemsList, "Copy"
                 )
                 if (isInterrupted!!) {
                     break
@@ -337,6 +421,69 @@ class FileCopyService : Service() {
         return to.toString()
     }
 
+    //Unlocking file from one place to other
+    private fun unlockingFile(sourceLoc: String, itmName: String, itemNo: Int) {
+
+
+        val sourceLo = File(sourceLoc)
+        var finalDst: String? = null
+        try {
+
+            val inStream: InputStream = FileInputStream(sourceLo)
+            var dsinationLoc = "/storage/emulated/0/Download/DVault"
+            val destLo = File(dsinationLoc)
+            if (!destLo.exists()) {
+                destLo.mkdirs()
+            }
+            finalDst = "$destLo/$itmName"
+            val outStream: OutputStream = FileOutputStream(finalDst)
+
+            val lenghtOfFile: Int = inStream.available()
+            val buf = ByteArray(1024)
+            var len: Int
+            var total: Long = 0
+            var fileTotalSize = getFileSize(sourceLo)
+            while (inStream.read(buf).also { len = it } != -1) {
+                FileSize.UNLOCK_FILE_COPYING = true
+                total += len.toLong()
+                var bytes: Int = (total * 100 / lenghtOfFile).toInt()
+                outStream.write(buf, 0, len)
+                var res = FileSize.bytesToHuman(total.toLong())
+                var totalItemsList = itemModelList?.size
+                updateNotification(
+                    bytes,
+                    res + " / " + fileTotalSize.toString(),
+                    itemNo.toString() + "/" + totalItemsList,
+                    "Unlock"
+                )
+                if (UNLOCK_INTERRUPT!!) {
+                    var fff=File(finalDst)
+                    fff.delete()
+                    break
+                }
+                outStream.flush()
+            }
+            if (!UNLOCK_INTERRUPT!!) {
+                Log.d(TAG, "copyFile: Not Interupted")
+                var res = delete(this, sourceLo)
+                Log.d(TAG, "Delete File $res")
+                if (!res) {
+                    var newDel = sourceLo.delete()
+                    Log.d(TAG, "New Delete $newDel")
+                }
+            }
+            inStream.close()
+            outStream.flush()
+            outStream.close()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            var fff=File(finalDst)
+            fff.delete()
+            Log.d(TAG, "Unlock File Exception --> : ${e.message}")
+        }
+
+    }
+
     private fun delete(context: Context, file: File): Boolean {
         val where = MediaStore.MediaColumns.DATA + "=?"
         val selectionArgs = arrayOf(
@@ -351,7 +498,7 @@ class FileCopyService : Service() {
         return !file.exists()
     }
 
-    private fun fromUriGetRealPath(sourcesModel: SourcesModel,itemNo:Int): ItemModel {
+    private fun fromUriGetRealPath(sourcesModel: SourcesModel, itemNo: Int): ItemModel {
         val fileRealPath: String? = RealPathUtill.getRealPath(this, sourcesModel.source.toUri())
         var file = File(fileRealPath)
         var filesize = getFileSize(file)
@@ -361,7 +508,8 @@ class FileCopyService : Service() {
             fileRealPath.toString(),
             file.name,
             sourcesModel.catType,
-            sourcesModel.source.toUri(),itemNo)
+            sourcesModel.source.toUri(), itemNo
+        )
         Log.d(TAG, "File New Path : ${newFilePath}")
 
         return ItemModel(

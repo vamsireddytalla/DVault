@@ -31,6 +31,7 @@
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/ic_image_icon.xml" value="0.2546875" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/ic_launcher_foreground.xml" value="0.2703125" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/ic_ln_bg.xml" value="0.2703125" />
+        <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/ic_logo.xml" value="0.25052083333333336" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/ic_pro_dialog_bg.xml" value="0.2546875" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/ic_profile_bg_card.xml" value="0.2703125" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/ic_set_icon_bg.xml" value="0.2703125" />
@@ -65,7 +66,7 @@
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/layout/activity_splash.xml" value="0.23854166666666668" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/layout/bottom_sheet_bg.xml" value="0.25416666666666665" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/layout/collapsed_item_progress.xml" value="0.25416666666666665" />
-        <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/layout/copying_file_dialog.xml" value="0.4" />
+        <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/layout/copying_file_dialog.xml" value="0.264" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/layout/custom_dialog_profile.xml" value="0.264" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/layout/custom_item_progress.xml" value="0.25416666666666665" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/layout/custom_spinner.xml" value="0.23854166666666668" />

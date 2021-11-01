@@ -34,6 +34,7 @@ You can restore them when you reinstall.</string>
     <string name="folderId">folderId</string>
     <string name="catType">catType</string>
     <string name="fileCopy">FileCopy</string>
+    <string name="unlockedList">unlockList</string>
 
 
     <string-array name="security_questions">

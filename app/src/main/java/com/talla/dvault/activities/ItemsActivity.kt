@@ -14,7 +14,6 @@ import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
 import android.view.View
-import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -96,6 +95,7 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
                         }
 
                         binder?.startFileCopyingService(sourceList)
+                        showFileCopyDialog("Copy")
 
                         //                        else{
 //                            startFileCopyService(sourceList)
@@ -110,7 +110,7 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
             }
 
         binding.plus.setOnClickListener {
-            if (!FileSize.FILE_COPYING) {
+            if (!FileSize.FILE_COPYING && !FileSize.UNLOCK_FILE_COPYING) {
 
                 val openFileIntent = Intent()
                 when (catType) {
@@ -146,7 +146,7 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
 
             } else {
                 showSnackBar("Already files in Processing...")
-                binder?.let { showFileCopyDialog() }
+                binder?.let { showFileCopyDialog("Copy") }
             }
 
         }
@@ -177,38 +177,51 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
         })
 
         binding.selectAll.setOnClickListener {
-            lifecycleScope.async {
-
-                FileSize.SelectAll = !FileSize.SelectAll
-                FileSize.OnLongItemClick = FileSize.SelectAll
-
-                for (itemModel in itemsList) {
-                    itemModel.isSelected = FileSize.SelectAll
-                    if (FileSize.SelectAll) FileSize.selectedUnlockItems.add(itemModel) else {
-                        FileSize.selectedUnlockItems.clear()
-                        withContext(Dispatchers.Main) {
-                            binding.plus.visibility = View.VISIBLE
-                            binding.unlock.visibility = View.GONE
-                            binding.selectAll.visibility = View.GONE
-                        }
-                    }
-                }
-
-                itemsAdapter.setListData(itemsList)
-                Log.d(TAG, "Select ALl Clicked Select All Value  ${FileSize.SelectAll}")
-                Log.d(TAG, "Select ALl Clicked OnLon Value   ${FileSize.OnLongItemClick}")
-                Log.d(
-                    TAG,
-                    "Select ALl CLicked MyItems Ids ${FileSize.selectedUnlockItems.toString()}"
-                )
-            }
-
+            selectALlCall()
         }
 
         binding.unlock.setOnClickListener {
-            binder?.unlockFilesService(FileSize.selectedUnlockItems)
+            if (FileSize.selectedUnlockItems.isNotEmpty() && !FileSize.UNLOCK_FILE_COPYING && !FileSize.FILE_COPYING){
+                binder?.unlockFilesService(FileSize.selectedUnlockItems)
+                FileSize.SelectAll=true
+                selectALlCall()
+                binding.unlock.visibility = View.GONE
+                binding.selectAll.visibility = View.GONE
+                showFileCopyDialog("Unlock")
+            }else {
+                showSnackBar("Unlocking files already in Processing...")
+                binder?.let { showFileCopyDialog("Unlock") }
+            }
         }
 
+    }
+
+    fun selectALlCall(){
+        lifecycleScope.async {
+
+            FileSize.SelectAll = !FileSize.SelectAll
+            FileSize.OnLongItemClick = FileSize.SelectAll
+
+            for (itemModel in itemsList) {
+                itemModel.isSelected = FileSize.SelectAll
+                if (FileSize.SelectAll) FileSize.selectedUnlockItems.add(itemModel) else {
+                    FileSize.selectedUnlockItems.clear()
+                    withContext(Dispatchers.Main) {
+                        binding.plus.visibility = View.VISIBLE
+                        binding.unlock.visibility = View.GONE
+                        binding.selectAll.visibility = View.GONE
+                    }
+                }
+            }
+
+            itemsAdapter.setListData(itemsList)
+            Log.d(TAG, "Select ALl Clicked Select All Value  ${FileSize.SelectAll}")
+            Log.d(TAG, "Select ALl Clicked OnLon Value   ${FileSize.OnLongItemClick}")
+            Log.d(
+                TAG,
+                "Select ALl CLicked MyItems Ids ${FileSize.selectedUnlockItems.toString()}"
+            )
+        }
     }
 
     fun startFileCopyService(sourceList: List<SourcesModel>) {
@@ -226,16 +239,20 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
         Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).show()
     }
 
-    private fun showFileCopyDialog() {
+    private fun showFileCopyDialog(flagType:String) {
         dialog = Dialog(this, R.style.Theme_MaterialComponents_DayNight_Dialog_MinWidth)
         dialog.setCancelable(true)
         copyDialog = CopyingFileDialogBinding.inflate(layoutInflater)
-        dialog.setContentView(copyDialog.getRoot())
-//        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.setContentView(copyDialog.root)
         copyDialog.progressFile.max = 100
 
         copyDialog.cancelFileProcess.setOnClickListener(View.OnClickListener {
-            serviceBinder?.stopServiceAndUnBind()
+            var myTag="Copy"
+            if (flagType == "Unlock")
+            {
+                myTag="Unlock"
+            }
+            binder?.stopFileProcessing(myTag)
             dialog.dismiss()
         })
 
@@ -247,6 +264,7 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
                     dialog.dismiss()
                 }
                 lifecycleScope.launch(Dispatchers.Main) {
+                    copyDialog.addingVaultTitle.text = "Adding Files to DVault"
                     copyDialog.progressFile.progress = progress
                     copyDialog.totalElapsed.text = mbCount
                     copyDialog.totalCount.text = totalItems
@@ -256,6 +274,16 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
 
             override fun fileUnlockingCallBack(progress: Int, mbCount: String, totalItems: String) {
                 Log.d(TAG, "fileUnlockingCallBack : $progress $mbCount $totalItems")
+                if (!FileSize.UNLOCK_FILE_COPYING) {
+                    dialog.dismiss()
+                }
+                lifecycleScope.launch(Dispatchers.Main) {
+                    copyDialog.addingVaultTitle.text = "Unlocking Files "
+                    copyDialog.progressFile.progress = progress
+                    copyDialog.totalElapsed.text = mbCount
+                    copyDialog.totalCount.text = totalItems
+                    if (mbCount == "Completed") dialog.dismiss()
+                }
             }
         })
 
