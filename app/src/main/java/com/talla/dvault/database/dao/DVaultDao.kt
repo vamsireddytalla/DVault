@@ -33,6 +33,9 @@ interface DVaultDao
     @Query("Select * from AppLockModel order by timeStamp Desc Limit 1")
     fun getApplockState():LiveData<AppLockModel>
 
+    @Query("Select * from ItemModel Where serverId Is Null or serverId=''")
+    fun checkDataAndGetCount():LiveData<List<ItemModel>>
+
     @Query("Select * from AppLockModel order by timeStamp Desc Limit 1")
     suspend fun getAppLockModel():AppLockModel
 
@@ -89,5 +92,14 @@ interface DVaultDao
 
     @Query("Delete from ItemModel where itemId=:itemId")
     suspend fun deleteItem(itemId: Int)
+
+    @Query("Select * from ItemModel Where (itemMimeType=:categoryType AND (serverId Is Null OR serverId=''))")
+    fun getBRItems(categoryType:String):List<ItemModel>
+
+    @Query("Select * from ItemModel Where itemMimeType=:catType AND serverId Is Not Null And serverId!=''")
+    fun getRBItems(catType:String):List<ItemModel>
+
+    @Query("Update ItemModel Set serverId=:serverId where itemId=:itemId")
+    suspend fun updateItemServerId(serverId:String,itemId:Int):Int
 
 }

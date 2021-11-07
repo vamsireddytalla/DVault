@@ -11,6 +11,7 @@ import com.talla.dvault.repositories.VaultRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import androidx.lifecycle.MediatorLiveData
+import com.talla.dvault.database.entities.ItemModel
 import kotlinx.coroutines.*
 
 
@@ -38,6 +39,14 @@ class SettingsViewModel @Inject constructor(private val repository: AppLockRepos
     suspend fun getLockData(): LiveData<AppLockModel> {
 
         return repository.getApplockState()
+    }
+
+    suspend fun checkDataAndGetCount(): LiveData<List<ItemModel>> {
+
+        var res: Deferred<LiveData<List<ItemModel>>> = viewModelScope.async(Dispatchers.IO) {
+            repository.checkDataAndGetCount()
+        }
+        return res.await()
     }
 
     suspend fun lockChange(vales: Boolean): Int {

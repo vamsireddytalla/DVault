@@ -67,6 +67,8 @@
         </activity>
 
         <service android:name=".services.FileCopyService" />
+        <service android:name=".services.DriveService" />
+        <service android:name=".services.DashBoardService" />
 
         <receiver android:name=".BroadcastReceiver.FIleProcessingReceiver"/>
 

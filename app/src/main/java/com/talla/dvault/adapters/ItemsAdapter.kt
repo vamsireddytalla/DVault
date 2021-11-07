@@ -114,7 +114,7 @@ class ItemsAdapter(
         val itemObj = itemModelList.get(position)
         holder.mbinding?.apply {
             itemName.text = itemObj.itemName
-            createdAndSize.text = itemObj.itemCreatedAt + " - " + itemObj.itemSize
+            createdAndSize.text = itemObj.itemCreatedAt + " - " + FileSize.bytesToHuman(itemObj.itemSize.toLong())
             glide.load(itemObj.itemCurrentPath).into(thumbNail)
 
             if (!itemObj.isSelected) {

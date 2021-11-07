@@ -1,10 +1,16 @@
 package com.talla.dvault.modules
 
 import android.content.Context
+import android.provider.Settings.Global.getString
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.Scope
+import com.google.api.client.extensions.android.http.AndroidHttp
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
+import com.google.api.client.json.jackson2.JacksonFactory
+import com.google.api.services.drive.Drive
 import com.google.api.services.drive.DriveScopes
+import com.talla.dvault.R
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -28,5 +34,7 @@ object GoogleModule {
             .build()
         return gso
     }
+
+
 
 }

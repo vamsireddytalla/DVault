@@ -12,10 +12,13 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.Scope
 import com.google.android.material.snackbar.Snackbar
+import com.google.api.services.drive.DriveScopes
 import com.talla.dvault.activities.DashBoardActivity
 import com.talla.dvault.database.entities.User
 import com.talla.dvault.databinding.ActivityMainBinding
@@ -59,7 +62,7 @@ class MainActivity : AppCompatActivity() {
                     handleSignData(result.data)
                 } else {
                     Log.d(TAG, "googleSignIn error: ${result.data.toString()}")
-                    showSnackBar(result.data.toString())
+                    showSnackBar("Cancelled")
                 }
             }
 
@@ -103,38 +106,60 @@ class MainActivity : AppCompatActivity() {
             .addOnCompleteListener {
                 if (it.isSuccessful) {
                     // user successfully logged-in
-                    Log.d(
-                        TAG,
-                        "handleSignData: ${it.result?.account}  ${it.result?.displayName} ${it.result?.email}"
-                    )
-                    var userName = it.result?.displayName
-                    var userEmail = it.result?.email
-                    var userProfilePic: Uri? = it.result?.photoUrl
-                    var currentDT: String? = DateUtills.getSystemTime(this)
-                    var job: Job = lifecycleScope.launch {
-                        val user = User(
-                            userName.toString(),
-                            userEmail.toString(),
-                            userProfilePic.toString(),
-                            currentDT.toString()
-                        )
-                        var result = viewModel.insertData(user)
-                        Log.d(TAG, "Result of User Insertion :  ${result}")
+                    Log.d(TAG, "handleSignData: ${it.result?.account}  ${it.result?.displayName} ${it.result?.email}")
+                    Log.d(TAG, "handleSignData: ${it.result?.grantedScopes}")
+                    Log.d(TAG, "handleSignData: ${it.result?.requestedScopes}")
+                    if (it.result?.grantedScopes!!.contains(Scope(DriveScopes.DRIVE_APPDATA)))
+                    {
+                        Log.d(TAG, "handleSignData: ---------->  Granted Scope")
+                        var userName = it.result?.displayName
+                        var userEmail = it.result?.email
+                        var userProfilePic: Uri? = it.result?.photoUrl
+                        var currentDT: String? = DateUtills.getSystemTime(this)
+                        var job: Job = lifecycleScope.launch {
+                            val user = User(
+                                userName.toString(),
+                                userEmail.toString(),
+                                userProfilePic.toString(),
+                                currentDT.toString()
+                            )
+                            var result = viewModel.insertData(user)
+                            Log.d(TAG, "Result of User Insertion :  ${result}")
+                        }
+                        runBlocking {
+                            job.join()
+                            openIntent()
+                        }
+                    }else{
+                        Log.d(TAG, "handleSignData: ---------->  Not Granted Scope")
+                        showAccessPermission()
                     }
-                    runBlocking {
-                        job.join()
-                        openIntent()
-                    }
+
 
                 } else {
                     Log.d(TAG, "handleSignData: ${it.exception.toString()}")
-                    Toast.makeText(this, it.exception.toString(), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Error Occured $it.exception.toString()", Toast.LENGTH_SHORT).show()
                 }
             }.addOnFailureListener {
                 Log.d(TAG, "handleSignData: ${it.localizedMessage}")
-                Toast.makeText(this, "${it.localizedMessage}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Failure ${it.localizedMessage}", Toast.LENGTH_SHORT).show()
             }
     }
+
+    private fun showAccessPermission() {
+        val alertDialogBuilder = AlertDialog.Builder(this)
+        alertDialogBuilder.setTitle("DVault Requires Permission")
+        alertDialogBuilder.setMessage("Please allow Edit Access(Check Box) while Login to Save your files to your Drive (Mandatory to use this App).")
+        alertDialogBuilder.setCancelable(false)
+        alertDialogBuilder.setPositiveButton("Ok") { dialogInterface, i ->
+            dialogInterface.dismiss()
+            googleSIgnIn(binding.root)
+        }.setNegativeButton("Cancel") { dialog, which ->
+            dialog.dismiss()
+        }
+        alertDialogBuilder.show()
+    }
+
 
 
 }

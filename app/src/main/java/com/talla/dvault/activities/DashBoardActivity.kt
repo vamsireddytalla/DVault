@@ -104,7 +104,7 @@ class DashBoardActivity : AppCompatActivity()
         lifecycleScope.launch(Dispatchers.IO) {
             appSettingsPrefs.getBooleanData(UserPreferences.NIGHT_MODE).collect { value ->
                 withContext(Dispatchers.Main){
-                    if (value is Boolean)
+                    if (value)
                     {
                         isNightMode=value
                     }else{
@@ -170,8 +170,6 @@ class DashBoardActivity : AppCompatActivity()
             val intent: Intent = Intent(this, FoldersActivity::class.java)
             intent.putExtra(getString(R.string.cat_key),"Img")
             startActivity(intent)
-
-
         }
 
     }

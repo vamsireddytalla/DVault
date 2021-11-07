@@ -6,7 +6,7 @@ import android.os.Environment
 import android.os.StatFs
 import com.talla.dvault.database.entities.ItemModel
 import java.io.File
-
+import android.webkit.MimeTypeMap
 
 object FileSize {
     fun floatForm(d: Double): String {
@@ -15,19 +15,27 @@ object FileSize {
 
     var OnLongItemClick:Boolean=false
     var SelectAll:Boolean=false
+    var backUpRestoreEnabled:Boolean=false
     var selectedUnlockItems: MutableSet<ItemModel> = mutableSetOf()
+    var selectedBackRestore: MutableSet<String> = mutableSetOf()
     const val ACTION_START_FOREGROUND_SERVICE = "ACTION_START_FOREGROUND_SERVICE"
     const val ACTION_STOP_FOREGROUND_SERVICE = "ACTION_STOP_FOREGROUND_SERVICE"
     const val ACTION_UNLOCK_START_FOREGROUND_SERVICE = "ACTION_UNLOCK_START_FOREGROUND_SERVICE"
     const val ACTION_UNLOCK_STOP_FOREGROUND_SERVICE = "ACTION_UNLOCK_STOP_FOREGROUND_SERVICE"
+    const val ACTION_SETTINGS_START_FOREGROUND_SERVICE = "ACTION_SETTINGS_START_FOREGROUND_SERVICE"
+    const val ACTION_SETTINGS_STOP_FOREGROUND_SERVICE = "ACTION_SETTINGS_STOP_FOREGROUND_SERVICE"
     const val FILE_ADD_CHANNEl_ID = "101"
     const val FILE_ADD_CHANNEL_NAME = "FILE_ADD_PROCESSING_NOTIFICATION"
     const val FILE_UNLOCK_CHANNEl_ID = "102"
     const val FILE_UNLOCK_CHANNEL_NAME = "FILE_UNLOCK_PROCESSING_NOTIFICATION"
+    const val BR_CHANNEl_ID = "103"
+    const val BR_CHANNEL_NAME = "BR_PROCESSING_NOTIFICATION"
     const val FILE_NOTIFY_ID = 100
     const val UNLOCK_FILE_NOTIFY_ID = 99
+    const val  BR_NOTIFY_ID= 98
     var FILE_COPYING:Boolean = false
     var UNLOCK_FILE_COPYING:Boolean = false
+    var settingsBRSelected:String=""
 
     fun bytesToHuman(size: Long): String? {
         val Kb = (1 * 1024).toLong()
@@ -74,7 +82,14 @@ object FileSize {
         }
     }
 
-
+    fun getMimeType(url: String): String? {
+        var type: String? = null
+        val extension = MimeTypeMap.getFileExtensionFromUrl(url)
+        if (extension != null) {
+            type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension)
+        }
+        return type
+    }
 
 
 }

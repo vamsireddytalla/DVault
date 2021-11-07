@@ -15,6 +15,15 @@ class DateUtills
             val simpleDateFormat = SimpleDateFormat(pattern)
             return simpleDateFormat.format(date)
         }
+
+        fun getLastBackUpTime(context: Context): String? {
+            val date = Date(System.currentTimeMillis())
+            val pattern = context.resources.getString(R.string.dateFormat)
+            val simpleDateFormat = SimpleDateFormat(pattern)
+            return simpleDateFormat.format(date)
+        }
+
+
     }
 
 }

@@ -9,6 +9,8 @@ class AppLockRepository @Inject constructor(private val appDao: DVaultDao)
 {
     fun getApplockState() = appDao.getApplockState()
 
+    fun checkDataAndGetCount() = appDao.checkDataAndGetCount()
+
     suspend fun getAppLockModel()=appDao.getAppLockModel()
 
     suspend fun saveAppLockData(appLockModel: AppLockModel) = appDao.saveAppLockData(appLockModel)

@@ -35,6 +35,18 @@ You can restore them when you reinstall.</string>
     <string name="catType">catType</string>
     <string name="fileCopy">FileCopy</string>
     <string name="unlockedList">unlockList</string>
+    <string name="db_path">/data/data/com.talla.dvault/databases/</string>
+    <string name="folder_mime_type">application/vnd.google-apps.folder</string>
+    <string name="file_mime_type">application/vnd.google-apps.file</string>
+    <string name="photo_mime_type">application/vnd.google-apps.photo</string>
+    <string name="audio_mime_type">application/vnd.google-apps.audio</string>
+    <string name="document_mime_type">application/vnd.google-apps.document</string>
+    <string name="video_mime_type">application/vnd.google-apps.video</string>
+    <string name="file_sys_dst">/storage/emulated/0/Download/DVault</string>
+    <string name="key">key</string>
+    <string name="initializing">Initializing...</string>
+    <string name="dateFormat">E, dd MMM yyyy HH:mm:ss</string>
+    <string name="check_internet">Check Internet</string>
 
 
     <string-array name="security_questions">

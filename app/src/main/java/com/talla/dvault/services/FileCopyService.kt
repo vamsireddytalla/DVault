@@ -332,7 +332,7 @@ class FileCopyService : Service() {
             fileCopyCallBack?.fileUnlockingCallBack(progress, mbCopied, totalCount)
             notificationLayout.setTextViewText(
                 R.id.addingVaultTitle,
-                "Unlocking Files to \n/storage/emulated/0/Download"
+                "Unlocking Files \n${this.resources.getString(R.string.file_sys_dst)}"
             )
             // update the notification
             if (api < VERSION_CODES.HONEYCOMB) {
@@ -430,7 +430,7 @@ class FileCopyService : Service() {
         try {
 
             val inStream: InputStream = FileInputStream(sourceLo)
-            var dsinationLoc = "/storage/emulated/0/Download/DVault"
+            var dsinationLoc = this.resources.getString(R.string.file_sys_dst)
             val destLo = File(dsinationLoc)
             if (!destLo.exists()) {
                 destLo.mkdirs()
@@ -501,7 +501,7 @@ class FileCopyService : Service() {
     private fun fromUriGetRealPath(sourcesModel: SourcesModel, itemNo: Int): ItemModel {
         val fileRealPath: String? = RealPathUtill.getRealPath(this, sourcesModel.source.toUri())
         var file = File(fileRealPath)
-        var filesize = getFileSize(file)
+        var filesize: Long = file.length()
         Log.d(TAG, "File size : ${filesize}")
         Log.d(TAG, "File Real Path : ${fileRealPath}")
         var newFilePath: String = copyFile(

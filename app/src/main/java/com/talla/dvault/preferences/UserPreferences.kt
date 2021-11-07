@@ -19,6 +19,7 @@ class UserPreferences(val context: Context)
         val USER_IMAGE="USER_IMAGE"
         val NIGHT_MODE="NIGHT_MODE"
         val FIRST_TIME="FIRST_TIME"
+        val LAST_BACKUP_TIME="LAST_BACKUP_TIME"
     }
 
     suspend fun storeStringData(key: String, value: String) {
@@ -39,7 +40,7 @@ class UserPreferences(val context: Context)
                 throw it
             }
         }.map { preference ->
-            val result = preference[dataStoreKey] ?: "No Data Found"
+            val result = preference[dataStoreKey] ?: ""
             result
         }
         return returnVal

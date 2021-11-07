@@ -24,7 +24,7 @@ class VaultRepository @Inject constructor(private val appDao:DVaultDao)
    }
 
 
-    suspend fun  changePhotosCount(count:Int)
+    suspend fun changePhotosCount(count:Int)
     {
         appDao.changePhotosCount(count)
     }
@@ -48,6 +48,10 @@ class VaultRepository @Inject constructor(private val appDao:DVaultDao)
 
     fun getFoldersData(catType:String)=appDao.getFoldersData(catType)
 
+    fun getBRItems(catType:String)=appDao.getBRItems(catType)
+
+    fun getRBItems(catType:String)=appDao.getRBItems(catType)
+
 
     suspend fun renameFolder(folderName:String,folderId:Int):Int
     {
@@ -70,5 +74,10 @@ class VaultRepository @Inject constructor(private val appDao:DVaultDao)
     fun getItemsBasedOnCatType(catType:String,folderId:Int)=appDao.getItemsBasedOnCatType(catType,folderId)
 
     suspend fun deleteItem(folderId: Int)=appDao.deleteItem(folderId)
+
+    suspend fun updateItemServerId(serverId:String,itemId:Int):Int
+    {
+       return appDao.updateItemServerId(serverId,itemId)
+    }
 
 }

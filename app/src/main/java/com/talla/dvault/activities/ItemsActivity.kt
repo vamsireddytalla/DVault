@@ -22,9 +22,15 @@ import androidx.core.graphics.drawable.DrawableCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.RequestManager
+import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.talla.dvault.R
 import com.talla.dvault.databinding.ActivityItemsBinding
 import com.google.android.material.snackbar.Snackbar
+import com.google.api.client.extensions.android.http.AndroidHttp
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
+import com.google.api.client.json.jackson2.JacksonFactory
+import com.google.api.services.drive.Drive
+import com.google.api.services.drive.DriveScopes
 import com.talla.dvault.adapters.ItemsAdapter
 import com.talla.dvault.database.entities.ItemModel
 import com.talla.dvault.database.entities.SourcesModel
@@ -59,6 +65,23 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
     @Inject
     lateinit var glide: RequestManager
     private val viewModel: ItemViewModel by viewModels()
+
+    private fun getDriveService(): Drive? {
+        GoogleSignIn.getLastSignedInAccount(this)?.let { googleAccount ->
+            val credential = GoogleAccountCredential.usingOAuth2(
+                this, listOf(DriveScopes.DRIVE_APPDATA)
+            )
+            credential.selectedAccount = googleAccount.account!!
+            return Drive.Builder(
+                AndroidHttp.newCompatibleTransport(),
+                JacksonFactory.getDefaultInstance(),
+                credential
+            )
+                .setApplicationName(getString(R.string.app_name))
+                .build()
+        }
+        return null
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
