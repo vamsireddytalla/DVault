@@ -102,4 +102,10 @@ interface DVaultDao
     @Query("Update ItemModel Set serverId=:serverId where itemId=:itemId")
     suspend fun updateItemServerId(serverId:String,itemId:Int):Int
 
+    @Query("Update CategoriesModel Set totalItems=totalItems-1 Where catId=:catId")
+    suspend fun removeCatItemCount(catId:String)
+
+    @Query("Update CategoriesModel Set totalItems=totalItems+1 Where catId=:catId")
+    suspend fun addCatItemCount(catId:String)
+
 }

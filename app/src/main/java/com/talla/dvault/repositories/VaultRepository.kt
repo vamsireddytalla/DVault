@@ -70,6 +70,9 @@ class VaultRepository @Inject constructor(private val appDao:DVaultDao)
 
     suspend fun insertSingleItem(itemsList:ItemModel)=appDao.insertSingleItem(itemsList)
 
+    suspend fun removeCatItemCount(catId: String)=appDao.removeCatItemCount(catId)
+
+    suspend fun addCatItemCount(catId: String)=appDao.addCatItemCount(catId)
 
     fun getItemsBasedOnCatType(catType:String,folderId:Int)=appDao.getItemsBasedOnCatType(catType,folderId)
 

@@ -1,6 +1,8 @@
 package com.talla.dvault.activities
 
 
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -100,13 +102,14 @@ class FoldersActivity : AppCompatActivity() ,FolderItemClick {
     }
 
     fun showBottomSheetDialog(title:String,btnText:String,value:String) {
-        var bsd = BottomSheetDialog(this, R.style.bottomSheetStyle)
+        var bsd = BottomSheetDialog(this, R.style.BottomSheetDialogStyle)
         var bottomView: View? = null
         var sheetBinding: FolderBottomSheetBinding? = null
         sheetBinding= FolderBottomSheetBinding.inflate(layoutInflater)
         bottomView=sheetBinding.root
         bsd.setContentView(bottomView)
         bsd.setCanceledOnTouchOutside(true)
+        bsd.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         sheetBinding.apply {
             t1.text=title
             et1.setText(value)
@@ -116,7 +119,6 @@ class FoldersActivity : AppCompatActivity() ,FolderItemClick {
                 var folderName=et1.text.toString().trim()
                 var createdTime=DateUtills.getSystemTime(this@FoldersActivity)
                 var catType=catType
-                var foldertable=FolderTable(folderName = folderName,folderCreatedAt = createdTime.toString(),folderCatType = catType.toString())
                 runBlocking {
                     var btnType=b1.text.toString()
                     if (btnType.equals(this@FoldersActivity.resources.getString(R.string.create)))
@@ -124,8 +126,8 @@ class FoldersActivity : AppCompatActivity() ,FolderItemClick {
 //                        viewModel.createNewFolder(foldertable)
                         var res: Long =viewModel.checkDataANdCreateFolder(folderName,createdTime.toString(),catType.toString())
                         if (res==-1L){
-                            Toast.makeText(this@FoldersActivity, "ALready Existed", Toast.LENGTH_SHORT).show()
-                            et1.error = "Already Existed!"
+                            Toast.makeText(this@FoldersActivity, getString(R.string.already_existed), Toast.LENGTH_SHORT).show()
+                            et1.error = getString(R.string.already_existed)
                             et1.requestFocus()
                         }else{
                             bsd.dismiss()
@@ -135,8 +137,8 @@ class FoldersActivity : AppCompatActivity() ,FolderItemClick {
                     }else{
                         var res: Int =viewModel.renameFolder(folderName,folderId)
                         if(res==2067){
-                            Toast.makeText(this@FoldersActivity, "ALready Existed", Toast.LENGTH_SHORT).show()
-                            et1.error = "Already Existed!"
+                            Toast.makeText(this@FoldersActivity, getString(R.string.already_existed), Toast.LENGTH_SHORT).show()
+                            et1.error = getString(R.string.already_existed)
                             et1.requestFocus()
                         }else{
                             bsd.dismiss()

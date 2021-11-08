@@ -25,10 +25,12 @@ import android.widget.CompoundButton
 import androidx.core.view.isVisible
 import com.google.android.material.snackbar.Snackbar
 import com.talla.dvault.database.entities.User
+import com.talla.dvault.databinding.StorageLayoutBinding
 import com.talla.dvault.preferences.UserPreferences
 import com.talla.dvault.preferences.UserPreferences.Companion.dataStore
 import com.talla.dvault.utills.DateUtills
 import com.talla.dvault.utills.FileSize
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
@@ -111,12 +113,19 @@ class SettingsActivity : AppCompatActivity() {
             }
         }
 
-        userPreferences.getData(UserPreferences.LAST_BACKUP_TIME).map {
-            Log.d(TAG, "onCreate:--------> $it")
-            binding.lastBackUp.text=it
-        }
-    }
+       lifecycleScope.launch {
+           userPreferences.getData(UserPreferences.LAST_BACKUP_TIME).collect { value ->
+               withContext(Dispatchers.Main){
+                   if (value.isNotEmpty())
+                   {
+                       binding.lastBackUp.text="Last Backup at\n"+value
+                   }
 
+               }
+           }
+       }
+
+    }
 
     /** Defines callbacks for service binding, passed to bindService()  */
     private val connection = object : ServiceConnection {
@@ -160,6 +169,23 @@ class SettingsActivity : AppCompatActivity() {
 
 
                         }
+                    }
+                }
+
+                override fun storageQuote(usedStorage: String,totalStorage: String) {
+                    Log.d(TAG, "storageQuote: $totalStorage $usedStorage")
+                    var usedOutPut=totalStorage?.let {
+                        it.length-3
+                    }
+                    var totalOutPut=usedStorage?.let {
+                        it.length-3
+                    }
+                    var storageBinding=StorageLayoutBinding.bind(binding.root)
+                    lifecycleScope.launch(Dispatchers.Main) {
+                        storageBinding.storageProgress.max=totalOutPut
+                        storageBinding.storageProgress.progress=usedOutPut
+                        storageBinding.totalSpace.text=totalStorage
+                        storageBinding.usedSpace.text=usedStorage
                     }
                 }
 

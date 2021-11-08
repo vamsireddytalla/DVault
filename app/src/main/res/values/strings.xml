@@ -47,6 +47,7 @@ You can restore them when you reinstall.</string>
     <string name="initializing">Initializing...</string>
     <string name="dateFormat">E, dd MMM yyyy HH:mm:ss</string>
     <string name="check_internet">Check Internet</string>
+    <string name="already_existed">Already Existed!</string>
 
 
     <string-array name="security_questions">

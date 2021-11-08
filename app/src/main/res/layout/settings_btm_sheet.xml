@@ -6,6 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:padding="20dp"
+    android:background="@color/dashboard_ln_bg"
     android:orientation="vertical">
 
     <RelativeLayout

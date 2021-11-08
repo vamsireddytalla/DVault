@@ -60,7 +60,7 @@ class DriveService : Service() {
     private var isInterrupted: Boolean? = false
     private var allItemFileSize: Double = 0.0
     private var cancelProcessJob: Job? = null
-    private var mediaContent:FileContent? = null
+    private var mediaContent: FileContent? = null
     private val backgroundScope = CoroutineScope(Dispatchers.Default)
 
 
@@ -68,6 +68,11 @@ class DriveService : Service() {
         super.onCreate()
         startServiceOreoCondition()
         isInterrupted = false
+        backgroundScope.launch {
+            getTotalDriveStorages()
+//            updateFile(getDriveService()!!,"1uW0cZQtVAu_NS6Zwbs27Oe5hpvsxxvqXf-FsNktTh7bwBy5s9w")
+//            updateFile("1uW0cZQtVAu_NS6Zwbs27Oe5hpvsxxvqXf-FsNktTh7bwBy5s9w")
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -85,7 +90,10 @@ class DriveService : Service() {
                             Log.d(TAG, "onStartCommand: $catType")
                             itemModelList = repository.getBRItems(catType) as ArrayList<ItemModel>
                         }
-                        Log.d(TAG, "onStartCommand: Total List Received ${itemModelList.toString()}")
+                        Log.d(
+                            TAG,
+                            "onStartCommand: Total List Received ${itemModelList.toString()}"
+                        )
                         if (itemModelList.isEmpty()) {
                             Log.d(TAG, "onStartCommand: No Items Found")
                             stopServiceMethod("Done")
@@ -104,17 +112,18 @@ class DriveService : Service() {
                                             uploadLargeFiles(source, index)
                                         } catch (e: Exception) {
                                             e.printStackTrace()
-                                            Log.d(TAG, "onStartCommand: Exception Occured-----> ${e.message}")
+                                            Log.d(
+                                                TAG,
+                                                "onStartCommand: Exception Occured-----> ${e.message}"
+                                            )
                                         }
                                     } else {
 //                                        downloadLargeFiles(source,index)
                                     }
                                 } else break
                             }
-                            runBlocking {
-                                cancelProcessJob?.join()
-                                stopServiceMethod("Process Completed!")
-                            }
+                            cancelProcessJob?.join()
+                            stopServiceMethod("Process Completed!")
                         }
                     }
 
@@ -126,17 +135,17 @@ class DriveService : Service() {
                         mediaContent?.closeInputStream
                         it.cancel()
                     }
+                    settingsCallbackListner?.fileServerDealing(0, "Process Completed!", "")
                     FileSize.backUpRestoreEnabled = false
                     stopForeground(false)
                     notificationManager.cancel(FileSize.BR_NOTIFY_ID)
-                    stopSelf()
                 }
             }
         }
         return START_STICKY
     }
 
-    fun stopServiceMethod(message:String) {
+    fun stopServiceMethod(message: String) {
         settingsCallbackListner?.fileServerDealing(0, message, "")
         var clickIntent = Intent(this@DriveService, DriveService::class.java)
         clickIntent.action = FileSize.ACTION_SETTINGS_STOP_FOREGROUND_SERVICE
@@ -158,7 +167,7 @@ class DriveService : Service() {
         }
 
         fun stopSettingsService() {
-           stopServiceMethod("Cancelled!")
+            stopServiceMethod("Cancelled!")
         }
     }
 
@@ -256,43 +265,79 @@ class DriveService : Service() {
         }
     }
 
-    fun uploadDataBaseFiles(mainDb: String, shmDbPath: String, walDb: String) {
+    fun uploadDataBaseFiles() {
         val storageFile = File()
+        val mimetype = this.resources.getString(R.string.file_mime_type)
         storageFile.parents = Collections.singletonList("appDataFolder")
-        storageFile.name = "DVault"
+        storageFile.name = "DVault.db"
+        storageFile.mimeType = "*/*"
 
         val storageFile_shm = File()
         storageFile_shm.parents = Collections.singletonList("appDataFolder")
         storageFile_shm.name = "DVault-shm"
+        storageFile_shm.mimeType = mimetype
 
         val storageFile_wal = File()
         storageFile_wal.parents = Collections.singletonList("appDataFolder")
         storageFile_wal.name = "DVault-wal"
+        storageFile_wal.mimeType = "*/*"
 
-        val filePath: java.io.File = java.io.File(mainDb)
-        val filePathShm: java.io.File = java.io.File(shmDbPath)
-        val filePathWal: java.io.File = java.io.File(walDb)
+        val filePath: java.io.File =
+            java.io.File(this.resources.getString(R.string.db_path) + "DVault.db")
+        val filePathShm: java.io.File =
+            java.io.File(this.resources.getString(R.string.db_path) + "DVault-shm")
+        val filePathWal: java.io.File =
+            java.io.File(this.resources.getString(R.string.db_path) + "DVault-wal")
         val mimeType = this.resources.getString(R.string.file_mime_type)
-        val mediaContent = FileContent(mimeType, filePath)
+        Log.d(TAG, "uploadDataBaseFiles: $filePath")
+        val mediaContent = FileContent("*/*", filePath)
         val mediaContentShm = FileContent(mimeType, filePathShm)
         val mediaContentWal = FileContent(mimeType, filePathWal)
 
         try {
-            var mainDbRes: File? = getDriveService()?.let {
+            var driveService = getDriveService()
+            var mainDbRes: File? = driveService?.let {
                 it.files().create(storageFile, mediaContent).execute()
             }
-            var secondDbRes: File? = getDriveService()?.let {
-                it.files().create(storageFile, mediaContentShm).execute()
-            }
-            var thirdDbWal: File? = getDriveService()?.let {
-                it.files().create(storageFile, mediaContentWal).execute()
-            }
+//            var secondDbRes: File? = driveService?.let {
+//                it.files().create(storageFile_shm, mediaContentShm).execute()
+//            }
+//            var thirdDbWal: File? = driveService?.let {
+//                it.files().create(storageFile_wal, mediaContentWal).execute()
+//            }
 
-            val inputStream: InputStream = FileInputStream(mainDb)
-            val contentStream: InputStreamContent = InputStreamContent(mimeType, inputStream)
+            getDriveFiles()
 
         } catch (e: Exception) {
             e.printStackTrace()
+        }
+    }
+
+    private fun updateDbFiles(service: Drive, fileId: String): File? {
+        return try {
+            // First retrieve the file from the API.
+//            val file: File = service.let {
+//                it.files()[fileId].execute()
+//            }
+//            file.let {
+//                // File's new metadata.
+//                it.name = "Dvault2.db"
+//                it.mimeType = "file/*"
+//            }
+
+            var mimeType = "*/*"
+            // File's new content.
+            val fileContent = File(this.resources.getString(R.string.db_path) + "DVault.db-wal")
+            val mediaContent = FileContent(mimeType, fileContent)
+
+            val newMetadata = File()
+            // Send the request to the API.
+            var file=service.files().update(fileId, newMetadata, mediaContent).execute()
+            return file
+        } catch (e: IOException) {
+            println("An error occurred: $e")
+            Log.d(TAG, "updateFile Error Occured --> : ${e.message}")
+            null
         }
     }
 
@@ -384,7 +429,7 @@ class DriveService : Service() {
                     "progressChanged: Initiation is complete!"
                 )
                 UploadState.MEDIA_IN_PROGRESS -> {
-                    if (!isInterrupted!!){
+                    if (!isInterrupted!!) {
                         val respo: Double = uploader.progress * 100
 
                         Log.d(TAG, "progressChanged: ${respo}%")
@@ -395,9 +440,13 @@ class DriveService : Service() {
                             "$mbCount/$itemSize",
                             "$itemNo/$totalItems"
                         )
-                        updateNotification(respo.toInt(), "$mbCount/$itemSize", "$itemNo/$totalItems")
+                        updateNotification(
+                            respo.toInt(),
+                            "$mbCount/$itemSize",
+                            "$itemNo/$totalItems"
+                        )
                         FileSize.backUpRestoreEnabled = true
-                    }else{
+                    } else {
                         throw GoogleDriveException("Upload canceled")
                     }
 
@@ -418,18 +467,18 @@ class DriveService : Service() {
         val fileMetadata = File()
         fileMetadata.name = "test1.mp4"
         fileMetadata.parents = Collections.singletonList("appDataFolder")
-        fileMetadata.mimeType = "media/mp4"
+        fileMetadata.mimeType = "file/*"
 
-        val file: java.io.File = File("/storage/emulated/0/Download/test1.mp4")
-        val mediaContent = FileContent("media/mp4", file)
+        val file: java.io.File = File(this.resources.getString(R.string.db_path) + "DVault.db-wal")
+        val mediaContent = FileContent("file/*", file)
 
 //        res?.mediaHttpUploader?.progressListener = CustomUploadProgressListener()
 
         val mediaContentNew =
-            InputStreamContent("media/mp4", BufferedInputStream(FileInputStream(file)))
+            InputStreamContent("file/*", BufferedInputStream(FileInputStream(file)))
         mediaContentNew.length = file.length()
         getDriveService()?.let {
-//            it.files().update(fileId,file)
+            it.files().update(fileId, fileMetadata)
         }
 
     }
@@ -439,8 +488,11 @@ class DriveService : Service() {
             it.about().get().setFields("user, storageQuota").execute()
         }
         about?.let {
-            Log.d(TAG, "getFileSize: ${about.storageQuota}")
+            var usedStorage = FileSize.bytesToHuman(about.storageQuota.usage)
+            var totalStorage = FileSize.bytesToHuman(about.storageQuota.limit)
+            settingsCallbackListner?.storageQuote(usedStorage.toString(), totalStorage.toString())
         }
+        getDriveFiles()
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -529,6 +581,7 @@ class DriveService : Service() {
 
     interface SettingsCalBack {
         fun fileServerDealing(progress: Int, mbCount: String, totalItems: String)
+        fun storageQuote(totalStorage: String, usedStorage: String)
     }
 
 }

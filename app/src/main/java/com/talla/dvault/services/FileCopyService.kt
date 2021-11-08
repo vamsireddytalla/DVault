@@ -50,7 +50,6 @@ import androidx.core.app.NotificationCompat.PRIORITY_MIN
 
 
 private const val TAG = "FileCopyService"
-
 @AndroidEntryPoint
 class FileCopyService : Service() {
 
@@ -106,6 +105,8 @@ class FileCopyService : Service() {
                                         var itemModel = fromUriGetRealPath(source, index)
                                         if (!isInterrupted!!) {
                                             repository.insertSingleItem(itemModel)
+                                            Log.d(TAG, "onStartCommand: ${source.catType}")
+                                            repository.addCatItemCount(source.catType)
                                         }
                                     } catch (e: Exception) {
                                         Log.d(TAG, "onStartCommand: ${e.message}")
@@ -158,6 +159,8 @@ class FileCopyService : Service() {
                                         )
                                         if (!UNLOCK_INTERRUPT!!) {
                                             repository.deleteItem(source.itemId)
+                                            Log.d(TAG, "onStartCommand: ${source.itemMimeType}")
+                                            repository.removeCatItemCount(source.itemMimeType)
                                         }
                                     } catch (e: Exception) {
                                         Log.d(TAG, "onStartCommand: ${e.message}")
@@ -439,7 +442,7 @@ class FileCopyService : Service() {
             val outStream: OutputStream = FileOutputStream(finalDst)
 
             val lenghtOfFile: Int = inStream.available()
-            val buf = ByteArray(1024)
+            val buf = ByteArray(1024*1024)
             var len: Int
             var total: Long = 0
             var fileTotalSize = getFileSize(sourceLo)

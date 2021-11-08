@@ -93,10 +93,10 @@ class DashBoardActivity : AppCompatActivity()
         viewModel.getLiveData().observe(this, Observer{
             it?.let {
                 it.forEach { catModel->
-                    if (catModel.catId.equals("Img")) binding.totalImages.setText(catModel.totalItems.toString())
-                    if (catModel.catId.equals("Vdo")) binding.totalVIdeos.setText(catModel.totalItems.toString())
-                    if (catModel.catId.equals("Doc")) binding.totalDocs.setText(catModel.totalItems.toString())
-                    if (catModel.catId.equals("Aud")) binding.totalAudios.setText(catModel.totalItems.toString())
+                    if (catModel.catId == "Img") binding.totalImages.text = catModel.totalItems.toString()
+                    if (catModel.catId == "Vdo") binding.totalVIdeos.text = catModel.totalItems.toString()
+                    if (catModel.catId == "Doc") binding.totalDocs.text = catModel.totalItems.toString()
+                    if (catModel.catId == "Aud") binding.totalAudios.text = catModel.totalItems.toString()
                 }
             }
         })
@@ -189,7 +189,6 @@ class DashBoardActivity : AppCompatActivity()
             Log.d(TAG, "checkDarkMode: Below Lollipop Version")
         }
 
-
     }
 
     private fun showLocationMandatoryDialog() {
@@ -243,7 +242,6 @@ class DashBoardActivity : AppCompatActivity()
         finish()
     }
 
-
     fun View.showSnackbar(view: View, msg: String, length: Int, actionMessage: CharSequence?, action: (View) -> Unit)
     {
         val snackbar = Snackbar.make(view, msg, length)
@@ -255,9 +253,5 @@ class DashBoardActivity : AppCompatActivity()
             snackbar.show()
         }
     }
-
-
-
-
 
 }
