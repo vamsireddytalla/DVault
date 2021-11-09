@@ -36,6 +36,7 @@ You can restore them when you reinstall.</string>
     <string name="fileCopy">FileCopy</string>
     <string name="unlockedList">unlockList</string>
     <string name="db_path">/data/data/com.talla.dvault/databases/</string>
+    <string name="db_folders_path">/data/user/0/com.talla.dvault/</string>
     <string name="folder_mime_type">application/vnd.google-apps.folder</string>
     <string name="file_mime_type">application/vnd.google-apps.file</string>
     <string name="photo_mime_type">application/vnd.google-apps.photo</string>
@@ -45,9 +46,12 @@ You can restore them when you reinstall.</string>
     <string name="file_sys_dst">/storage/emulated/0/Download/DVault</string>
     <string name="key">key</string>
     <string name="initializing">Initializing...</string>
-    <string name="dateFormat">E, dd MMM yyyy HH:mm:ss</string>
+    <string name="dateFormat">E, dd MMM yyyy hh:mm a</string>
     <string name="check_internet">Check Internet</string>
     <string name="already_existed">Already Existed!</string>
+    <string name="logout_alert">Make sure to backup all your files. Logout may delete all your restored files.</string>
+    <string name="restore_alert">Your Backup data available on the Server click OK to restore.</string>
+    <string name="internet_alert">Make sure to turn on your Internet to proceed with this app.</string>
 
 
     <string-array name="security_questions">

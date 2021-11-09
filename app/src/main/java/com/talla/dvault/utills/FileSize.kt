@@ -4,9 +4,11 @@ import android.os.Build
 import java.text.DecimalFormat
 import android.os.Environment
 import android.os.StatFs
+import android.view.View
 import com.talla.dvault.database.entities.ItemModel
 import java.io.File
 import android.webkit.MimeTypeMap
+import com.google.android.material.snackbar.Snackbar
 
 object FileSize {
     fun floatForm(d: Double): String {
@@ -89,6 +91,10 @@ object FileSize {
             type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension)
         }
         return type
+    }
+
+    fun showSnackBar(message: String,view:View) {
+        Snackbar.make(view, message, Snackbar.LENGTH_LONG).show()
     }
 
 

@@ -1,6 +1,7 @@
 package com.talla.dvault.modules
 
 import android.app.Application
+import android.app.Dialog
 import android.content.Context
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
@@ -8,6 +9,7 @@ import com.bumptech.glide.request.RequestOptions
 import com.talla.dvault.R
 import com.talla.dvault.database.VaultDatabase
 import com.talla.dvault.database.dao.DVaultDao
+import com.talla.dvault.databinding.CustonProgressDialogBinding
 import com.talla.dvault.preferences.UserPreferences
 import com.talla.dvault.repositories.AppLockRepository
 import com.talla.dvault.repositories.VaultRepository
@@ -62,7 +64,5 @@ object AppModule {
 //            .error(R.drawable.ic_image)
             .diskCacheStrategy(DiskCacheStrategy.DATA)
     )
-
-
 
 }

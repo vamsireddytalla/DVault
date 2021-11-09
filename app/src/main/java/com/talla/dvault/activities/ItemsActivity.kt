@@ -92,7 +92,8 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
             catType = bundle.getString(resources.getString(R.string.catType))!!
             folderName = bundle.getString(resources.getString(R.string.folderName))!!
             folderId = bundle.getInt(resources.getString(R.string.folderId))
-            binding.screenTitle.text = folderName
+            binding.titleScrnTitle.text = folderName
+            Log.d("FolderName", "onCreate: $folderName")
             changeFolderColor(catType)
         }
 
@@ -345,27 +346,21 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
 
     fun changeFolderColor(type: String) {
         var selectedColor: Int? = null
-        var screenTitle: String? = null
 
         when (type) {
             "Img" -> {
                 selectedColor = R.color.light_pink
-                screenTitle = "Images"
             }
             "Aud" -> {
                 selectedColor = R.color.light_yellow
-                screenTitle = "Audio"
             }
             "Doc" -> {
                 selectedColor = R.color.light_blue
-                screenTitle = "Documents"
             }
             "Vdo" -> {
                 selectedColor = R.color.light_violet
-                screenTitle = "Videos"
             }
         }
-        binding.screenTitle.text = screenTitle
         DrawableCompat.setTint(
             DrawableCompat.wrap(binding.plus.background),
             ContextCompat.getColor(this, selectedColor!!)

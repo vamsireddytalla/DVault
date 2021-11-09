@@ -39,7 +39,7 @@ class DashBoardService : Service() {
     }
 
     override fun onBind(intent: Intent?): IBinder? {
-        return null
+        return binder
     }
 
     override fun onCreate() {
@@ -47,7 +47,7 @@ class DashBoardService : Service() {
         startServiceOreoCondition()
         GlobalScope.async {
             startServiceOreoCondition()
-            getDriveFilesAndSearchDb()
+//            getDriveFilesAndSearchDb()
         }
     }
 
@@ -82,7 +82,7 @@ class DashBoardService : Service() {
                 result?.let { res ->
                     res.files.forEach { file ->
                         Log.d(" DashBoard FILE", " ${file.name} ${file.id} ${file.mimeType}")
-                        downloadDataBase(file.id)
+//                        downloadDataBase(file.id)
                     }
                 }
 

@@ -2,8 +2,6 @@ package com.talla.dvault.activities
 
 import android.Manifest
 import android.app.Dialog
-import android.content.DialogInterface
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.drawable.AnimatedVectorDrawable
@@ -43,72 +41,81 @@ import com.talla.dvault.preferences.UserPreferences
 import com.talla.dvault.services.FileCopyService
 import com.talla.dvault.viewmodels.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import android.app.ActivityManager
-import android.content.Context
+import android.content.*
+import android.os.IBinder
+import com.google.api.client.extensions.android.http.AndroidHttp
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
+import com.google.api.client.json.jackson2.JacksonFactory
+import com.google.api.services.drive.Drive
+import com.google.api.services.drive.DriveScopes
+import com.talla.dvault.database.VaultDatabase
+import com.talla.dvault.databinding.CustonProgressDialogBinding
+import com.talla.dvault.services.DashBoardService
 import com.talla.dvault.utills.FileSize
+import com.talla.dvault.utills.InternetUtil
+import kotlinx.coroutines.*
+import java.io.File
 
 
 private const val TAG = "DashBoardActivity"
 
 @AndroidEntryPoint
-class DashBoardActivity : AppCompatActivity()
-{
+class DashBoardActivity : AppCompatActivity() {
     private lateinit var binding: ActivityDashBoardBinding
+
     @Inject
-    lateinit var appSettingsPrefs:UserPreferences
+    lateinit var appSettingsPrefs: UserPreferences
+
     @Inject
     lateinit var glide: RequestManager
+
     @Inject
-    lateinit var gso:GoogleSignInOptions
-    private lateinit var dialog:Dialog
-    private lateinit var user:User
-    private lateinit var customDialogProfileBinding:CustomDialogProfileBinding
-    private lateinit var requestPermissionLauncher:ActivityResultLauncher<String>
-    private val viewModel:MainViewModel by viewModels()
+    lateinit var gso: GoogleSignInOptions
+    private lateinit var dialog: Dialog
+    private lateinit var user: User
+    private lateinit var customDialogProfileBinding: CustomDialogProfileBinding
+    private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
+    private val viewModel: MainViewModel by viewModels()
     var isNightMode = false
+    private lateinit var progressDialog: Dialog
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityDashBoardBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        lifecycleScope.launch(Dispatchers.Default) {
-
-            withContext(Dispatchers.Main){
-                user=viewModel.getUserObj()
-                binding.userName.text=user.userName
-                glide.load(user.userImage).into(binding.userProfilePic)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    binding.userProfilePic.clipToOutline=true
-                }
-            }
+        dialogIninit()
+        if (InternetUtil.isInternetAvail(this)) {
+            defaultCall()
+        } else {
+            checkInternetDialog()
         }
 
-        viewModel.getLiveData().observe(this, Observer{
+
+        viewModel.getLiveData().observe(this, Observer {
             it?.let {
-                it.forEach { catModel->
-                    if (catModel.catId == "Img") binding.totalImages.text = catModel.totalItems.toString()
-                    if (catModel.catId == "Vdo") binding.totalVIdeos.text = catModel.totalItems.toString()
-                    if (catModel.catId == "Doc") binding.totalDocs.text = catModel.totalItems.toString()
-                    if (catModel.catId == "Aud") binding.totalAudios.text = catModel.totalItems.toString()
+                it.forEach { catModel ->
+                    if (catModel.catId == "Img") binding.totalImages.text =
+                        catModel.totalItems.toString()
+                    if (catModel.catId == "Vdo") binding.totalVIdeos.text =
+                        catModel.totalItems.toString()
+                    if (catModel.catId == "Doc") binding.totalDocs.text =
+                        catModel.totalItems.toString()
+                    if (catModel.catId == "Aud") binding.totalAudios.text =
+                        catModel.totalItems.toString()
                 }
             }
         })
 
         lifecycleScope.launch(Dispatchers.IO) {
             appSettingsPrefs.getBooleanData(UserPreferences.NIGHT_MODE).collect { value ->
-                withContext(Dispatchers.Main){
-                    if (value)
-                    {
-                        isNightMode=value
-                    }else{
-                        isNightMode=false
+                withContext(Dispatchers.Main) {
+                    if (value) {
+                        isNightMode = value
+                    } else {
+                        isNightMode = false
                     }
                     if (isNightMode) {
                         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
@@ -124,9 +131,9 @@ class DashBoardActivity : AppCompatActivity()
 
         binding.linearLayout.setOnClickListener {
             if (isNightMode) {
-                 lifecycleScope.launch(Dispatchers.Default) {
-                     appSettingsPrefs.saveBooleanData(UserPreferences.NIGHT_MODE, false)
-                 }
+                lifecycleScope.launch(Dispatchers.Default) {
+                    appSettingsPrefs.saveBooleanData(UserPreferences.NIGHT_MODE, false)
+                }
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
             } else {
                 lifecycleScope.launch(Dispatchers.Default) {
@@ -137,14 +144,18 @@ class DashBoardActivity : AppCompatActivity()
 
         }
 
-        requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
-            if (isGranted) {
-                Log.d(TAG, "Permission: Granted")
-            } else {
-                var result=ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                Log.d(TAG, "Permission: Denied ${result}")
+        requestPermissionLauncher =
+            registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+                if (isGranted) {
+                    Log.d(TAG, "Permission: Granted")
+                } else {
+                    var result = ActivityCompat.shouldShowRequestPermissionRationale(
+                        this,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                    )
+                    Log.d(TAG, "Permission: Denied ${result}")
+                }
             }
-        }
 
         binding.settingsBtn.setOnClickListener {
             val intent: Intent = Intent(this, SettingsActivity::class.java)
@@ -153,25 +164,38 @@ class DashBoardActivity : AppCompatActivity()
 
         binding.audioSelection.setOnClickListener {
             val intent: Intent = Intent(this, FoldersActivity::class.java)
-            intent.putExtra(getString(R.string.cat_key),"Aud")
+            intent.putExtra(getString(R.string.cat_key), "Aud")
             startActivity(intent)
         }
         binding.docSelection.setOnClickListener {
             val intent: Intent = Intent(this, FoldersActivity::class.java)
-            intent.putExtra(getString(R.string.cat_key),"Doc")
+            intent.putExtra(getString(R.string.cat_key), "Doc")
             startActivity(intent)
         }
         binding.videoSelection.setOnClickListener {
             val intent: Intent = Intent(this, FoldersActivity::class.java)
-            intent.putExtra(getString(R.string.cat_key),"Vdo")
+            intent.putExtra(getString(R.string.cat_key), "Vdo")
             startActivity(intent)
         }
         binding.imageSelection.setOnClickListener {
             val intent: Intent = Intent(this, FoldersActivity::class.java)
-            intent.putExtra(getString(R.string.cat_key),"Img")
+            intent.putExtra(getString(R.string.cat_key), "Img")
             startActivity(intent)
         }
 
+    }
+
+    fun defaultCall() {
+        lifecycleScope.launch(Dispatchers.Default) {
+            withContext(Dispatchers.Main) {
+                user = viewModel.getUserObj()
+                binding.userName.text = user.userName
+                glide.load(user.userImage).into(binding.userProfilePic)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    binding.userProfilePic.clipToOutline = true
+                }
+            }
+        }
     }
 
     fun checkDarkMode() {
@@ -191,16 +215,18 @@ class DashBoardActivity : AppCompatActivity()
 
     }
 
-    private fun showLocationMandatoryDialog() {
+    private fun checkInternetDialog() {
         val alertDialogBuilder = AlertDialog.Builder(this)
-        alertDialogBuilder.setTitle("Turn On Gps")
-        alertDialogBuilder.setMessage("Please allow permission to get nearest shops to you.")
+        alertDialogBuilder.setTitle("Check Internet !")
+        alertDialogBuilder.setMessage(getString(R.string.internet_alert))
         alertDialogBuilder.setCancelable(false)
-        alertDialogBuilder.setPositiveButton("Ok") { dialogInterface, i ->
-            dialogInterface.dismiss()
-        }.setNegativeButton("Cancel") { dialog, which ->
-            dialog.dismiss()
-            finish()
+        alertDialogBuilder.setPositiveButton("retry") { dialogInterface, i ->
+            if (InternetUtil.isInternetAvail(this)) {
+                dialogInterface.dismiss()
+                defaultCall()
+            } else {
+                checkInternetDialog()
+            }
         }
         alertDialogBuilder.show()
     }
@@ -213,37 +239,50 @@ class DashBoardActivity : AppCompatActivity()
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         dialog.show()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            customDialogProfileBinding.userProfilePic.clipToOutline=true
+            customDialogProfileBinding.userProfilePic.clipToOutline = true
         }
-        customDialogProfileBinding.userName.text=user.userName
-        customDialogProfileBinding.userEmail.text=user.userEmail
-        customDialogProfileBinding.lastLoggedin.text=user.userloginTime
+        customDialogProfileBinding.userName.text = user.userName
+        customDialogProfileBinding.userEmail.text = user.userEmail
+        customDialogProfileBinding.lastLoggedin.text = user.userloginTime
         glide.load(user.userImage).into(customDialogProfileBinding.userProfilePic)
         customDialogProfileBinding.login.setOnClickListener(View.OnClickListener {
             val mGoogleSignInClient = GoogleSignIn.getClient(this, gso)
             mGoogleSignInClient?.signOut()
                 ?.addOnCompleteListener(this, object : OnCompleteListener<Void> {
                     override fun onComplete(task: Task<Void>) {
-                        Toast.makeText(this@DashBoardActivity, "Signed Out", Toast.LENGTH_SHORT).show()
-                        openIntent()
+                        if (task.isSuccessful) {
+                            Log.d(TAG, "onComplete: ${task.result}")
+                            dialog.dismiss()
+                            showLogOutAlert()
+                        } else {
+                            Log.d(TAG, "onComplete: ${task.result}")
+                            dialog.dismiss()
+                            FileSize.showSnackBar("Error Occured retry", binding.root)
+                        }
+
                     }
                 })
-            dialog.dismiss() })
+        })
     }
 
-    fun profileRoot(view: android.view.View)
-    {
+    fun profileRoot(view: android.view.View) {
         showPofileDialog()
     }
 
     private fun openIntent() {
+        Toast.makeText(this@DashBoardActivity, "Signed Out", Toast.LENGTH_SHORT).show()
         val intent: Intent = Intent(this, MainActivity::class.java)
         startActivity(intent)
         finish()
     }
 
-    fun View.showSnackbar(view: View, msg: String, length: Int, actionMessage: CharSequence?, action: (View) -> Unit)
-    {
+    fun View.showSnackbar(
+        view: View,
+        msg: String,
+        length: Int,
+        actionMessage: CharSequence?,
+        action: (View) -> Unit
+    ) {
         val snackbar = Snackbar.make(view, msg, length)
         if (actionMessage != null) {
             snackbar.setAction(actionMessage) {
@@ -251,6 +290,70 @@ class DashBoardActivity : AppCompatActivity()
             }.show()
         } else {
             snackbar.show()
+        }
+    }
+
+    fun dialogIninit() {
+        progressDialog = Dialog(this)
+        val customProgressDialogBinding = CustonProgressDialogBinding.inflate(this.layoutInflater)
+        progressDialog.setContentView(customProgressDialogBinding.root)
+        progressDialog.setCancelable(false)
+    }
+
+    suspend fun showProgressDialog() {
+        withContext(Dispatchers.Main) {
+            progressDialog.show()
+        }
+    }
+
+    suspend fun stopProgressDialog() {
+        withContext(Dispatchers.Main) {
+            progressDialog.dismiss()
+        }
+    }
+
+
+    private fun showLogOutAlert() {
+        val alertDialogBuilder = AlertDialog.Builder(this)
+        alertDialogBuilder.setTitle("Logout Alert!")
+        alertDialogBuilder.setMessage(getString(R.string.logout_alert))
+        alertDialogBuilder.setCancelable(false)
+        alertDialogBuilder.setPositiveButton("Ok") { dialogInterface, i ->
+            dialogInterface.dismiss()
+            oldDataDelete()
+        }.setNegativeButton("Cancel") { dialog, which ->
+            dialog.dismiss()
+        }
+        alertDialogBuilder.show()
+    }
+
+    private fun oldDataDelete() {
+        runBlocking {
+            progressDialog.show()
+            var deleteJob = lifecycleScope.launch(Dispatchers.Default) {
+                appSettingsPrefs.storeStringData(
+                    UserPreferences.LAST_BACKUP_TIME,
+                    "No BackUp found"
+                )
+                var pathsArray = arrayListOf<String>(
+                    "app_Img",
+                    "app_New Folder",
+                    "app_Vdo",
+                    "app_Aud",
+                    "app_Doc"
+                )
+                pathsArray.forEach {
+                    val basePath =
+                        this@DashBoardActivity.resources.getString(R.string.db_folders_path)
+                    Log.d(TAG, "showDataDeleteDialog: Directory $basePath")
+                    val to = File("$basePath$it")
+                    to.deleteRecursively()
+                }
+                viewModel.deletAllAppData()
+            }
+            deleteJob.join()
+            progressDialog.dismiss()
+            openIntent()
         }
     }
 

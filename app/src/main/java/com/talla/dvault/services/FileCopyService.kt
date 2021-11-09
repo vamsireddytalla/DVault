@@ -366,7 +366,7 @@ class FileCopyService : Service() {
     ): String {
 
         val newdir: File = this.getDir(catFolderName, Context.MODE_PRIVATE) //Don't do
-        Log.d(TAG, newdir.toString())
+        Log.d(TAG, "File Path Vamsi "+newdir.toString())
         if (!newdir.exists()) {
             newdir.mkdirs()
             Log.d(TAG, "createFolder: Creating")

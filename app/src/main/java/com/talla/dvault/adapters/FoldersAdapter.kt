@@ -2,6 +2,7 @@ package com.talla.dvault.adapters
 
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.PopupMenu
@@ -68,6 +69,7 @@ class FoldersAdapter(val folderCat:String,val mContext:Context,val onOptionClick
             folderCard.setOnClickListener {
                 var io=Intent(mContext,ItemsActivity::class.java)
                 io.putExtra(mContext.getString(R.string.folderName),folderObj.folderName)
+                Log.d("FolderName", "onBindViewHolder: ${folderObj.folderName}")
                 io.putExtra(mContext.getString(R.string.catType),folderCat)
                 io.putExtra(mContext.getString(R.string.folderId),folderObj.folderId)
                 mContext.startActivity(io)

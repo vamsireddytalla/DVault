@@ -17,11 +17,22 @@ class VaultRepository @Inject constructor(private val appDao:DVaultDao)
        return appDao.getUserDetails()
    }
 
+    suspend fun checkIsUserExist(userEmail:String):Int
+    {
+        return appDao.checkIsUserExist(userEmail = userEmail)
+    }
+
    suspend fun insertUser(user:User):Long
    {
        var result=appDao.insertUserDetails(user)
        return result
    }
+
+    suspend fun updateUser(user:User):Long
+    {
+        var result=appDao.updateUser(user)
+        return result
+    }
 
 
     suspend fun changePhotosCount(count:Int)
