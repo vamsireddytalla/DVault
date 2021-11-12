@@ -106,10 +106,6 @@ class DriveService : Service() {
                                     if (source.serverId == null || source.serverId.isEmpty()) {
                                         try {
                                             uploadLargeFiles(source, index)
-                                            var catList=repository.getCategoriesIfNotEmpty()
-                                            catList.forEach {
-                                                updateDbFiles(it.serverId,it.categoryName,it.catType)
-                                            }
                                         } catch (e: Exception) {
                                             e.printStackTrace()
                                             Log.d(TAG, "onStartCommand: Exception Occured-----> ${e.message}")
@@ -213,7 +209,7 @@ class DriveService : Service() {
                 result?.let { res ->
                     res.files.forEach { file ->
                         Log.d("FILE", " ${file.name} ${file.id} ${file.mimeType} ${FileSize.bytesToHuman(file.quotaBytesUsed)}")
-//                        deleteData(file.id)
+                        deleteData(file.id)
                     }
                 }
 

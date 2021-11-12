@@ -59,6 +59,18 @@ class MainViewModel @Inject constructor(
         res.await()
     }
 
+    suspend fun updateCatItem(catModel:CategoriesModel):Int {
+        var res: Deferred<Int> = viewModelScope.async {
+            try {
+                repository.updateCategory(catModel)
+            }catch (e:Exception){
+                e.printStackTrace()
+                Log.d("MainActiivty", "insertUpdateCatList: ${e.message}")
+            }
+        }
+       return res.await()
+    }
+
 
     suspend fun updateUser(user: User): Long {
         var res: Deferred<Long> = viewModelScope.async(Dispatchers.IO) {
@@ -122,6 +134,10 @@ class MainViewModel @Inject constructor(
         return repository.getDbFilesList()
     }
 
+    suspend fun deleteParticularCat(catId:String) {
+         repository.deleteParticularCat(catId)
+    }
+
 
     suspend fun getDbServerFolderId(catId: String): CategoriesModel {
         return repository.getDbServerFolderId(catId)
@@ -133,6 +149,13 @@ class MainViewModel @Inject constructor(
         dao.deleteItemTable()
         dao.deleteUserTable()
         dao.resetCategoriesTable()
+    }
+
+    suspend fun resetCatServerId(){
+        viewModelScope.async(Dispatchers.IO) {
+            dao.resetCategoriesTable()
+        }
+
     }
 
 }

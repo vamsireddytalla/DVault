@@ -112,7 +112,7 @@ class SplashActivity : AppCompatActivity() {
             runBlocking {
                 val res = viewModel.isLoggedInPerfectly()
                 Log.d(TAG, "IsLoggedIn Result: $res")
-                if (res >= 8) {
+                if (res >= 8 && isUserSignedIn()) {
                     Log.d(TAG, "IsLoggedIn Perfectly: $res")
                     openDashBoard()
                 } else {

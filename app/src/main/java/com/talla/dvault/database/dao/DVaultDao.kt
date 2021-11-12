@@ -26,8 +26,8 @@ interface DVaultDao {
     @Insert(onConflict = REPLACE)
     suspend fun insertCartList(catList: ArrayList<CategoriesModel>)
 
-    @Query("Update CategoriesModel Set serverId=:serverId Where catId=:catId")
-    suspend fun updateCategory(serverId:String,catId: String):Int
+    @Query("Update CategoriesModel Set serverId=:serverId,categoryName=:catName Where catId=:catId")
+    suspend fun updateCategory(serverId:String,catName:String,catId: String):Int
 
     @Insert(onConflict = REPLACE)
     suspend fun updateUser(userDetails: User): Long
@@ -121,6 +121,9 @@ interface DVaultDao {
 
     @Query("Delete from ItemModel where itemId=:itemId")
     suspend fun deleteItem(itemId: Int)
+
+    @Query("Delete from CategoriesModel where catId=:catId")
+    suspend fun deleteParticularCat(catId:String)
 
     @Query("Select * from ItemModel Where (itemMimeType=:categoryType AND (serverId Is Null OR serverId=''))")
     fun getBRItems(categoryType: String): List<ItemModel>

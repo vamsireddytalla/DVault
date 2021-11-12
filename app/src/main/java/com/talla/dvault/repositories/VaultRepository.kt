@@ -29,8 +29,8 @@ class VaultRepository @Inject constructor(private val appDao:DVaultDao)
 
     suspend fun insertCatList(catList:ArrayList<CategoriesModel>)=appDao.insertCartList(catList)
 
-    suspend fun updateCatItem(catModel:CategoriesModel):Int{
-      return appDao.updateCategory(catModel.serverId,catModel.catId)
+    suspend fun updateCategory(catModel:CategoriesModel):Int{
+      return appDao.updateCategory(catModel.serverId,catModel.categoryName,catModel.catId)
     }
 
     suspend fun updateUser(user:User):Long
@@ -95,6 +95,8 @@ class VaultRepository @Inject constructor(private val appDao:DVaultDao)
     fun getItemsBasedOnCatType(catType:String,folderId:Int)=appDao.getItemsBasedOnCatType(catType,folderId)
 
     suspend fun deleteItem(folderId: Int)=appDao.deleteItem(folderId)
+
+    suspend fun deleteParticularCat(catId:String)=appDao.deleteParticularCat(catId)
 
     suspend fun deleteCategories()=appDao.deleteCategories()
 
