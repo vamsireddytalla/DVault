@@ -104,7 +104,6 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
                     Log.d(TAG, "onCreate: ${receivedData?.data?.path.toString()}")
                     if (null != receivedData) {
                         var sourceList = ArrayList<SourcesModel>()
-                        val appPrivatePath: File = this.getDir(folderName, Context.MODE_PRIVATE)
                         if (null != receivedData.clipData) {
                             for (i in 0 until receivedData.clipData!!.itemCount) {
                                 val uri = receivedData.clipData!!.getItemAt(i).uri
@@ -164,7 +163,7 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
                 }
                 openFileIntent.addCategory(Intent.CATEGORY_OPENABLE)
                 openFileIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-                openFileIntent.setAction(Intent.ACTION_GET_CONTENT)
+                openFileIntent.action = Intent.ACTION_GET_CONTENT
                 res.launch(Intent.createChooser(openFileIntent, "Select Multiple Items"))
 
 

@@ -19,6 +19,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.talla.dvault.activities.DashBoardActivity
@@ -41,6 +42,9 @@ class SplashActivity : AppCompatActivity() {
     private val viewModel: MainViewModel by viewModels()
 
     @Inject
+    lateinit var gso: GoogleSignInOptions
+
+    @Inject
     lateinit var userPreference: UserPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,7 +52,6 @@ class SplashActivity : AppCompatActivity() {
         binding = ActivitySplashBinding.inflate(layoutInflater)
         setContentView(binding.root)
         requestPermissions()
-
     }
 
 
@@ -58,15 +61,15 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun openLoginScreen() {
+        logout()
         val intent: Intent = Intent(this, MainActivity::class.java)
         startActivity(intent)
         finish()
     }
 
-    private fun openDashBoard()
-    {
+    private fun openDashBoard() {
         runBlocking {
-            val res=viewModel.isLockedOrNot()
+            val res = viewModel.isLockedOrNot()
             if (res) {
                 val intent: Intent = Intent(this@SplashActivity, PasswordActivity::class.java)
                 startActivity(intent)
@@ -105,17 +108,25 @@ class SplashActivity : AppCompatActivity() {
 
     private fun requestPermissions() {
 
-        if (isUserSignedIn() && hasExternalStoragePermission()) {
-            openDashBoard()
-        } else if (!hasExternalStoragePermission()) {
+        if (hasExternalStoragePermission()) {
+            runBlocking {
+                val res = viewModel.isLoggedInPerfectly()
+                Log.d(TAG, "IsLoggedIn Result: $res")
+                if (res >= 8) {
+                    Log.d(TAG, "IsLoggedIn Perfectly: $res")
+                    openDashBoard()
+                } else {
+                    Log.d(TAG, "requestPermissions: Logout")
+                    openLoginScreen()
+                }
+            }
+        } else if(!hasExternalStoragePermission()) {
             val permissionsList = mutableListOf<String>()
             permissionsList.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
 
             if (permissionsList.isNotEmpty()) {
                 ActivityCompat.requestPermissions(this, permissionsList.toTypedArray(), 0)
             }
-        } else {
-            openLoginScreen()
         }
 
     }
@@ -200,5 +211,12 @@ class SplashActivity : AppCompatActivity() {
         }
     }
 
+    fun logout() {
+        val mGoogleSignInClient = GoogleSignIn.getClient(this, gso)
+        mGoogleSignInClient?.signOut()
+            ?.addOnCompleteListener(
+                this
+            ) { }
+    }
 
 }

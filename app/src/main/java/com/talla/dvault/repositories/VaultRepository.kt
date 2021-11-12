@@ -1,11 +1,10 @@
 package com.talla.dvault.repositories
 
+import android.util.Log
 import androidx.lifecycle.LiveData
+import androidx.sqlite.db.SimpleSQLiteQuery
 import com.talla.dvault.database.dao.DVaultDao
-import com.talla.dvault.database.entities.AppLockModel
-import com.talla.dvault.database.entities.FolderTable
-import com.talla.dvault.database.entities.ItemModel
-import com.talla.dvault.database.entities.User
+import com.talla.dvault.database.entities.*
 import java.lang.Exception
 import javax.inject.Inject
 
@@ -28,19 +27,21 @@ class VaultRepository @Inject constructor(private val appDao:DVaultDao)
        return result
    }
 
+    suspend fun insertCatList(catList:ArrayList<CategoriesModel>)=appDao.insertCartList(catList)
+
+    suspend fun updateCatItem(catModel:CategoriesModel):Int{
+      return appDao.updateCategory(catModel.serverId,catModel.catId)
+    }
+
     suspend fun updateUser(user:User):Long
     {
         var result=appDao.updateUser(user)
         return result
     }
 
-
-    suspend fun changePhotosCount(count:Int)
-    {
-        appDao.changePhotosCount(count)
-    }
-
     fun isLockOrNot(): Boolean = appDao.isLockedOrNot()
+
+    fun isLoggedInPerfectly(): Int = appDao.isLoggedInPerfectly()
 
     suspend fun checkPassword(password:String)=appDao.checkPassword(password)
 
@@ -63,6 +64,14 @@ class VaultRepository @Inject constructor(private val appDao:DVaultDao)
 
     fun getRBItems(catType:String)=appDao.getRBItems(catType)
 
+    suspend fun getCategoriesData()=appDao.getCategoriesData()
+
+    suspend fun getDbFilesList()=appDao.getDbFilesList()
+
+    suspend fun getCategoriesIfNotEmpty()=appDao.getCategoriesIfNotEmpty()
+
+    suspend fun getDbServerFolderId(catId:String)=appDao.getDbServerFolderId(catId)
+
 
     suspend fun renameFolder(folderName:String,folderId:Int):Int
     {
@@ -81,13 +90,15 @@ class VaultRepository @Inject constructor(private val appDao:DVaultDao)
 
     suspend fun insertSingleItem(itemsList:ItemModel)=appDao.insertSingleItem(itemsList)
 
-    suspend fun removeCatItemCount(catId: String)=appDao.removeCatItemCount(catId)
-
-    suspend fun addCatItemCount(catId: String)=appDao.addCatItemCount(catId)
+    suspend fun updateCatServId(catId:String,servId:String)=appDao.updateCatServId(catId, servId)
 
     fun getItemsBasedOnCatType(catType:String,folderId:Int)=appDao.getItemsBasedOnCatType(catType,folderId)
 
     suspend fun deleteItem(folderId: Int)=appDao.deleteItem(folderId)
+
+    suspend fun deleteCategories()=appDao.deleteCategories()
+
+    suspend fun checkPoint()=appDao.checkpoint(SimpleSQLiteQuery("pragma wal_checkpoint(full)"));
 
     suspend fun updateItemServerId(serverId:String,itemId:Int):Int
     {

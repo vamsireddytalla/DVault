@@ -121,9 +121,8 @@ class FoldersActivity : AppCompatActivity() ,FolderItemClick {
                 var catType=catType
                 runBlocking {
                     var btnType=b1.text.toString()
-                    if (btnType.equals(this@FoldersActivity.resources.getString(R.string.create)))
+                    if (btnType == this@FoldersActivity.resources.getString(R.string.create))
                     {
-//                        viewModel.createNewFolder(foldertable)
                         var res: Long =viewModel.checkDataANdCreateFolder(folderName,createdTime.toString(),catType.toString())
                         if (res==-1L){
                             Toast.makeText(this@FoldersActivity, getString(R.string.already_existed), Toast.LENGTH_SHORT).show()

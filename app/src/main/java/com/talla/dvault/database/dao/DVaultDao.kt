@@ -1,9 +1,16 @@
 package com.talla.dvault.database.dao
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.room.*
 import androidx.room.OnConflictStrategy.REPLACE
 import com.talla.dvault.database.entities.*
+import androidx.sqlite.db.SupportSQLiteQuery
+
+import androidx.room.RawQuery
+
+
+
 
 @Dao
 interface DVaultDao {
@@ -11,10 +18,19 @@ interface DVaultDao {
     suspend fun insertUserDetails(userDetails: User): Long
 
     @Insert(onConflict = REPLACE)
-    suspend fun updateUser(userDetails: User): Long
+    suspend fun insertUpdateCatList(catList:ArrayList<CategoriesModel>)
 
-    @Query("Update CategoriesModel Set totalItems=:count where categoryName='Image'")
-    suspend fun changePhotosCount(count: Int)
+    @Update(onConflict = REPLACE)
+    suspend fun insertCatItem(catModel:CategoriesModel):Int
+
+    @Insert(onConflict = REPLACE)
+    suspend fun insertCartList(catList: ArrayList<CategoriesModel>)
+
+    @Query("Update CategoriesModel Set serverId=:serverId Where catId=:catId")
+    suspend fun updateCategory(serverId:String,catId: String):Int
+
+    @Insert(onConflict = REPLACE)
+    suspend fun updateUser(userDetails: User): Long
 
     @Query("SELECT * FROM User ORDER BY userloginTime DESC LIMIT 1")
     suspend fun getUserDetails(): User
@@ -46,6 +62,9 @@ interface DVaultDao {
 
     @Query("Select isLocked from AppLockModel ORDER BY timeStamp DESC LIMIT 1")
     fun isLockedOrNot(): Boolean
+
+    @Query("Select Count(*) from CategoriesModel Where (serverId IS NOT NULL AND serverId!='')")
+    fun isLoggedInPerfectly(): Int
 
     @Query("Update AppLockModel Set isLocked=:vales")
     suspend fun lockChange(vales: Boolean): Int
@@ -109,14 +128,20 @@ interface DVaultDao {
     @Query("Select * from ItemModel Where itemMimeType=:catType AND serverId Is Not Null And serverId!=''")
     fun getRBItems(catType: String): List<ItemModel>
 
+    @Query("Select * from CategoriesModel Where (serverId IS NULL OR serverId='')")
+    suspend fun getCategoriesData(): List<CategoriesModel>
+
+    @Query("Select * from CategoriesModel Where (serverId IS NOT NULL AND serverId!='' AND catType='file/*')")
+    suspend fun getCategoriesIfNotEmpty(): List<CategoriesModel>
+
+    @Query("Select * from CategoriesModel Where (catId=:catId AND (serverId IS NOT NULL OR serverId!='')) Limit 1")
+    suspend fun getDbServerFolderId(catId:String):CategoriesModel
+
+    @Query("Select * from CategoriesModel")
+    suspend fun getDbFilesList():List<CategoriesModel>
+
     @Query("Update ItemModel Set serverId=:serverId where itemId=:itemId")
     suspend fun updateItemServerId(serverId: String, itemId: Int): Int
-
-    @Query("Update CategoriesModel Set totalItems=totalItems-1 Where catId=:catId")
-    suspend fun removeCatItemCount(catId: String)
-
-    @Query("Update CategoriesModel Set totalItems=totalItems+1 Where catId=:catId")
-    suspend fun addCatItemCount(catId: String)
 
     //delete all tables
     @Query("Delete from ApplockModel")
@@ -134,8 +159,17 @@ interface DVaultDao {
     @Query("Delete from User")
     suspend fun deleteUserTable()
 
-    @Query("Update CategoriesModel Set totalItems=0")
+    @Query("Update CategoriesModel Set serverId=''")
     suspend fun resetCategoriesTable()
+
+    @Query("Delete from CategoriesModel")
+    suspend fun deleteCategories()
+
+    @Query("Update CategoriesModel Set serverId=:servId Where catId=:catId")
+    suspend fun updateCatServId(catId:String,servId:String):Int
+
+    @RawQuery
+    fun checkpoint(supportSQLiteQuery: SupportSQLiteQuery?): Int
 
 
 }

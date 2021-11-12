@@ -11,5 +11,5 @@ data class CategoriesModel(
     var catId:String,
     @NotNull
     var categoryName:String,
-    @NotNull
-    var totalItems:Int=0)
+    var serverId:String,
+    var catType:String)

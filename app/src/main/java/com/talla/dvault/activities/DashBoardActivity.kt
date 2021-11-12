@@ -97,14 +97,10 @@ class DashBoardActivity : AppCompatActivity() {
         viewModel.getLiveData().observe(this, Observer {
             it?.let {
                 it.forEach { catModel ->
-                    if (catModel.catId == "Img") binding.totalImages.text =
-                        catModel.totalItems.toString()
-                    if (catModel.catId == "Vdo") binding.totalVIdeos.text =
-                        catModel.totalItems.toString()
-                    if (catModel.catId == "Doc") binding.totalDocs.text =
-                        catModel.totalItems.toString()
-                    if (catModel.catId == "Aud") binding.totalAudios.text =
-                        catModel.totalItems.toString()
+                    if (catModel.catId == "Img") binding.totalImages.text = "0"
+                    if (catModel.catId == "Vdo") binding.totalVIdeos.text = "0"
+                    if (catModel.catId == "Doc") binding.totalDocs.text = "0"
+                    if (catModel.catId == "Aud") binding.totalAudios.text ="0"
                 }
             }
         })
@@ -340,15 +336,14 @@ class DashBoardActivity : AppCompatActivity() {
                     "app_New Folder",
                     "app_Vdo",
                     "app_Aud",
-                    "app_Doc"
-                )
+                    "app_Doc")
                 pathsArray.forEach {
-                    val basePath =
-                        this@DashBoardActivity.resources.getString(R.string.db_folders_path)
+                    val basePath = this@DashBoardActivity.resources.getString(R.string.db_folders_path)
                     Log.d(TAG, "showDataDeleteDialog: Directory $basePath")
                     val to = File("$basePath$it")
                     to.deleteRecursively()
                 }
+                this@DashBoardActivity.cacheDir.deleteRecursively()
                 viewModel.deletAllAppData()
             }
             deleteJob.join()

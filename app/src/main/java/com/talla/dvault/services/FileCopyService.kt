@@ -88,16 +88,14 @@ class FileCopyService : Service() {
                     if (intent.extras != null) {
                         Log.d(TAG, "onStartCommand: ACTION_START_FOREGROUND_SERVICE")
                         sourceModelList?.clear()
-                        sourceModelList =
-                            intent.getSerializableExtra(this.resources.getString(R.string.fileCopy)) as ArrayList<SourcesModel>
+                        sourceModelList = intent.getSerializableExtra(this.resources.getString(R.string.fileCopy)) as ArrayList<SourcesModel>
                         Log.d(TAG, "Hash Code -> : ${sourceModelList.hashCode()}")
                         isInterrupted = false
                         createNotification(
                             FileSize.FILE_ADD_CHANNEl_ID,
                             FileSize.FILE_ADD_CHANNEL_NAME,
                             FileSize.FILE_NOTIFY_ID,
-                            FileSize.ACTION_STOP_FOREGROUND_SERVICE
-                        )
+                            FileSize.ACTION_STOP_FOREGROUND_SERVICE)
                         lockJob = GlobalScope.launch(Dispatchers.IO) {
                             sourceModelList?.let { sourceModel ->
                                 for ((index, source) in sourceModel.withIndex()) {
@@ -106,7 +104,6 @@ class FileCopyService : Service() {
                                         if (!isInterrupted!!) {
                                             repository.insertSingleItem(itemModel)
                                             Log.d(TAG, "onStartCommand: ${source.catType}")
-                                            repository.addCatItemCount(source.catType)
                                         }
                                     } catch (e: Exception) {
                                         Log.d(TAG, "onStartCommand: ${e.message}")
@@ -160,7 +157,6 @@ class FileCopyService : Service() {
                                         if (!UNLOCK_INTERRUPT!!) {
                                             repository.deleteItem(source.itemId)
                                             Log.d(TAG, "onStartCommand: ${source.itemMimeType}")
-                                            repository.removeCatItemCount(source.itemMimeType)
                                         }
                                     } catch (e: Exception) {
                                         Log.d(TAG, "onStartCommand: ${e.message}")
