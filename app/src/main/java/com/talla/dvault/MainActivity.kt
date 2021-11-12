@@ -111,6 +111,7 @@ class MainActivity : AppCompatActivity() {
 //        intent.flags= Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
         startActivity(intent)
         finish()
+        exitProcess(0)
     }
 
     fun googleSIgnIn(view: android.view.View) {
@@ -226,10 +227,7 @@ class MainActivity : AppCompatActivity() {
                             Log.d(TAG, "getDriveFiles: Old User")
                             var catList = ArrayList<CategoriesModel>()
                             res.files.forEach { fileee ->
-                                Log.d(
-                                    TAG,
-                                    "getDriveFiles: Server File Sizes ${fileee.size} ${fileee.name}"
-                                )
+                                Log.d(TAG, "getDriveFiles: Server File Sizes ${fileee.size} ${fileee.name}")
                                 var name = ""
                                 when (fileee.name) {
                                     "Img" -> name = "Images"
@@ -241,7 +239,7 @@ class MainActivity : AppCompatActivity() {
                                     "DVault.db-wal" -> name = "DVault.db-wal"
                                     "DVault.db-shm" -> name = "DVault.db-shm"
                                 }
-                                var catModel = CategoriesModel(fileee.name, "", fileee.id, fileee.mimeType)
+                                var catModel = CategoriesModel(fileee.name, name, fileee.id, fileee.mimeType)
                                 catList.add(catModel)
                             }
                             Log.d(TAG, "Category List Retrieved: ${catList.toString()}")
@@ -503,7 +501,7 @@ class MainActivity : AppCompatActivity() {
         try {
             val categoriesList: ArrayList<CategoriesModel> =
                 viewModel.getCategoriesIfNotEmpty() as ArrayList<CategoriesModel>
-            databaseInstance.close()
+//            databaseInstance.close()
             var file = java.io.File(this@MainActivity.resources.getString(R.string.db_path))
             deleteAllDbFiles(file)
 

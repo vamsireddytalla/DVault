@@ -213,7 +213,7 @@ class DriveService : Service() {
                 result?.let { res ->
                     res.files.forEach { file ->
                         Log.d("FILE", " ${file.name} ${file.id} ${file.mimeType} ${FileSize.bytesToHuman(file.quotaBytesUsed)}")
-                        deleteData(file.id)
+//                        deleteData(file.id)
                     }
                 }
 

@@ -147,7 +147,7 @@ interface DVaultDao {
     @Query("Delete from ApplockModel")
     suspend fun deleteAppLockTable()
 
-    @Query("Delete from ApplockModel")
+    @Query("Delete from CategoriesModel")
     suspend fun deleteCategoriesTable()
 
     @Query("Delete from FolderTable")

@@ -327,13 +327,9 @@ class DashBoardActivity : AppCompatActivity() {
         runBlocking {
             progressDialog.show()
             var deleteJob = lifecycleScope.launch(Dispatchers.Default) {
-                appSettingsPrefs.storeStringData(
-                    UserPreferences.LAST_BACKUP_TIME,
-                    "No BackUp found"
-                )
+                appSettingsPrefs.storeStringData(UserPreferences.LAST_BACKUP_TIME, "No BackUp found")
                 var pathsArray = arrayListOf<String>(
                     "app_Img",
-                    "app_New Folder",
                     "app_Vdo",
                     "app_Aud",
                     "app_Doc")

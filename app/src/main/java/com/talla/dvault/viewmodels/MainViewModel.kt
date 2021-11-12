@@ -49,7 +49,7 @@ class MainViewModel @Inject constructor(
     suspend fun insertCatItem(catList:ArrayList<CategoriesModel>) {
         var res: Deferred<Unit> = viewModelScope.async {
             try {
-                repository.deleteCategories()
+//                repository.deleteCategories()
                 repository.insertCatList(catList)
             }catch (e:Exception){
                 e.printStackTrace()
@@ -129,7 +129,6 @@ class MainViewModel @Inject constructor(
 
     suspend fun deletAllAppData() {
         dao.deleteAppLockTable()
-        dao.deleteCategoriesTable()
         dao.deleteFolderTable()
         dao.deleteItemTable()
         dao.deleteUserTable()
