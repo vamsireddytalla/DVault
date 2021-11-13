@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
 import android.view.View
+import android.view.animation.AnimationUtils
 import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
@@ -23,7 +24,14 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import android.widget.CompoundButton
 import androidx.core.view.isVisible
+import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.material.snackbar.Snackbar
+import com.google.api.client.extensions.android.http.AndroidHttp
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
+import com.google.api.client.json.jackson2.JacksonFactory
+import com.google.api.services.drive.Drive
+import com.google.api.services.drive.DriveScopes
+import com.google.api.services.drive.model.About
 import com.talla.dvault.database.entities.User
 import com.talla.dvault.databinding.StorageLayoutBinding
 import com.talla.dvault.preferences.UserPreferences
@@ -110,6 +118,13 @@ class SettingsActivity : AppCompatActivity() {
                 binding.restoreRoot.visibility = View.VISIBLE
                 binding.restoreProgressRoot.visibility = View.GONE
                 binder?.stopSettingsService("Restore-Cancelled!")
+            }
+            binding.googleCloudLayout.refreshStorage.setOnClickListener {
+                var rotationAnimation=AnimationUtils.loadAnimation(this@SettingsActivity,R.anim.rotate_image)
+                binding.googleCloudLayout.refreshStorage.startAnimation(rotationAnimation)
+                lifecycleScope.async(Dispatchers.IO){
+                    binder?.getDriveStorage()
+                }
             }
         }
 

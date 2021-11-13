@@ -73,8 +73,8 @@ class DriveService : Service() {
         startServiceOreoCondition()
         isInterrupted = false
         backgroundScope.launch {
-//            getTotalDriveStorages()
-            getDriveFiles()
+            getTotalDriveStorages()
+//            getDriveFiles()
         }
     }
 
@@ -105,7 +105,7 @@ class DriveService : Service() {
                             Log.d(TAG, "onStartCommand: Total List Received ${itemModelList.toString()}")
                             if (itemModelList.isEmpty()) {
                                 Log.d(TAG, "onStartCommand: No Items Found")
-                                stopServiceMethod("Done")
+                                stopServiceMethod(type.toString()+" Completed!")
                             } else {
                                 isInterrupted = false
                                 createNotification(
@@ -125,7 +125,14 @@ class DriveService : Service() {
                                                    Log.d(TAG, "onStartCommand: Exception Occured-----> ${e.message}")
                                                }
                                            } else {
-                                               downloadDBFiles(source, index + 1)
+                                               val orgDir: java.io.File = this@DriveService.getDir(source.itemCatType, Context.MODE_PRIVATE)
+                                               val searchFile=File(orgDir.toString()+"/"+source.itemName)
+                                               Log.d(TAG, "onStartCommand: Secret File Path $searchFile")
+                                               if (searchFile.exists()) {
+                                                   Log.d(TAG, "onStartCommand: File Already Exists")
+                                                   continue
+                                               }
+                                               downloadDBFiles(source, index + 1,searchFile.toString())
                                            }
                                        }catch (e:Exception){
                                            e.printStackTrace()
@@ -133,6 +140,7 @@ class DriveService : Service() {
                                        }
                                     } else break
                                 }
+                                stopServiceMethod(type.toString()+" Completed!")
                                 cancelProcessJob?.join()
                             }
                         }
@@ -184,6 +192,7 @@ class DriveService : Service() {
     }
 
     fun stopServiceMethod(message: String) {
+        Log.d(TAG, "stopServiceMethod: Called")
         settingsCallbackListner?.fileServerDealing(0, message, "")
         var clickIntent = Intent(this@DriveService, DriveService::class.java)
         clickIntent.action = FileSize.ACTION_SETTINGS_STOP_FOREGROUND_SERVICE
@@ -208,6 +217,10 @@ class DriveService : Service() {
 
         fun stopSettingsService(cancelMsg:String) {
             stopServiceMethod(cancelMsg)
+        }
+
+        fun getDriveStorage(){
+            getTotalDriveStorages()
         }
     }
 
@@ -304,116 +317,38 @@ class DriveService : Service() {
         }
     }
 
-    fun uploadDataBaseFiles() {
-        val storageFile = File()
-        val mimetype = this.resources.getString(R.string.file_mime_type)
-        storageFile.parents = Collections.singletonList("appDataFolder")
-        storageFile.name = "DVault.db"
-        storageFile.mimeType = "*/*"
-
-        val storageFile_shm = File()
-        storageFile_shm.parents = Collections.singletonList("appDataFolder")
-        storageFile_shm.name = "DVault-shm"
-        storageFile_shm.mimeType = mimetype
-
-        val storageFile_wal = File()
-        storageFile_wal.parents = Collections.singletonList("appDataFolder")
-        storageFile_wal.name = "DVault-wal"
-        storageFile_wal.mimeType = "*/*"
-
-        val filePath: java.io.File =
-            java.io.File(this.resources.getString(R.string.db_path) + "DVault.db")
-        val filePathShm: java.io.File =
-            java.io.File(this.resources.getString(R.string.db_path) + "DVault-shm")
-        val filePathWal: java.io.File =
-            java.io.File(this.resources.getString(R.string.db_path) + "DVault-wal")
-        val mimeType = this.resources.getString(R.string.file_mime_type)
-        Log.d(TAG, "uploadDataBaseFiles: $filePath")
-        val mediaContent = FileContent("*/*", filePath)
-        val mediaContentShm = FileContent(mimeType, filePathShm)
-        val mediaContentWal = FileContent(mimeType, filePathWal)
-
+    //quotaBytesUsed
+    private fun updateDbFiles(service: Drive, fileId: String, fileName: String) {
         try {
-            var driveService = getDriveService()
-            var mainDbRes: File? = driveService?.let {
-                it.files().create(storageFile, mediaContent).execute()
-            }
-//            var secondDbRes: File? = driveService?.let {
-//                it.files().create(storageFile_shm, mediaContentShm).execute()
-//            }
-//            var thirdDbWal: File? = driveService?.let {
-//                it.files().create(storageFile_wal, mediaContentWal).execute()
-//            }
-
-            getDriveFiles()
-
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
-    private fun updateDbFiles(service: Drive, fileId: String): File? {
-        return try {
-
             var mimeType = "file/*"
             // File's new content.
-            val file = File(this.resources.getString(R.string.db_path) + "DVault.db-shm")
-            val fileContent = FileContent(mimeType, file)
-
-            val newMetadata = File()
+            val file = File(this.resources.getString(R.string.db_path) + fileName)
+            val newMetadata = com.google.api.services.drive.model.File()
             newMetadata.name = file.name
 
             // Convert content to an AbstractInputStreamContent instance.
-
-            // Convert content to an AbstractInputStreamContent instance.
             val contentStream = ByteArrayContent.fromString(mimeType, file.toString())
-            val mediaContentNew =
-                InputStreamContent("file/*", BufferedInputStream(FileInputStream(file)))
+            val mediaContentNew = InputStreamContent("file/*", BufferedInputStream(FileInputStream(file)))
             // Send the request to the API.
-            var fileRes = service.files().update(fileId, newMetadata, mediaContentNew)
-                .setFields("id, name, appProperties").execute()
-            return fileRes
+            var fileRes = service.files().update(fileId, newMetadata, mediaContentNew).setFields("id, name, appProperties,quotaBytesUsed").execute()
+            fileRes?.let {
+                Log.d(TAG, "UpdateDbFiles: Successfully ${fileRes.name} ${fileRes.id} ${fileRes.quotaBytesUsed}")
+            }
         } catch (e: IOException) {
             println("An error occurred: $e")
-            Log.d(TAG, "updateFile Error Occured --> : ${e.message}")
-            null
+            Log.d(TAG, "UpdateDbFile Error --> : ${e.message}")
         }
     }
 
-    fun updateFile(fileId: String) {
-        Log.d(TAG, "updateFile File ID : $fileId")
-        val fileMetadata: File = File()
-        fileMetadata.name = "test1.mp4"
-        fileMetadata.parents = Collections.singletonList("appDataFolder")
-        fileMetadata.mimeType = "file/*"
+    fun downloadDBFiles(itemModel: ItemModel, itemNo: Int,oriPath:String) {
 
-        val file: java.io.File = File(this.resources.getString(R.string.db_path) + "DVault.db-wal")
-        val mediaContent = FileContent("file/*", file)
-
-//        res?.mediaHttpUploader?.progressListener = CustomUploadProgressListener()
-
-        val mediaContentNew =
-            InputStreamContent("file/*", BufferedInputStream(FileInputStream(file)))
-        mediaContentNew.length = file.length()
-        getDriveService()?.let {
-            it.files().update(fileId, fileMetadata)
-        }
-
-    }
-
-    fun downloadDBFiles(itemModel: ItemModel, itemNo: Int) {
-        val file = java.io.File(this.resources.getString(R.string.file_sys_dst))
-        val fileItem = File("$file/${itemModel.itemName}")
-        if (fileItem.exists()){
-            fileItem.delete()
-        }
-        val out: OutputStream = FileOutputStream(fileItem)
+        val out: OutputStream = FileOutputStream(oriPath)
         val request: Drive.Files.Get? = getDriveService()?.files()?.get(itemModel.serverId)
         request?.let {
             val uploader: MediaHttpDownloader = it.mediaHttpDownloader
             uploader.isDirectDownloadEnabled = false
             uploader.chunkSize = MediaHttpUploader.MINIMUM_CHUNK_SIZE
-            val downloadListner = CustomProgressListener(itemModel, itemNo, FileSize.bytesToHuman(itemModel.itemSize.toLong()).toString())
+            val downloadListner = CustomProgressListener(itemModel, itemNo, FileSize.bytesToHuman(itemModel.itemSize.toLong()).toString(),oriPath.toString())
             it.mediaHttpDownloader?.progressListener = downloadListner
             it.executeMediaAndDownloadTo(out)
         }
@@ -422,7 +357,7 @@ class DriveService : Service() {
     suspend fun uploadLargeFiles(itemModel: ItemModel, itemNo: Int) {
         val fileMetadata = File()
         fileMetadata.name = itemModel.itemName
-        var catModel = repository.getDbServerFolderId(itemModel.itemCatType)
+        val catModel = repository.getDbServerFolderId(itemModel.itemCatType)
         fileMetadata.parents = Collections.singletonList(catModel.serverId)
         fileMetadata.mimeType = FileSize.getMimeType(itemModel.itemCurrentPath)
 
@@ -430,15 +365,15 @@ class DriveService : Service() {
         mediaContent = FileContent(FileSize.getMimeType(file.toString()), file)
         val fileSize: String? = FileSize.bytesToHuman(file.length())
         Log.d(TAG, "ItemSize : $fileSize ")
-        var res: Drive.Files.Create? = getDriveService()?.let {
+        val res: Drive.Files.Create? = getDriveService()?.let {
             it.files().create(fileMetadata, mediaContent)
         }
-        var responsee: File? = res?.let {
+        val responsee: File? = res?.let {
             val uploader: MediaHttpUploader = it.mediaHttpUploader
             uploader.isDirectUploadEnabled = false
             Log.d(TAG, "uploadLargeFiles: Process One")
             uploader.chunkSize = MediaHttpUploader.MINIMUM_CHUNK_SIZE
-            var listner: CustomUploadProgressListener =
+            val listner: CustomUploadProgressListener =
                 CustomUploadProgressListener(itemModel, itemNo, fileSize!!)
             it.mediaHttpUploader?.progressListener = listner
             Log.d(TAG, "uploadLargeFiles: Process Two")
@@ -455,7 +390,8 @@ class DriveService : Service() {
     inner class CustomProgressListener(
         var itemModel: ItemModel,
         var itemNo: Int,
-        var itemSize: String
+        var itemSize: String,
+        var downloadPath:String
     ) : MediaHttpDownloaderProgressListener {
         override fun progressChanged(downloader: MediaHttpDownloader) {
             when (downloader.downloadState) {
@@ -478,6 +414,8 @@ class DriveService : Service() {
                             "$itemNo/$totalItems")
                         FileSize.backUpRestoreEnabled = true
                     } else {
+                        var deleteFile=File(downloadPath)
+                        if (deleteFile.exists()) deleteFile.delete()
                         throw GoogleDriveException("Download canceled")
                     }
                 }
@@ -538,7 +476,19 @@ class DriveService : Service() {
                     Log.d(TAG, "progressChanged: TotalList ${itemModelList.size}")
                     Log.d(TAG, "progressChanged: ItemNo ${itemNo}")
                     if ((itemModelList.size) == itemNo) {
-                        stopServiceMethod("Back-up Completed!")
+                       runBlocking {
+                           val catDbLocalFileList = repository.getCategoriesIfNotEmpty()
+                           Log.d(TAG, "uploadData: ${catDbLocalFileList.toString()}")
+                           Log.d(TAG, "uploadData: CatList Check Server Ids List ${catDbLocalFileList.size}")
+                           var updateJob = backgroundScope.launch(Dispatchers.IO) {
+                               catDbLocalFileList.forEach {
+                                   updateDbFiles(getDriveService()!!, it.serverId, it.catId)
+                               }
+                           }
+                           updateJob.join()
+                           stopServiceMethod("Back-up Completed!")
+                       }
+
                     }
                 }
                 UploadState.NOT_STARTED -> Log.d(
@@ -557,12 +507,9 @@ class DriveService : Service() {
             var usedStorage = FileSize.bytesToHuman(about.storageQuota.usage)
             var totalStorage = FileSize.bytesToHuman(about.storageQuota.limit)
             settingsCallbackListner?.storageQuote(usedStorage.toString(), totalStorage.toString())
-            Log.d(
-                "MainActivity",
-                "getTotalDriveStorages: ${usedStorage.toString()}, ${totalStorage.toString()}"
-            )
+            Log.d("MainActivity", "getTotalDriveStorages: ${usedStorage.toString()}, ${totalStorage.toString()}")
         }
-        getDriveFiles()
+//        getDriveFiles()
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

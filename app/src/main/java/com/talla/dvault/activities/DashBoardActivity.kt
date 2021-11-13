@@ -308,8 +308,7 @@ class DashBoardActivity : AppCompatActivity() {
             progressDialog.dismiss()
         }
     }
-
-
+    
     private fun showLogOutAlert() {
         val alertDialogBuilder = AlertDialog.Builder(this)
         alertDialogBuilder.setTitle("Logout Alert!")
