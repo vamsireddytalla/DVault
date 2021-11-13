@@ -12,6 +12,7 @@ import android.util.Log
 import android.widget.RemoteViews
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
+import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.api.client.extensions.android.http.AndroidHttp
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
@@ -44,6 +45,7 @@ import java.io.*
 import kotlin.collections.ArrayList
 import com.google.api.client.http.ByteArrayContent
 import com.google.api.services.drive.model.FileList
+import com.talla.dvault.database.entities.CategoriesModel
 
 
 private const val TAG = "DriveService"
@@ -71,8 +73,8 @@ class DriveService : Service() {
         startServiceOreoCondition()
         isInterrupted = false
         backgroundScope.launch {
-            getTotalDriveStorages()
-//            getDriveFiles()
+//            getTotalDriveStorages()
+            getDriveFiles()
         }
     }
 
@@ -81,66 +83,79 @@ class DriveService : Service() {
             val actionMaker = intent.action
             itemModelList = ArrayList<ItemModel>()
             itemModelList.clear()
-            when (actionMaker) {
-                FileSize.ACTION_SETTINGS_START_FOREGROUND_SERVICE -> {
-                    Log.d(TAG, "onStartCommand: Started Service")
-                    cancelProcessJob = backgroundScope.launch {
-                        var selecteData = FileSize.selectedBackRestore
-                        Log.d(TAG, "onStartCommand: ${selecteData}")
-                        selecteData.forEach { catType ->
-                            Log.d(TAG, "onStartCommand: $catType")
-                            itemModelList = repository.getBRItems(catType) as ArrayList<ItemModel>
-                        }
-                        Log.d(TAG, "onStartCommand: Total List Received ${itemModelList.toString()}")
-                        if (itemModelList.isEmpty()) {
-                            Log.d(TAG, "onStartCommand: No Items Found")
-                            stopServiceMethod("Done")
-                        } else {
-                            isInterrupted = false
-                            createNotification(
-                                FileSize.BR_CHANNEl_ID,
-                                FileSize.BR_CHANNEL_NAME,
-                                FileSize.BR_NOTIFY_ID,
-                                FileSize.ACTION_SETTINGS_STOP_FOREGROUND_SERVICE)
-                            for ((index, source) in itemModelList.withIndex()) {
-                                if (!isInterrupted!!) {
-                                    if (source.serverId == null || source.serverId.isEmpty()) {
-                                        try {
-                                            uploadLargeFiles(source, index)
-                                        } catch (e: Exception) {
-                                            e.printStackTrace()
-                                            Log.d(TAG, "onStartCommand: Exception Occured-----> ${e.message}")
-                                        }
-                                    } else {
-//                                        downloadLargeFiles(source,index)
-                                    }
-                                } else break
+            if (intent.extras != null) {
+                val type: Any? = intent.extras!!.get(this.resources.getString(R.string.key))
+                when (actionMaker) {
+                    FileSize.ACTION_SETTINGS_START_FOREGROUND_SERVICE -> {
+                        Log.d(TAG, "onStartCommand: Started Service")
+                        cancelProcessJob = backgroundScope.launch {
+                            var selecteData = FileSize.selectedBackRestore
+                            Log.d(TAG, "onStartCommand: ${selecteData}")
+                            selecteData.forEach { catType ->
+                                Log.d(TAG, "onStartCommand: $catType")
+                                if (type==this@DriveService.resources.getString(R.string.backup))
+                                {
+                                    itemModelList = repository.getBRItems(catType) as ArrayList<ItemModel>
+                                }else{
+                                    itemModelList = repository.getRBItems(catType) as ArrayList<ItemModel>
+                                }
+
                             }
-                            cancelProcessJob?.join()
-
-                            stopServiceMethod("Process Completed!")
+                            Log.d(TAG, "onStartCommand: Button Type -----> $type")
+                            Log.d(TAG, "onStartCommand: Total List Received ${itemModelList.toString()}")
+                            if (itemModelList.isEmpty()) {
+                                Log.d(TAG, "onStartCommand: No Items Found")
+                                stopServiceMethod("Done")
+                            } else {
+                                isInterrupted = false
+                                createNotification(
+                                    FileSize.BR_CHANNEl_ID,
+                                    FileSize.BR_CHANNEL_NAME,
+                                    FileSize.BR_NOTIFY_ID,
+                                    FileSize.ACTION_SETTINGS_STOP_FOREGROUND_SERVICE
+                                )
+                                for ((index, source) in itemModelList.withIndex()) {
+                                    if (!isInterrupted!!) {
+                                       try {
+                                           if (source.serverId == null || source.serverId.isEmpty()) {
+                                               try {
+                                                   uploadLargeFiles(source, index + 1)
+                                               } catch (e: Exception) {
+                                                   e.printStackTrace()
+                                                   Log.d(TAG, "onStartCommand: Exception Occured-----> ${e.message}")
+                                               }
+                                           } else {
+                                               downloadDBFiles(source, index + 1)
+                                           }
+                                       }catch (e:Exception){
+                                           e.printStackTrace()
+                                           Log.d(TAG, "onStartCommand: ${e.message}")
+                                       }
+                                    } else break
+                                }
+                                cancelProcessJob?.join()
+                            }
                         }
                     }
-
-                }
-                FileSize.ACTION_SETTINGS_STOP_FOREGROUND_SERVICE -> {
-                    Log.d(TAG, "onStartCommand: Stopped Foreground Service")
-                    cancelProcessJob?.let {
-                        isInterrupted = true
-                        mediaContent?.closeInputStream
-                        it.cancel()
+                    FileSize.ACTION_SETTINGS_STOP_FOREGROUND_SERVICE -> {
+                        Log.d(TAG, "onStartCommand: Stopped Foreground Service")
+                        cancelProcessJob?.let {
+                            isInterrupted = true
+                            mediaContent?.closeInputStream
+                            it.cancel()
+                        }
+                        FileSize.backUpRestoreEnabled = false
+                        settingsCallbackListner?.fileServerDealing(0, type.toString(), "")
+                        stopForeground(false)
+                        notificationManager.cancel(FileSize.BR_NOTIFY_ID)
                     }
-                    settingsCallbackListner?.fileServerDealing(0, "Process Completed!", "")
-                    FileSize.backUpRestoreEnabled = false
-                    stopForeground(false)
-                    notificationManager.cancel(FileSize.BR_NOTIFY_ID)
                 }
             }
         }
         return START_STICKY
     }
 
-    private fun updateDbFiles(serverid:String,catName:String,catType:String) {
+    private fun updateDbFiles(serverid: String, catName: String, catType: String) {
         try {
 
             var mimeType = catType
@@ -172,6 +187,7 @@ class DriveService : Service() {
         settingsCallbackListner?.fileServerDealing(0, message, "")
         var clickIntent = Intent(this@DriveService, DriveService::class.java)
         clickIntent.action = FileSize.ACTION_SETTINGS_STOP_FOREGROUND_SERVICE
+        clickIntent.putExtra(this@DriveService.resources.getString(R.string.key),message)
         startService(clickIntent)
     }
 
@@ -183,14 +199,15 @@ class DriveService : Service() {
             settingsCallbackListner = callback
         }
 
-        fun startBackUpService() {
+        fun startBackUpService(btnType:String) {
             var clickIntent = Intent(this@DriveService, DriveService::class.java)
             clickIntent.action = FileSize.ACTION_SETTINGS_START_FOREGROUND_SERVICE
+            clickIntent.putExtra(this@DriveService.resources.getString(R.string.key),btnType)
             startService(clickIntent)
         }
 
-        fun stopSettingsService() {
-            stopServiceMethod("Cancelled!")
+        fun stopSettingsService(cancelMsg:String) {
+            stopServiceMethod(cancelMsg)
         }
     }
 
@@ -210,7 +227,7 @@ class DriveService : Service() {
                 result?.let { res ->
                     res.files.forEach { file ->
                         Log.d("FILE", " ${file.name} ${file.id} ${file.mimeType} ${FileSize.bytesToHuman(file.quotaBytesUsed)}")
-                        deleteData(file.id)
+//                        deleteData(file.id)
                     }
                 }
 
@@ -384,35 +401,33 @@ class DriveService : Service() {
 
     }
 
-    fun downloadDBFiles(dbFileIdSList: List<String>) {
-        var file = java.io.File(this.resources.getString(R.string.file_sys_dst))
-//        if (file.isDirectory) {
-//            var filesList: Array<String> = file.list()
-//            filesList.forEach { java.io.File(file, it).delete() }
-//        }
-
-        dbFileIdSList.forEach { fileId ->
-            val out: OutputStream = FileOutputStream("$file/video.mp4")
-            val request: Drive.Files.Get? = getDriveService()?.files()?.get(fileId)
-            request?.let {
-                val uploader: MediaHttpDownloader = it.mediaHttpDownloader
-                uploader.isDirectDownloadEnabled = false
-                uploader.progressListener = CustomProgressListener()
-                it.executeMediaAndDownloadTo(out)
-                out.flush()
-                out.close()
-            }
+    fun downloadDBFiles(itemModel: ItemModel, itemNo: Int) {
+        val file = java.io.File(this.resources.getString(R.string.file_sys_dst))
+        val fileItem = File("$file/${itemModel.itemName}")
+        if (fileItem.exists()){
+            fileItem.delete()
+        }
+        val out: OutputStream = FileOutputStream(fileItem)
+        val request: Drive.Files.Get? = getDriveService()?.files()?.get(itemModel.serverId)
+        request?.let {
+            val uploader: MediaHttpDownloader = it.mediaHttpDownloader
+            uploader.isDirectDownloadEnabled = false
+            uploader.chunkSize = MediaHttpUploader.MINIMUM_CHUNK_SIZE
+            val downloadListner = CustomProgressListener(itemModel, itemNo, FileSize.bytesToHuman(itemModel.itemSize.toLong()).toString())
+            it.mediaHttpDownloader?.progressListener = downloadListner
+            it.executeMediaAndDownloadTo(out)
         }
     }
 
-    fun uploadLargeFiles(itemModel: ItemModel, itemNo: Int) {
+    suspend fun uploadLargeFiles(itemModel: ItemModel, itemNo: Int) {
         val fileMetadata = File()
         fileMetadata.name = itemModel.itemName
-        fileMetadata.parents = Collections.singletonList(itemModel.itemMimeType)
+        var catModel = repository.getDbServerFolderId(itemModel.itemCatType)
+        fileMetadata.parents = Collections.singletonList(catModel.serverId)
         fileMetadata.mimeType = FileSize.getMimeType(itemModel.itemCurrentPath)
 
         val file: java.io.File = File(itemModel.itemCurrentPath)
-        mediaContent = FileContent(FileSize.getMimeType(itemModel.itemCurrentPath), file)
+        mediaContent = FileContent(FileSize.getMimeType(file.toString()), file)
         val fileSize: String? = FileSize.bytesToHuman(file.length())
         Log.d(TAG, "ItemSize : $fileSize ")
         var res: Drive.Files.Create? = getDriveService()?.let {
@@ -422,7 +437,7 @@ class DriveService : Service() {
             val uploader: MediaHttpUploader = it.mediaHttpUploader
             uploader.isDirectUploadEnabled = false
             Log.d(TAG, "uploadLargeFiles: Process One")
-            uploader.chunkSize = 20 * MediaHttpUploader.MINIMUM_CHUNK_SIZE
+            uploader.chunkSize = MediaHttpUploader.MINIMUM_CHUNK_SIZE
             var listner: CustomUploadProgressListener =
                 CustomUploadProgressListener(itemModel, itemNo, fileSize!!)
             it.mediaHttpUploader?.progressListener = listner
@@ -432,24 +447,48 @@ class DriveService : Service() {
 
         responsee?.let {
             Log.d(TAG, "uploadLargeFiles: ServerFile ID->  ${it.id}")
-            runBlocking {
-                var res = repository.updateItemServerId(it.id, itemModel.itemId)
-                Log.d(TAG, "uploadLargeFiles: $res")
-            }
+            var res = repository.updateItemServerId(it.id, itemModel.itemId)
+            Log.d(TAG, "uploadLargeFiles: $res")
         }
     }
 
-    internal class CustomProgressListener : MediaHttpDownloaderProgressListener {
+    inner class CustomProgressListener(
+        var itemModel: ItemModel,
+        var itemNo: Int,
+        var itemSize: String
+    ) : MediaHttpDownloaderProgressListener {
         override fun progressChanged(downloader: MediaHttpDownloader) {
             when (downloader.downloadState) {
-                DownloadState.MEDIA_IN_PROGRESS -> Log.d(
-                    TAG,
-                    "progressChanged: ${downloader.progress * 100}"
-                )
-                DownloadState.MEDIA_COMPLETE -> Log.d(
-                    TAG,
-                    "progressChanged: Download Is Complete"
-                )
+                DownloadState.MEDIA_IN_PROGRESS -> {
+                    Log.d(TAG, "progressChanged: ${downloader.progress * 100}")
+                    if (!isInterrupted!!) {
+                        val respo: Double = downloader.progress * 100
+
+                        Log.d(TAG, "progressChanged: ${respo}%")
+                        val mbCount = FileSize.bytesToHuman(downloader.numBytesDownloaded)
+                        Log.d(TAG, "progressChanged: Download Bytes Done $mbCount")
+                        val totalItems = itemModelList.size
+                        settingsCallbackListner?.fileServerDealing(
+                            respo.toInt(),
+                            "$mbCount/$itemSize",
+                            "$itemNo/$totalItems")
+                        updateNotification(
+                            respo.toInt(),
+                            "$mbCount/$itemSize",
+                            "$itemNo/$totalItems")
+                        FileSize.backUpRestoreEnabled = true
+                    } else {
+                        throw GoogleDriveException("Download canceled")
+                    }
+                }
+                DownloadState.MEDIA_COMPLETE -> {
+                    Log.d(TAG, "progressChanged: Download Is Complete")
+                    Log.d(TAG, "progressChanged: TotalList ${itemModelList.size}")
+                    Log.d(TAG, "progressChanged: ItemNo ${itemNo}")
+                    if ((itemModelList.size) == itemNo) {
+                        stopServiceMethod("Restore Completed!")
+                    }
+                }
             }
         }
     }
@@ -468,8 +507,7 @@ class DriveService : Service() {
                     Log.d(TAG, "progressChanged: Initiation has started!")
                 }
                 UploadState.INITIATION_COMPLETE -> Log.d(
-                    TAG,
-                    "progressChanged: Initiation is complete!"
+                    TAG, "progressChanged: Initiation is complete!"
                 )
                 UploadState.MEDIA_IN_PROGRESS -> {
                     if (!isInterrupted!!) {
@@ -477,6 +515,7 @@ class DriveService : Service() {
 
                         Log.d(TAG, "progressChanged: ${respo}%")
                         val mbCount = FileSize.bytesToHuman(uploader.numBytesUploaded)
+                        Log.d(TAG, "progressChanged: Upload Byte Done $mbCount")
                         val totalItems = itemModelList.size
                         settingsCallbackListner?.fileServerDealing(
                             respo.toInt(),
@@ -496,6 +535,11 @@ class DriveService : Service() {
                 }
                 UploadState.MEDIA_COMPLETE -> {
                     Log.d(TAG, "progressChanged: Upload is complete!")
+                    Log.d(TAG, "progressChanged: TotalList ${itemModelList.size}")
+                    Log.d(TAG, "progressChanged: ItemNo ${itemNo}")
+                    if ((itemModelList.size) == itemNo) {
+                        stopServiceMethod("Back-up Completed!")
+                    }
                 }
                 UploadState.NOT_STARTED -> Log.d(
                     TAG,

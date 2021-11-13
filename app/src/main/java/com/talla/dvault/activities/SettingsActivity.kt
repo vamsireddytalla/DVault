@@ -103,13 +103,13 @@ class SettingsActivity : AppCompatActivity() {
                 FileSize.backUpRestoreEnabled = false
                 backupRoot.visibility = View.VISIBLE
                 backUpProgressRoot.visibility = View.GONE
-                binder?.stopSettingsService()
+                binder?.stopSettingsService("Back-up Cancelled!")
             }
             cancelRestore.setOnClickListener {
                 FileSize.backUpRestoreEnabled = false
                 binding.restoreRoot.visibility = View.VISIBLE
                 binding.restoreProgressRoot.visibility = View.GONE
-                binder?.stopSettingsService()
+                binder?.stopSettingsService("Restore-Cancelled!")
             }
         }
 
@@ -157,7 +157,7 @@ class SettingsActivity : AppCompatActivity() {
                                 binding.totalMbRestore.text = mbCount
                                 binding.restorePercent.text = totalItems
                                 binding.restoreProgress.isIndeterminate=false
-                                if (!FileSize.backUpRestoreEnabled || mbCount == "Done") {
+                                if (!FileSize.backUpRestoreEnabled || mbCount == "") {
                                     binding.restoreRoot.visibility = View.VISIBLE
                                     binding.restoreProgressRoot.visibility = View.GONE
                                     showSnackBar(mbCount)
@@ -271,10 +271,10 @@ class SettingsActivity : AppCompatActivity() {
                     && !FileSize.UNLOCK_FILE_COPYING
                     && !FileSize.FILE_COPYING
                     && !FileSize.backUpRestoreEnabled
-                    && (binding.restoreProgress.isVisible && binding.backupProgress.isVisible)
+                    && (binding.restoreProgress.isVisible || binding.backupProgress.isVisible)
                 ) {
-                    var backupstring = this@SettingsActivity.resources.getString(R.string.backup)
-                    if (title == backupstring) {
+                    var backupstring = bkpBtn.text.toString()
+                    if (title == this@SettingsActivity.resources.getString(R.string.backup)) {
                         binding.backUpMbTransfer.text=getString(R.string.initializing)
                         FileSize.settingsBRSelected = backupstring
                         FileSize.backUpRestoreEnabled = true
@@ -282,8 +282,7 @@ class SettingsActivity : AppCompatActivity() {
                         binding.backUpProgressRoot.visibility = View.VISIBLE
                     } else {
                         binding.totalMbRestore.text=getString(R.string.initializing)
-                        var restoreString =
-                            this@SettingsActivity.resources.getString(R.string.restore)
+                        var restoreString = this@SettingsActivity.resources.getString(R.string.restore)
                         FileSize.settingsBRSelected = restoreString
                         FileSize.backUpRestoreEnabled = true
                         binding.restoreRoot.visibility = View.GONE
@@ -293,14 +292,14 @@ class SettingsActivity : AppCompatActivity() {
                       userPreferences.storeStringData(UserPreferences.LAST_BACKUP_TIME,
                           DateUtills.getLastBackUpTime(this@SettingsActivity)!!)
                   }
-                    binder?.startBackUpService()
+                    binder?.startBackUpService(title)
                 } else {
                     if (FileSize.UNLOCK_FILE_COPYING) {
                         showSnackBar("File Unlocking is In Progress Please wait...")
                     } else if (FileSize.FILE_COPYING) {
                         showSnackBar("File Copying is In Progress Please wait...")
                     } else if (FileSize.backUpRestoreEnabled) {
-                        showSnackBar("Processing Another Task Please Wait...")
+                        showSnackBar("Processing another task Please wait")
                     }
                 }
 
