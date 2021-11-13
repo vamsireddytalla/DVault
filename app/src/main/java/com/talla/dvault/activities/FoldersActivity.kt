@@ -117,7 +117,7 @@ class FoldersActivity : AppCompatActivity() ,FolderItemClick {
 
             b1.setOnClickListener {
                 var folderName=et1.text.toString().trim()
-                var createdTime=DateUtills.getSystemTime(this@FoldersActivity)
+                var createdTime=System.currentTimeMillis().toString()
                 var catType=catType
                 runBlocking {
                     var btnType=b1.text.toString()

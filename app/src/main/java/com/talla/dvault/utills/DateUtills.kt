@@ -23,6 +23,12 @@ class DateUtills
             return simpleDateFormat.format(date)
         }
 
+        fun convertMilToDate(context: Context, milliSec: Long): String? {
+            val date = Date(milliSec)
+            val pattern = context.resources.getString(R.string.dateFormat)
+            val simpleDateFormat = SimpleDateFormat(pattern)
+            return simpleDateFormat.format(date)
+        }
 
     }
 

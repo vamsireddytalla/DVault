@@ -514,11 +514,12 @@ class FileCopyService : Service() {
         return ItemModel(
             itemName = file.name,
             itemSize = filesize.toString(),
-            itemCreatedAt = DateUtills.getSystemTime(this).toString(),
-            itemMimeType = sourcesModel.catType,
+            itemCreatedAt = System.currentTimeMillis().toString(),
+            itemMimeType = FileSize.getMimeType(file.toString()).toString(),
             itemOriPath = fileRealPath.toString(),
             folderId = sourcesModel.folderID.toString(),
-            itemCurrentPath = newFilePath.toString()
+            itemCurrentPath = newFilePath.toString(),
+            itemCatType = sourcesModel.catType
         )
     }
 

@@ -80,7 +80,6 @@ class MainActivity : AppCompatActivity() {
     @Inject
     lateinit var gso: GoogleSignInOptions
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -93,8 +92,7 @@ class MainActivity : AppCompatActivity() {
         dialogInit()
 
 
-        launchIntent =
-            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        launchIntent = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
                 if (result.resultCode == Activity.RESULT_OK) {
                     handleSignData(result.data)
                 } else {
@@ -158,7 +156,7 @@ class MainActivity : AppCompatActivity() {
                             var userName = it.result?.displayName
                             var userEmail = it.result?.email
                             var userProfilePic: Uri? = it.result?.photoUrl
-                            var currentDT: String? = DateUtills.getSystemTime(this@MainActivity)
+                            var currentDT: String? = System.currentTimeMillis().toString()
                             val user = User(
                                 userName.toString(),
                                 userEmail.toString(),
@@ -204,6 +202,7 @@ class MainActivity : AppCompatActivity() {
 
     suspend fun getDriveFiles(user: User) {
         try {
+
             getDriveService()?.let { gdService ->
                 var pagetoken: String? = null
                 do {
@@ -232,10 +231,7 @@ class MainActivity : AppCompatActivity() {
                             Log.d(TAG, "getDriveFiles: Old User")
                             var catList = ArrayList<CategoriesModel>()
                             res.files.forEach { fileee ->
-                                Log.d(
-                                    TAG,
-                                    "getDriveFiles: Server File Sizes ${FileSize.bytesToHuman(fileee.quotaBytesUsed)} ${fileee.name}"
-                                )
+                                Log.d(TAG, "getDriveFiles: Server File Sizes ${FileSize.bytesToHuman(fileee.quotaBytesUsed)} ${fileee.name}")
                                 var name = ""
                                 when (fileee.name) {
                                     "Img" -> name = "Images"
@@ -284,6 +280,7 @@ class MainActivity : AppCompatActivity() {
 
     suspend fun createFolder(res: FileList) {
         try {
+            FileSize.showSnackBar("New User Registering",binding.root)
             viewModel.resetCatServerId()
             var deleteJob = lifecycleScope.async(Dispatchers.IO) {
                 res.files.forEach { serverFile ->
@@ -331,7 +328,7 @@ class MainActivity : AppCompatActivity() {
             e.printStackTrace()
             FileSize.showSnackBar(e.message.toString(), binding.root)
             Log.d(TAG, "createFolder: Exception Occured ->${e.message}")
-            logout("createFolder()")
+//            logout("createFolder()")
         }
     }
 
@@ -375,11 +372,7 @@ class MainActivity : AppCompatActivity() {
                             .execute()
                     }
 
-                    fileRes?.let {
-                        Log.d(
-                            TAG,
-                            "Database Files Uploaded : ${fileRes.id} ${fileRes.name} ${fileRes.quotaBytesUsed}"
-                        )
+                    fileRes?.let { Log.d(TAG, "Database Files Uploaded : ${fileRes.id} ${fileRes.name} ${fileRes.quotaBytesUsed}")
                         viewModel.updateCatServId(it.name.toString(), it.id.toString())
                     }
                 }
@@ -434,38 +427,21 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    suspend fun getFilesUnderDBFolder(
-        DbFolderId: String,
-        categoriesList: ArrayList<CategoriesModel>
-    ): List<CategoriesModel> {
-        var dbList = categoriesList
+    fun getFilesUnderDBFolder(DbFolderId: String){
         Log.d(TAG, "getFilesUnderDBFolder: $DbFolderId")
         val files: FileList? = getDriveService()?.let {
             it.files().list()
                 .setSpaces("appDataFolder")
                 .setQ("'${DbFolderId}' in parents")
-                .setFields("nextPageToken, files(id, name)")
+                .setFields("nextPageToken, files(id, name,quotaBytesUsed,permissions)")
                 .execute()
         }
         files?.let {
             Log.d(TAG, "Db Files Under Folder in Server : Total List  ${it.files.size}")
             for (file in it.files) {
-                for ((index, source) in dbList.withIndex()) {
-                    if (source.catType == "files/*") {
-                        if (file.name.contentEquals(source.catId)) {
-                            Log.d(
-                                TAG,
-                                "getFilesUnderDBFolder: Files Under Db Folder Existed ${file.name.toString()}"
-                            )
-                            viewModel.updateCatServId(file.name.toString(), file.id.toString())
-                        }
-                    }
-                }
+                Log.d(TAG, "getFilesUnderDBFolder: ${file.name} ${file.quotaBytesUsed} ${file.permissions}")
             }
         }
-        val catListData: ArrayList<CategoriesModel> =
-            viewModel.getCategoriesData() as ArrayList<CategoriesModel>
-        return catListData
     }
 
     suspend fun downloadDbFiles() {

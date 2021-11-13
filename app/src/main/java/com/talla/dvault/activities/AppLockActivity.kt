@@ -59,7 +59,7 @@ class AppLockActivity : AppCompatActivity() {
         else {
             var appLockModel=AppLockModel(question!!,answer!!,
                 cnf_password,true,
-                DateUtills.getSystemTime(this).toString(),this.resources.getString(R.string.app_name))
+                System.currentTimeMillis().toString(),this.resources.getString(R.string.app_name))
              runBlocking {
                  val res=viewModel.saveAppLockData(appLockModel)
                  showDialog(getString(R.string.password_set_sucess),getString(R.string.go_to_dashboard))

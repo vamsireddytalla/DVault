@@ -7,26 +7,15 @@ import android.graphics.Color
 import android.os.Build
 import android.util.Log
 import android.view.*
-import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.Observer
-import androidx.recyclerview.widget.AsyncListDiffer
-import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.RequestManager
-import com.google.common.collect.Lists
 import com.talla.dvault.R
 import com.talla.dvault.database.entities.ItemModel
 import com.talla.dvault.databinding.FileItemBinding
 import com.talla.dvault.interfaces.ItemAdapterClick
-import com.talla.dvault.viewmodels.ItemViewModel
-import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 import android.graphics.drawable.GradientDrawable
 import android.widget.PopupMenu
-import androidx.core.content.ContextCompat
-import androidx.core.graphics.drawable.DrawableCompat
+import com.talla.dvault.utills.DateUtills
 import com.talla.dvault.utills.FileSize
 
 
@@ -114,7 +103,7 @@ class ItemsAdapter(
         val itemObj = itemModelList.get(position)
         holder.mbinding?.apply {
             itemName.text = itemObj.itemName
-            createdAndSize.text = itemObj.itemCreatedAt + " - " + FileSize.bytesToHuman(itemObj.itemSize.toLong())
+            createdAndSize.text = DateUtills.convertMilToDate(mContext,itemObj.itemCreatedAt.toLong()) + " - " + FileSize.bytesToHuman(itemObj.itemSize.toLong())
             glide.load(itemObj.itemCurrentPath).into(thumbNail)
 
             if (!itemObj.isSelected) {
@@ -127,7 +116,7 @@ class ItemsAdapter(
                 threeDots.visibility = View.GONE
                 Log.d(TAG, "Selected")
                 var intColorCode: Int = 0
-                when (itemObj.itemMimeType) {
+                when (itemObj.itemCatType) {
                     "Img" -> {
                         intColorCode = mContext.resources.getColor(R.color.light_pink)
                     }

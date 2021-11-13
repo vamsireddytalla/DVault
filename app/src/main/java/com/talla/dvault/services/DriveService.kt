@@ -43,6 +43,7 @@ import kotlinx.coroutines.*
 import java.io.*
 import kotlin.collections.ArrayList
 import com.google.api.client.http.ByteArrayContent
+import com.google.api.services.drive.model.FileList
 
 
 private const val TAG = "DriveService"
@@ -407,7 +408,7 @@ class DriveService : Service() {
     fun uploadLargeFiles(itemModel: ItemModel, itemNo: Int) {
         val fileMetadata = File()
         fileMetadata.name = itemModel.itemName
-        fileMetadata.parents = Collections.singletonList("appDataFolder")
+        fileMetadata.parents = Collections.singletonList(itemModel.itemMimeType)
         fileMetadata.mimeType = FileSize.getMimeType(itemModel.itemCurrentPath)
 
         val file: java.io.File = File(itemModel.itemCurrentPath)

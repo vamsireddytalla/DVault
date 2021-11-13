@@ -16,6 +16,7 @@ import com.talla.dvault.activities.ItemsActivity
 import com.talla.dvault.database.entities.FolderTable
 import com.talla.dvault.databinding.FolderCardBinding
 import com.talla.dvault.interfaces.FolderItemClick
+import com.talla.dvault.utills.DateUtills
 
 class FoldersAdapter(val folderCat:String,val mContext:Context,val onOptionClick:FolderItemClick) : RecyclerView.Adapter<FoldersAdapter.MyViewHolder>()
 {
@@ -50,7 +51,7 @@ class FoldersAdapter(val folderCat:String,val mContext:Context,val onOptionClick
         val folderObj = differ.currentList[position]
         holder.mbinding?.apply {
             folderName.text = folderObj.folderName
-            folderCreatedAt.text = folderObj.folderCreatedAt
+            folderCreatedAt.text = DateUtills.convertMilToDate(mContext,folderObj.folderCreatedAt.toLong())
             setCustomFolderIcon(this)
 
             threeDots?.setOnClickListener{

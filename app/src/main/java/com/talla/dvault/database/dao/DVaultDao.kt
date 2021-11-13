@@ -116,7 +116,7 @@ interface DVaultDao {
     suspend fun insertSingleItem(itemsList: ItemModel)
 
 
-    @Query("Select * from ItemModel Where itemMimeType=:catType AND folderId=:folderId")
+    @Query("Select * from ItemModel Where itemCatType=:catType AND folderId=:folderId")
     fun getItemsBasedOnCatType(catType: String, folderId: Int): LiveData<List<ItemModel>>
 
     @Query("Delete from ItemModel where itemId=:itemId")
@@ -125,10 +125,10 @@ interface DVaultDao {
     @Query("Delete from CategoriesModel where catId=:catId")
     suspend fun deleteParticularCat(catId:String)
 
-    @Query("Select * from ItemModel Where (itemMimeType=:categoryType AND (serverId Is Null OR serverId=''))")
+    @Query("Select * from ItemModel Where (itemCatType=:categoryType AND (serverId Is Null OR serverId=''))")
     fun getBRItems(categoryType: String): List<ItemModel>
 
-    @Query("Select * from ItemModel Where itemMimeType=:catType AND serverId Is Not Null And serverId!=''")
+    @Query("Select * from ItemModel Where itemCatType=:catType AND serverId Is Not Null And serverId!=''")
     fun getRBItems(catType: String): List<ItemModel>
 
     @Query("Select * from CategoriesModel Where (serverId IS NULL OR serverId='')")

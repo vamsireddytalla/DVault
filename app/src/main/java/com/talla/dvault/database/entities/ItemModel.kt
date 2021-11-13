@@ -17,7 +17,8 @@ data class ItemModel(
     val itemOriPath:String="",
     val itemCurrentPath:String="",
     val serverId:String="",
-    val folderId:String=""
+    val folderId:String="",
+    val itemCatType:String=""
 ):Serializable{
     @Ignore
     var isSelected:Boolean=false

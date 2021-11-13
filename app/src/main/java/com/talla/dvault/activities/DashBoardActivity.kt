@@ -54,6 +54,7 @@ import com.google.api.services.drive.DriveScopes
 import com.talla.dvault.database.VaultDatabase
 import com.talla.dvault.databinding.CustonProgressDialogBinding
 import com.talla.dvault.services.DashBoardService
+import com.talla.dvault.utills.DateUtills
 import com.talla.dvault.utills.FileSize
 import com.talla.dvault.utills.InternetUtil
 import kotlinx.coroutines.*
@@ -239,7 +240,7 @@ class DashBoardActivity : AppCompatActivity() {
         }
         customDialogProfileBinding.userName.text = user.userName
         customDialogProfileBinding.userEmail.text = user.userEmail
-        customDialogProfileBinding.lastLoggedin.text = user.userloginTime
+        customDialogProfileBinding.lastLoggedin.text = DateUtills.convertMilToDate(this,user.userloginTime.toLong())
         glide.load(user.userImage).into(customDialogProfileBinding.userProfilePic)
         customDialogProfileBinding.login.setOnClickListener(View.OnClickListener {
             val mGoogleSignInClient = GoogleSignIn.getClient(this, gso)
