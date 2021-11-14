@@ -66,6 +66,7 @@
             android:fontFamily="@font/poppins_bold"
             android:includeFontPadding="false"
             android:paddingLeft="20dp"
+            android:text="Images"
             android:textAppearance="@style/TextAppearance.AppCompat.Large"
             android:textColor="@color/hello_color" />
 

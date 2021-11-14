@@ -15,4 +15,5 @@ You can restore them when you reinstall.</string>
     <string name="set_pin">Set Pin</string>
     <string name="remember">Remember this Question &amp; Answer.\nThis can helpful when you forgot your pin.</string>
     <string name="cat_key">CatKey</string>
+    <string name="about">Lorem ipsum dolor sit amet consectetur adipiscing elit. Venenatis eu a libero eget hac nulla massa lobortis sapien.</string>
 </resources>
