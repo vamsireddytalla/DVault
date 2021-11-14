@@ -100,6 +100,7 @@
             android:text="@string/backup"
             android:textAppearance="@style/TextAppearance.AppCompat.Medium"
             android:textColor="@color/blue_color"
+            app:layout_constraintBottom_toTopOf="@+id/backupDesc"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
@@ -115,6 +116,7 @@
             android:text="@string/backup_desc"
             android:textAppearance="@style/TextAppearance.AppCompat.Small"
             android:textColor="@color/hello_color"
+            app:layout_constraintBottom_toTopOf="@+id/backupRoot"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/backupHeading" />
@@ -151,6 +153,8 @@
                 android:id="@+id/backupBtn"
                 android:layout_width="100dp"
                 android:layout_height="40dp"
+                android:layout_marginStart="68dp"
+                android:layout_marginLeft="68dp"
                 android:background="@drawable/ic_button"
                 android:fontFamily="@font/poppins_medium"
                 android:includeFontPadding="false"
@@ -159,6 +163,7 @@
                 android:textColor="@color/white"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/lastBackUp"
                 app:layout_constraintTop_toTopOf="parent" />
 
 
@@ -288,6 +293,7 @@
             android:text="@string/restore"
             android:textAppearance="@style/TextAppearance.AppCompat.Medium"
             android:textColor="@color/blue_color"
+            app:layout_constraintBottom_toTopOf="@+id/restoreDesc"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
@@ -303,6 +309,7 @@
             android:text="@string/restore_desc"
             android:textAppearance="@style/TextAppearance.AppCompat.Small"
             android:textColor="@color/hello_color"
+            app:layout_constraintBottom_toTopOf="@+id/restoreRoot"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/restoreHeading" />
@@ -333,6 +340,8 @@
                 android:textColor="@color/white"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="1.0"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
 
@@ -469,13 +478,13 @@
 
         <Switch
             android:id="@+id/appLock"
-            android:theme="@style/MySwitch"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
             android:layout_alignParentRight="true"
             android:checked="false"
             android:switchMinWidth="55dp"
+            android:theme="@style/MySwitch"
             tools:ignore="UseSwitchCompatOrMaterialXml" />
 
     </RelativeLayout>

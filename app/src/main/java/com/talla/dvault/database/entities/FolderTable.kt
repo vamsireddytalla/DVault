@@ -9,5 +9,7 @@ data class FolderTable(
     var folderId:Int=0,
     var folderName:String="",
     var folderCreatedAt:String="",
-    var folderCatType:String=""
+    var folderCatType:String="",
+    var folderServerId:String="",
+    var folderTrash:Boolean=false
 )
