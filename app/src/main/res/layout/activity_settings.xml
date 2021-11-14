@@ -304,9 +304,9 @@
             android:textAppearance="@style/TextAppearance.AppCompat.Small"
             android:textColor="@color/hello_color"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/restoreHeading" />
-
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/restoreRoot"
