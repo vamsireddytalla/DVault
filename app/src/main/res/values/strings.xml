@@ -54,6 +54,7 @@ You can restore them when you reinstall.</string>
     <string name="restore_alert">Your Backup data available on the Server click OK to restore.</string>
     <string name="internet_alert">Make sure to turn on your Internet to proceed with this app.</string>
     <string name="google_drive_storage">Google Drive Storage</string>
+    <string name="designed_by_sathvik_developed_by_vamsi">Designed by Sathvik • Developed by Vamsi.</string>
 
 
     <string-array name="security_questions">

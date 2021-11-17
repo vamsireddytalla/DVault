@@ -17,6 +17,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.snackbar.Snackbar
 import com.talla.dvault.R
 import com.talla.dvault.adapters.FoldersAdapter
+import com.talla.dvault.database.entities.CategoriesModel
 import com.talla.dvault.database.entities.FolderTable
 import com.talla.dvault.databinding.FolderBottomSheetBinding
 import com.talla.dvault.interfaces.FolderItemClick
@@ -121,10 +122,12 @@ class FoldersActivity : AppCompatActivity() ,FolderItemClick {
                 var catType=catType
                 runBlocking {
                     var btnType=b1.text.toString()
+                    val folderModel=FolderTable(0,folderName,createdTime,catType.toString(),"",false)
                     if (btnType == this@FoldersActivity.resources.getString(R.string.create))
                     {
-                        var res: Long =viewModel.checkDataANdCreateFolder(folderName,createdTime.toString(),catType.toString())
-                        if (res==-1L){
+                        var res=viewModel.createNewFolder(folderModel)
+//                        var res: Long =viewModel.checkDataANdCreateFolder(folderName,createdTime.toString(),catType.toString())
+                        if (res==2067L){
                             Toast.makeText(this@FoldersActivity, getString(R.string.already_existed), Toast.LENGTH_SHORT).show()
                             et1.error = getString(R.string.already_existed)
                             et1.requestFocus()

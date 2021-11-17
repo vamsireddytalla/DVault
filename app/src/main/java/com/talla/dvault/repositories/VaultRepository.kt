@@ -48,9 +48,14 @@ class VaultRepository @Inject constructor(private val appDao:DVaultDao)
     fun getDashBoardData()=appDao.getDashBoardData()
 
 
-    suspend fun createNewFolder(folderTable: FolderTable)
+    suspend fun createNewFolder(folderTable: FolderTable):Long
     {
-        appDao.createNewFolder(folderTable)
+        try {
+            return appDao.createNewFolder(folderTable)
+        }catch (e:Exception){
+            e.printStackTrace()
+            return 2067
+        }
     }
 
     suspend fun checkDataANdCreateFolder(folderName: String,folderCreatedAt:String,catType: String):Long
@@ -106,5 +111,16 @@ class VaultRepository @Inject constructor(private val appDao:DVaultDao)
     {
        return appDao.updateItemServerId(serverId,itemId)
     }
+
+    suspend fun updateFolderServId(folderCatType: String, servId: String):Int
+    {
+        return appDao.updateFolderServId(folderCatType,servId)
+    }
+
+    suspend fun getFoldersBasedOnCategory(catId:String)=appDao.getFolderAndItemWithCatType(catId)
+
+    suspend fun getCatServerId(catId:String)=appDao.getCatServerId(catId)
+
+    suspend fun getFolderObject(catId: String)=appDao.getFolderObject(catId)
 
 }

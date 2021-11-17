@@ -17,7 +17,7 @@ data class ItemModel(
     val itemOriPath:String="",
     val itemCurrentPath:String="",
     val serverId:String="",
-    val folderId:String="",
+    var folderId:String="",
     val itemCatType:String="",
     val itemTrash:Boolean=false):Serializable{
     @Ignore

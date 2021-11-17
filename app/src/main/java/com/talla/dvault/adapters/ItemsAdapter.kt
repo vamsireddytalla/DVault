@@ -14,6 +14,8 @@ import com.talla.dvault.database.entities.ItemModel
 import com.talla.dvault.databinding.FileItemBinding
 import com.talla.dvault.interfaces.ItemAdapterClick
 import android.graphics.drawable.GradientDrawable
+import android.media.ThumbnailUtils
+import android.provider.MediaStore
 import android.widget.PopupMenu
 import com.talla.dvault.utills.DateUtills
 import com.talla.dvault.utills.FileSize
@@ -104,7 +106,15 @@ class ItemsAdapter(
         holder.mbinding?.apply {
             itemName.text = itemObj.itemName
             createdAndSize.text = DateUtills.convertMilToDate(mContext,itemObj.itemCreatedAt.toLong()) + " - " + FileSize.bytesToHuman(itemObj.itemSize.toLong())
-            glide.load(itemObj.itemCurrentPath).into(thumbNail)
+            //MICRO_KIND, size: 96 x 96 thumbnail
+            if (itemObj.itemCatType=="Vdo")
+            {
+                val bmThumbnail = ThumbnailUtils.createVideoThumbnail(itemObj.itemCurrentPath, MediaStore.Images.Thumbnails.MICRO_KIND);
+                thumbNail.setImageBitmap(bmThumbnail)
+            }else{
+                glide.load(itemObj.itemCurrentPath).into(thumbNail)
+            }
+
 
             if (!itemObj.isSelected) {
                 Log.d(TAG, "Unselected")

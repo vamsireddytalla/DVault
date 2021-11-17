@@ -21,9 +21,9 @@ class FoldersViewModel @Inject constructor(private val repository: VaultReposito
         Log.d(TAG, "FoldersViewModel Init Called")
     }
 
-    suspend fun createNewFolder(folderTable: FolderTable)
+    suspend fun createNewFolder(folderTable: FolderTable):Long
     {
-        repository.createNewFolder(folderTable)
+        return repository.createNewFolder(folderTable)
     }
 
     suspend fun checkDataANdCreateFolder(folderName: String,folderCreatedAt:String,catType: String):Long

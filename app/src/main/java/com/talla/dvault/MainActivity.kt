@@ -291,7 +291,7 @@ class MainActivity : AppCompatActivity() {
             val categoriesListNew: ArrayList<CategoriesModel> =
                 viewModel.getCategoriesData() as ArrayList<CategoriesModel>
             categoriesListNew.forEach { catModel ->
-                var folderMime = "application/vnd.google-apps.folder"
+                val folderMime = "application/vnd.google-apps.folder"
                 if (catModel.catType == folderMime) {
                     val fileMetadata = com.google.api.services.drive.model.File()
                     fileMetadata.name = catModel.catId

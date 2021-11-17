@@ -1,6 +1,5 @@
 package com.talla.dvault.database.dao
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.room.*
 import androidx.room.OnConflictStrategy.REPLACE
@@ -8,8 +7,7 @@ import com.talla.dvault.database.entities.*
 import androidx.sqlite.db.SupportSQLiteQuery
 
 import androidx.room.RawQuery
-
-
+import com.talla.dvault.database.relations.FolderAndItem
 
 
 @Dao
@@ -18,16 +16,16 @@ interface DVaultDao {
     suspend fun insertUserDetails(userDetails: User): Long
 
     @Insert(onConflict = REPLACE)
-    suspend fun insertUpdateCatList(catList:ArrayList<CategoriesModel>)
+    suspend fun insertUpdateCatList(catList: ArrayList<CategoriesModel>)
 
     @Update(onConflict = REPLACE)
-    suspend fun insertCatItem(catModel:CategoriesModel):Int
+    suspend fun insertCatItem(catModel: CategoriesModel): Int
 
     @Insert(onConflict = REPLACE)
     suspend fun insertCartList(catList: ArrayList<CategoriesModel>)
 
     @Query("Update CategoriesModel Set serverId=:serverId,categoryName=:catName Where catId=:catId")
-    suspend fun updateCategory(serverId:String,catName:String,catId: String):Int
+    suspend fun updateCategory(serverId: String, catName: String, catId: String): Int
 
     @Insert(onConflict = REPLACE)
     suspend fun updateUser(userDetails: User): Long
@@ -36,7 +34,7 @@ interface DVaultDao {
     suspend fun getUserDetails(): User
 
     @Query("SELECT count(*) FROM User Where userEmail=:userEmail")
-    suspend fun checkIsUserExist(userEmail:String): Int
+    suspend fun checkIsUserExist(userEmail: String): Int
 
     @Query("SELECT * FROM User WHERE userloginTime = (SELECT MAX(userloginTime) FROM User) ")
     fun getUserLastLogin(): User
@@ -86,7 +84,9 @@ interface DVaultDao {
     fun getDashBoardData(): LiveData<List<CategoriesModel>>
 
     @Insert
-    suspend fun createNewFolder(folderTable: FolderTable)
+    suspend fun createNewFolder(folderTable: FolderTable):Long
+
+
 
     @Query("INSERT INTO FolderTable (folderName, folderCreatedAt, folderCatType) SELECT * FROM (SELECT :folderName, :folderCreatedAt, :catType) AS tmp WHERE NOT EXISTS (SELECT :folderName FROM FolderTable WHERE folderName = :folderName and folderCatType=:catType) LIMIT 1;")
     suspend fun checkDataANdCreateFolder(
@@ -123,7 +123,7 @@ interface DVaultDao {
     suspend fun deleteItem(itemId: Int)
 
     @Query("Delete from CategoriesModel where catId=:catId")
-    suspend fun deleteParticularCat(catId:String)
+    suspend fun deleteParticularCat(catId: String)
 
     @Query("Select * from ItemModel Where (itemCatType=:categoryType AND (serverId Is Null OR serverId=''))")
     fun getBRItems(categoryType: String): List<ItemModel>
@@ -138,10 +138,10 @@ interface DVaultDao {
     suspend fun getCategoriesIfNotEmpty(): List<CategoriesModel>
 
     @Query("Select * from CategoriesModel Where (catId=:catId AND (serverId IS NOT NULL OR serverId!='')) Limit 1")
-    suspend fun getDbServerFolderId(catId:String):CategoriesModel
+    suspend fun getDbServerFolderId(catId: String): CategoriesModel
 
     @Query("Select * from CategoriesModel")
-    suspend fun getDbFilesList():List<CategoriesModel>
+    suspend fun getDbFilesList(): List<CategoriesModel>
 
     @Query("Update ItemModel Set serverId=:serverId where itemId=:itemId")
     suspend fun updateItemServerId(serverId: String, itemId: Int): Int
@@ -169,10 +169,21 @@ interface DVaultDao {
     suspend fun deleteCategories()
 
     @Query("Update CategoriesModel Set serverId=:servId Where catId=:catId")
-    suspend fun updateCatServId(catId:String,servId:String):Int
+    suspend fun updateCatServId(catId: String, servId: String): Int
+
+    @Query("Update FolderTable Set folderServerId=:servId Where folderCatType=:folderCatType")
+    suspend fun updateFolderServId(folderCatType: String, servId: String): Int
 
     @RawQuery
     fun checkpoint(supportSQLiteQuery: SupportSQLiteQuery?): Int
 
+    @Query("Select * from FolderTable Where folderCatType=:catType")
+    suspend fun getFolderAndItemWithCatType(catType: String):FolderAndItem
+
+    @Query("Select serverId from CategoriesModel Where catId=:catId")
+    suspend fun getCatServerId(catId: String):String
+
+    @Query("Select * from FolderTable Where folderCatType=:catId")
+    suspend fun getFolderObject(catId: String):FolderTable
 
 }
