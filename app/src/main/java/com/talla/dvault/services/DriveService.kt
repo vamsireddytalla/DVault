@@ -75,9 +75,9 @@ class DriveService : Service() {
         startServiceOreoCondition()
         isInterrupted = false
         backgroundScope.launch {
-            getFilesUnderParticularFolder()
+//            getFilesUnderParticularFolder()
             getTotalDriveStorages()
-//            getDriveFiles()
+            getDriveFiles()
         }
     }
 
@@ -88,6 +88,7 @@ class DriveService : Service() {
             itemModelList.clear()
             if (intent.extras != null) {
                 val type: Any? = intent.extras!!.get(this.resources.getString(R.string.key))
+                val bkpString=this@DriveService.resources.getString(R.string.backup)
                 when (actionMaker) {
                     FileSize.ACTION_SETTINGS_START_FOREGROUND_SERVICE -> {
                         Log.d(TAG, "onStartCommand: Started Service")
@@ -96,12 +97,19 @@ class DriveService : Service() {
                             Log.d(TAG, "onStartCommand: ${selecteData}")
                             selecteData.forEach { catType ->
                                 Log.d(TAG, "onStartCommand: $catType")
-                                if (type == this@DriveService.resources.getString(R.string.backup)) {
-                                    itemModelList =
-                                        repository.getBRItems(catType) as ArrayList<ItemModel>
+                                if (type == bkpString) {
+                                    Log.d(TAG, "onStartCommand: BackUp Inner")
+                                    val itemList = repository.getBRItems(catType) as ArrayList<ItemModel>
+                                    itemList.forEach {
+                                        itemModelList.add(it)
+                                    }
+
                                 } else {
-                                    itemModelList =
-                                        repository.getRBItems(catType) as ArrayList<ItemModel>
+                                    Log.d(TAG, "onStartCommand: Restore Inner")
+                                    val itemList = repository.getRBItems(catType) as ArrayList<ItemModel>
+                                    itemList.forEach {
+                                        itemModelList.add(it)
+                                    }
                                 }
 
                             }
@@ -116,13 +124,12 @@ class DriveService : Service() {
                                     FileSize.BR_CHANNEl_ID,
                                     FileSize.BR_CHANNEL_NAME,
                                     FileSize.BR_NOTIFY_ID,
-                                    FileSize.ACTION_SETTINGS_STOP_FOREGROUND_SERVICE
-                                )
+                                    FileSize.ACTION_SETTINGS_STOP_FOREGROUND_SERVICE)
                                 var dummyMsg=" Completed!"
                                 for ((index, source) in itemModelList.withIndex()) {
                                     if (!isInterrupted!!) {
                                         try {
-                                            if (source.serverId.isEmpty()) {
+                                            if (type==bkpString) {
                                                 try {
                                                     val newFolderServId = getFolderBasedOnCategory(source.itemCatType)
                                                     source.folderId = newFolderServId
@@ -193,6 +200,7 @@ class DriveService : Service() {
         }
 
         fun startBackUpService(btnType: String) {
+            Log.d(TAG, "startBackUpService: $btnType")
             var clickIntent = Intent(this@DriveService, DriveService::class.java)
             clickIntent.action = FileSize.ACTION_SETTINGS_START_FOREGROUND_SERVICE
             clickIntent.putExtra(this@DriveService.resources.getString(R.string.key), btnType)
@@ -364,7 +372,7 @@ class DriveService : Service() {
             val uploader: MediaHttpUploader = it.mediaHttpUploader
             uploader.isDirectUploadEnabled = false
             Log.d(TAG, "uploadLargeFiles: Process One")
-            uploader.chunkSize = MediaHttpUploader.DEFAULT_CHUNK_SIZE
+            uploader.chunkSize = 5*MediaHttpUploader.MINIMUM_CHUNK_SIZE
             val listner: CustomUploadProgressListener = CustomUploadProgressListener(itemModel, itemNo, fileSize!!)
             it.mediaHttpUploader?.progressListener = listner
             Log.d(TAG, "uploadLargeFiles: Process Two")
@@ -373,8 +381,25 @@ class DriveService : Service() {
 
         responsee?.let {
             Log.d(TAG, "uploadLargeFiles: ServerFile ID->  ${it.id}")
-            var res = repository.updateItemServerId(it.id, itemModel.itemId)
+            val res = repository.updateItemServerId(it.id, itemModel.itemId)
             Log.d(TAG, "uploadLargeFiles: $res")
+            if ((itemModelList.size) == itemNo) {
+                runBlocking {
+                    val catDbLocalFileList = repository.getCategoriesIfNotEmpty()
+                    Log.d(TAG, "uploadData: ${catDbLocalFileList.toString()}")
+                    Log.d(TAG, "uploadData: CatList Check Server Ids List ${catDbLocalFileList.size}")
+                    var updateJob = backgroundScope.launch(Dispatchers.IO) {
+                        catDbLocalFileList.forEach {
+                            updateDbFiles(getDriveService()!!, it.serverId, it.catId)
+                        }
+                    }
+                    updateJob.join()
+                    var msg="Back-up Completed!"
+                    if (isInterrupted == true) msg="Back-up Cancelled"
+                    stopServiceMethod(msg)
+                }
+
+            }
         }
     }
 
@@ -460,23 +485,7 @@ class DriveService : Service() {
                     Log.d(TAG, "progressChanged: Upload is complete!")
                     Log.d(TAG, "progressChanged: TotalList ${itemModelList.size}")
                     Log.d(TAG, "progressChanged: ItemNo ${itemNo}")
-                    if ((itemModelList.size) == itemNo) {
-                        runBlocking {
-                            val catDbLocalFileList = repository.getCategoriesIfNotEmpty()
-                            Log.d(TAG, "uploadData: ${catDbLocalFileList.toString()}")
-                            Log.d(TAG, "uploadData: CatList Check Server Ids List ${catDbLocalFileList.size}")
-                            var updateJob = backgroundScope.launch(Dispatchers.IO) {
-                                catDbLocalFileList.forEach {
-                                    updateDbFiles(getDriveService()!!, it.serverId, it.catId)
-                                }
-                            }
-                            updateJob.join()
-                            var msg="Back-up Completed!"
-                            if (isInterrupted == true) msg="Back-up Cancelled"
-                            stopServiceMethod(msg)
-                        }
 
-                    }
                 }
                 UploadState.NOT_STARTED -> Log.d(TAG, "progressChanged: Upload Still Not Started")
             }
@@ -501,8 +510,7 @@ class DriveService : Service() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun createNotificationChannel(channelId: String, channelName: String): String {
-        val chan =
-            NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH)
+        val chan = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH)
         chan.lightColor = Color.BLUE
         chan.lockscreenVisibility = Notification.VISIBILITY_PUBLIC
         notificationManager.createNotificationChannel(chan)

@@ -27,6 +27,7 @@
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/ic_button_spl.xml" value="0.2703125" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/ic_buttonspl.xml" value="0.2703125" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/ic_card.xml" value="0.2703125" />
+        <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/ic_delete_bin.xml" value="0.26614583333333336" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/ic_doc_card.xml" value="0.2703125" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/ic_doc_icon.xml" value="0.2703125" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/ic_image_card.xml" value="0.2703125" />
@@ -44,12 +45,14 @@
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/ic_video_card.xml" value="0.2703125" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/ic_videos_icon.xml" value="0.2703125" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/image_corner_radius.xml" value="0.11822916666666666" />
+        <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/lin_border.xml" value="0.26614583333333336" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/linear_border_select.xml" value="0.2703125" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/linear_border_stroke.xml" value="0.2703125" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/linear_layout_border.xml" value="0.2703125" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/moon.xml" value="0.2703125" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/notification_icon.xml" value="0.2703125" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/progress_drawable.xml" value="0.26614583333333336" />
+        <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/rect_lin_bg.xml" value="0.26614583333333336" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/right_arrow.xml" value="0.1707236842105263" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/select_all_icon.xml" value="0.2546875" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/drawable/skeleton_icon.xml" value="0.2703125" />
@@ -76,6 +79,7 @@
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/layout/custom_item_progress.xml" value="0.25416666666666665" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/layout/custom_spinner.xml" value="0.23854166666666668" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/layout/custon_progress_dialog.xml" value="0.234375" />
+        <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/layout/delete_dialog.xml" value="0.536" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/layout/file_copy_dialog.xml" value="0.25" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/layout/file_item.xml" value="0.264" />
         <entry key="..\:/Kotlin Projects/DVault/app/src/main/res/layout/folder_bottom_sheet.xml" value="0.25416666666666665" />

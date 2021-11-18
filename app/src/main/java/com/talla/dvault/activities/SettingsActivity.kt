@@ -288,7 +288,7 @@ class SettingsActivity : AppCompatActivity() {
                     && !FileSize.backUpRestoreEnabled
                     && (binding.restoreProgress.isVisible || binding.backupProgress.isVisible)
                 ) {
-                    var backupstring = bkpBtn.text.toString()
+                    val backupstring = bkpBtn.text.toString()
                     if (title == this@SettingsActivity.resources.getString(R.string.backup)) {
                         binding.backUpMbTransfer.text=getString(R.string.initializing)
                         FileSize.settingsBRSelected = backupstring
@@ -297,7 +297,7 @@ class SettingsActivity : AppCompatActivity() {
                         binding.backUpProgressRoot.visibility = View.VISIBLE
                     } else {
                         binding.totalMbRestore.text=getString(R.string.initializing)
-                        var restoreString = this@SettingsActivity.resources.getString(R.string.restore)
+                        val restoreString = this@SettingsActivity.resources.getString(R.string.restore)
                         FileSize.settingsBRSelected = restoreString
                         FileSize.backUpRestoreEnabled = true
                         binding.restoreRoot.visibility = View.GONE

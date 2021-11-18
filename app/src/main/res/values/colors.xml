@@ -14,6 +14,9 @@
     <color name="dvault_color">#FFFFFFFF</color>
     <color name="dashboard_bg">#FFFFFFFF</color>
     <color name="profile_bg_stroke">#C1C1C1</color>
+    <color name="del_icon_color">#3C3C3C</color>
+    <color name="del_txt_color">#989898</color>
+    <color name="blue_white">#3073D1</color>
     <color name="dashboard_ln_bg">#FAFAFA</color>
     <color name="settings_icon_border">#EEEEEE</color>
     <color name="settings_card_bg">#FFFFFF</color>

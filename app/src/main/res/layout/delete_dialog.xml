@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/rect_lin_bg"
+    android:padding="20dp"
+    android:layout_margin="10dp">
+
+    <TextView
+        android:id="@+id/MainHeading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/poppins_bold"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        android:text="Delete Folder"
+        android:textColor="@color/hello_color" />
+
+   <LinearLayout
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       android:layout_marginTop="8dp"
+       android:weightSum="1">
+
+     <LinearLayout
+         android:layout_width="0dp"
+         android:layout_height="wrap_content"
+         android:orientation="vertical"
+         android:layout_weight="0.80">
+       <TextView
+           android:id="@+id/heading"
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"
+           android:fontFamily="@font/poppins_regular"
+           android:text="@string/are_you_sure_you_wan_t_to_delete"
+           android:textColor="@color/hello_color" />
+
+       <TextView
+           android:id="@+id/fileName"
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"
+           android:fontFamily="@font/poppins_regular"
+           android:text="Imggubuibiuhiuiuuirbuibirb_4565.jpeg"
+           android:textAppearance="@style/TextAppearance.AppCompat.Small"
+           android:textColor="@color/blue_color" />
+     </LinearLayout>
+
+     <RelativeLayout
+       android:layout_width="0dp"
+       android:layout_height="wrap_content"
+       android:layout_weight="0.20">
+
+         <ImageView
+             android:id="@+id/imageView2"
+             android:layout_width="match_parent"
+             android:layout_height="41dp"
+             android:layout_alignParentRight="true"
+             app:srcCompat="@drawable/ic_delete_bin" />
+   </RelativeLayout>
+
+
+   </LinearLayout>
+
+  <androidx.appcompat.widget.AppCompatCheckBox
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:fontFamily="@font/poppins_regular"
+      android:id="@+id/isServDel"
+      android:includeFontPadding="false"
+      android:text="Delete from cloud"
+      android:translationX="-5dp"
+      android:buttonTint="@color/blue_color"
+      android:textColor="@color/del_txt_color"/>
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginTop="10dp"
+      android:weightSum="1">
+
+      <LinearLayout
+          android:id="@+id/no"
+          android:layout_width="0dp"
+          android:layout_height="40dp"
+          android:layout_weight="0.50"
+          android:layout_marginRight="10dp"
+          android:background="@drawable/lin_border"
+          android:orientation="vertical"
+          android:gravity="center">
+
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="No"
+              android:fontFamily="@font/poppins_medium"
+              android:includeFontPadding="false"
+              android:textAppearance="@style/TextAppearance.AppCompat.Small"
+              android:textColor="@color/blue_color"/>
+
+      </LinearLayout>
+      <LinearLayout
+          android:id="@+id/yes"
+          android:layout_width="0dp"
+          android:layout_height="40dp"
+          android:layout_weight="0.50"
+          android:layout_marginLeft="10dp"
+          android:background="@drawable/ic_button"
+          android:orientation="vertical"
+          android:gravity="center">
+
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="Delete"
+              android:fontFamily="@font/poppins_medium"
+              android:includeFontPadding="false"
+              android:textAppearance="@style/TextAppearance.AppCompat.Small"
+              android:textColor="@color/white"/>
+
+      </LinearLayout>
+
+
+  </LinearLayout>
+
+</LinearLayout>

@@ -128,7 +128,7 @@ interface DVaultDao {
     @Query("Select * from ItemModel Where (itemCatType=:categoryType AND (serverId Is Null OR serverId=''))")
     fun getBRItems(categoryType: String): List<ItemModel>
 
-    @Query("Select * from ItemModel Where itemCatType=:catType AND serverId Is Not Null And serverId!=''")
+    @Query("Select * from ItemModel Where itemCatType=:catType")
     fun getRBItems(catType: String): List<ItemModel>
 
     @Query("Select * from CategoriesModel Where (serverId IS NULL OR serverId='')")
