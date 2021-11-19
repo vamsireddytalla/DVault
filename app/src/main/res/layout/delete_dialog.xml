@@ -43,7 +43,7 @@
            android:layout_width="wrap_content"
            android:layout_height="wrap_content"
            android:fontFamily="@font/poppins_regular"
-           android:text="Imggubuibiuhiuiuuirbuibirb_4565.jpeg"
+           android:text="Img_414.jpeg"
            android:textAppearance="@style/TextAppearance.AppCompat.Small"
            android:textColor="@color/blue_color" />
      </LinearLayout>
@@ -72,6 +72,8 @@
       android:includeFontPadding="false"
       android:text="Delete from cloud"
       android:translationX="-5dp"
+      android:checked="true"
+      android:clickable="false"
       android:buttonTint="@color/blue_color"
       android:textColor="@color/del_txt_color"/>
 

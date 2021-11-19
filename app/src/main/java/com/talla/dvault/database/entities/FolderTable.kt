@@ -4,6 +4,8 @@ import androidx.annotation.Nullable
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import java.io.Serializable
+
 @Entity(indices = [Index(value = ["folderName", "folderCatType"], unique = true)])
 data class FolderTable(
     @PrimaryKey(autoGenerate = true)
@@ -13,4 +15,4 @@ data class FolderTable(
     val folderCatType:String="",
     @Nullable
     val folderServerId:String="",
-    var folderTrash:Boolean=false)
+    var folderTrash:Boolean=false):Serializable

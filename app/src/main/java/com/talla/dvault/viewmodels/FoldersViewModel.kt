@@ -5,11 +5,11 @@ import androidx.lifecycle.*
 import com.talla.dvault.database.entities.AppLockModel
 import com.talla.dvault.database.entities.CategoriesModel
 import com.talla.dvault.database.entities.FolderTable
+import com.talla.dvault.database.entities.ItemModel
 import com.talla.dvault.repositories.VaultRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import java.io.File
 import javax.inject.Inject
 
 private const val TAG = "FoldersViewModel"
@@ -37,6 +37,14 @@ class FoldersViewModel @Inject constructor(private val repository: VaultReposito
         return foldersMutableData
     }
 
+    suspend fun getItemsBasedOnFolderId(folderId:String):List<ItemModel>
+    {
+        val res: Deferred<List<ItemModel>> = viewModelScope.async(Dispatchers.IO) {
+            repository.getItemsBasedOnFolderId(folderId)
+        }
+        return res.await()
+    }
+
 
     suspend fun renameFolder(folderName:String,folderId:Int):Int
     {
@@ -53,6 +61,24 @@ class FoldersViewModel @Inject constructor(private val repository: VaultReposito
         repository.deleteFolder(folderId)
     }
 
+    suspend fun deleteItem(itemModel:ItemModel,tag:String)
+    {
+        var respo=viewModelScope.async(Dispatchers.Default) {
+            val file= File(itemModel.itemCurrentPath)
+            if (file.exists()){
+                val isDeleted=file.delete()
+                if (isDeleted) {
+                    repository.deleteItem(itemModel.itemId)
+                }
+            }else{
+                repository.deleteItem(itemModel.itemId)
+            }
+        }
+    }
 
+    suspend fun getFolderObjWithFolderID(folderId: String):FolderTable
+    {
+       return repository.getFolderObjWithFolderID(folderId)
+    }
 
 }

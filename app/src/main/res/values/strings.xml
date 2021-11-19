@@ -49,7 +49,7 @@ You can restore them when you reinstall.</string>
     <string name="initializing">Initializing...</string>
     <string name="dateFormat">E, dd MMM yyyy hh:mm a</string>
     <string name="check_internet">Check Internet</string>
-    <string name="already_existed">Already Existed!</string>
+    <string name="already_existed">Try new Name!</string>
     <string name="logout_alert">Make sure to backup all your files. Logout may delete all your restored files.</string>
     <string name="restore_alert">Your Backup data available on the Server click OK to restore.</string>
     <string name="internet_alert">Make sure to turn on your Internet to proceed with this app.</string>

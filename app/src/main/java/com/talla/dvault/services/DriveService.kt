@@ -93,7 +93,7 @@ class DriveService : Service() {
                     FileSize.ACTION_SETTINGS_START_FOREGROUND_SERVICE -> {
                         Log.d(TAG, "onStartCommand: Started Service")
                         cancelProcessJob = backgroundScope.launch {
-                            var selecteData = FileSize.selectedBackRestore
+                            val selecteData = FileSize.selectedBackRestore
                             Log.d(TAG, "onStartCommand: ${selecteData}")
                             selecteData.forEach { catType ->
                                 Log.d(TAG, "onStartCommand: $catType")
@@ -129,33 +129,50 @@ class DriveService : Service() {
                                 for ((index, source) in itemModelList.withIndex()) {
                                     if (!isInterrupted!!) {
                                         try {
+                                            val folderObj=repository.getFolderObjWithFolderID(source.folderId)
                                             if (type==bkpString) {
                                                 try {
+                                                    Log.d(TAG, "onStartCommand: BackUp Process")
                                                     val newFolderServId = getFolderBasedOnCategory(source.itemCatType)
                                                     source.folderId = newFolderServId
-                                                    Log.d(TAG, "onStartCommand: Final CHannel ${source.folderId}")
-                                                    uploadLargeFiles(source, index + 1)
+                                                    Log.d(TAG, "onStartCommand: Final Channel ${source.folderId}")
+                                                    uploadLargeFiles(source, index + 1,folderObj)
                                                 } catch (e: Exception) {
                                                     e.printStackTrace()
                                                     dummyMsg=" Cancelled!"
                                                     Log.d(TAG, "onStartCommand: Exception Occured-----> ${e.message}")
                                                 }
                                             } else {
-                                                val orgDir: java.io.File = this@DriveService.getDir(
-                                                    source.itemCatType,
-                                                    Context.MODE_PRIVATE)
-                                                val searchFile = File(orgDir.toString() + "/" + source.itemName)
-                                                Log.d(TAG, "onStartCommand: Secret File Path $searchFile")
-                                                if (searchFile.exists()) {
-                                                    Log.d(TAG, "onStartCommand: File Already Exists")
-                                                    continue
+                                                var searchFile:java.io.File?=null
+                                                try {
+                                                    Log.d(TAG, "onStartCommand: Restore Process")
+                                                    val orgDir=this@DriveService.resources.getString(R.string.db_folder_path)
+                                                    searchFile = File(orgDir.toString() + "/"+"app_"+ folderObj.folderCatType +"/"+ folderObj.folderName)
+                                                    Log.d(TAG, "onStartCommand: Secret File Path $searchFile")
+                                                    if (!searchFile.exists()) {
+                                                        searchFile.mkdir()
+                                                    }else{
+                                                        val finalFile=File(searchFile.toString()+ "/" + source.itemName)
+                                                        if (finalFile.exists()){
+                                                            Log.d(TAG, "onStartCommand: File Already Exists")
+                                                            continue
+                                                        }
+                                                        downloadDBFiles(source, index + 1, finalFile.toString())
+                                                    }
+
+                                                } catch (e: Exception) {
+                                                    e.printStackTrace()
+                                                    if (e.message.toString().contains("No such file or directory")) {
+                                                        Log.d(TAG, "onStartCommand: No Local File available")
+                                                        downloadDBFiles(source, index + 1, searchFile.toString())
+                                                    }
+                                                    Log.d(TAG, "onStartCommand: Excep ${e.message}")
                                                 }
-                                                downloadDBFiles(source, index + 1, searchFile.toString())
                                             }
                                         } catch (e: Exception) {
                                             e.printStackTrace()
                                             dummyMsg=" Cancelled!"
-                                            Log.d(TAG, "onStartCommand: ${e.message}")
+                                            Log.d(TAG, "onStartCommand New Exception: ${e.message}")
                                         }
                                     } else break
                                 }
@@ -310,7 +327,7 @@ class DriveService : Service() {
     //quotaBytesUsed
     private fun updateDbFiles(service: Drive, fileId: String, fileName: String) {
         try {
-            var mimeType = "file/*"
+            val mimeType = "file/*"
             // File's new content.
             val file = File(this.resources.getString(R.string.db_path) + fileName)
             val newMetadata = com.google.api.services.drive.model.File()
@@ -321,7 +338,7 @@ class DriveService : Service() {
             val mediaContentNew =
                 InputStreamContent("file/*", BufferedInputStream(FileInputStream(file)))
             // Send the request to the API.
-            var fileRes = service.files().update(fileId, newMetadata, mediaContentNew)
+            val fileRes = service.files().update(fileId, newMetadata, mediaContentNew)
                 .setFields("id, name, appProperties,quotaBytesUsed").execute()
             fileRes?.let {
                 Log.d(
@@ -342,7 +359,7 @@ class DriveService : Service() {
         request?.let {
             val uploader: MediaHttpDownloader = it.mediaHttpDownloader
             uploader.isDirectDownloadEnabled = false
-            uploader.chunkSize = MediaHttpUploader.MINIMUM_CHUNK_SIZE
+            uploader.chunkSize = 5*MediaHttpUploader.MINIMUM_CHUNK_SIZE
             val downloadListner = CustomProgressListener(
                 itemModel,
                 itemNo,
@@ -354,14 +371,17 @@ class DriveService : Service() {
         }
     }
 
-    suspend fun uploadLargeFiles(itemModel: ItemModel, itemNo: Int) {
+    suspend fun uploadLargeFiles(itemModel: ItemModel, itemNo: Int,folderObj:FolderTable) {
         val fileMetadata = File()
         fileMetadata.name = itemModel.itemName
-        val catModel = repository.getDbServerFolderId(itemModel.itemCatType)
+//        val catModel = repository.getDbServerFolderId(itemModel.itemCatType)
+        val defLocation=this.resources.getString(R.string.db_folder_path)
+        val folderNameCreation="app_"+folderObj.folderCatType
+        val sourceLoc="$defLocation/$folderNameCreation/${folderObj.folderName}/${itemModel.itemName}"
         fileMetadata.parents = Collections.singletonList(itemModel.folderId)
-        fileMetadata.mimeType = FileSize.getMimeType(itemModel.itemCurrentPath)
+        fileMetadata.mimeType = FileSize.getMimeType(sourceLoc)
 
-        val file: java.io.File = File(itemModel.itemCurrentPath)
+        val file: java.io.File = File(sourceLoc)
         mediaContent = FileContent(FileSize.getMimeType(file.toString()), file)
         val fileSize: String? = FileSize.bytesToHuman(file.length())
         Log.d(TAG, "ItemSize : $fileSize ")
@@ -625,6 +645,7 @@ class DriveService : Service() {
                         repository.getCatServerId(folderTable.folderCatType))
                     repository.updateFolderServId(folderTable.folderCatType, newFoldServId)
                 } else {
+                    updateFolderName(folderTable)
                     newFoldServId = folderTable.folderServerId
                 }
             } else {
@@ -634,6 +655,25 @@ class DriveService : Service() {
         opRes.join()
         Log.d(TAG, "getFolderBasedOnCategory: $newFoldServId")
         return newFoldServId
+    }
+
+    fun updateFolderName(folerTable:FolderTable){
+        try {
+            val mimeType = this.resources.getString(R.string.folder_mime_type)
+            // File's new content.
+            val newMetadata = com.google.api.services.drive.model.File()
+            newMetadata.name = folerTable.folderName
+
+            // Send the request to the API.
+            val fileRes = getDriveService()!!.files().update(folerTable.folderServerId, newMetadata)
+                .setFields("id, name, appProperties,quotaBytesUsed").execute()
+            fileRes?.let {
+                Log.d(TAG, "updateFolderName: Successfully ${fileRes.name} ${fileRes.id} ${fileRes.quotaBytesUsed}")
+            }
+        } catch (e: IOException) {
+            println("An error occurred: $e")
+            Log.d(TAG, "updateFolderName Error --> : ${e.message}")
+        }
     }
 
     fun deleteData(fileId: String) {

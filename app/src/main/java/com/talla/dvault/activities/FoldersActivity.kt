@@ -2,6 +2,7 @@ package com.talla.dvault.activities
 
 
 import android.app.Dialog
+import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Build
@@ -14,6 +15,8 @@ import androidx.activity.viewModels
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewModelScope
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.Task
@@ -23,19 +26,20 @@ import com.talla.dvault.R
 import com.talla.dvault.adapters.FoldersAdapter
 import com.talla.dvault.database.entities.CategoriesModel
 import com.talla.dvault.database.entities.FolderTable
+import com.talla.dvault.database.entities.ItemModel
 import com.talla.dvault.databinding.*
 import com.talla.dvault.interfaces.FolderItemClick
 import com.talla.dvault.utills.DateUtills
 import com.talla.dvault.utills.FileSize
+import com.talla.dvault.utills.InternetUtil
 import com.talla.dvault.viewmodels.AppLockViewModel
 import com.talla.dvault.viewmodels.FoldersViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
+import java.io.File
+import android.os.Environment
 
 private const val TAG = "FoldersActivity"
-
 @AndroidEntryPoint
 class FoldersActivity : AppCompatActivity(), FolderItemClick {
     private lateinit var binding: ActivityFoldersBinding
@@ -51,7 +55,7 @@ class FoldersActivity : AppCompatActivity(), FolderItemClick {
         super.onCreate(savedInstanceState)
         binding = ActivityFoldersBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        var bundle: Bundle? = intent.extras
+        val bundle: Bundle? = intent.extras
         if (bundle != null) {
             catType = bundle.getString("CatKey")
             changeFolderColor(catType!!)
@@ -66,8 +70,7 @@ class FoldersActivity : AppCompatActivity(), FolderItemClick {
                     "New Folder"
                 )
             }
-            foldersAdapter =
-                FoldersAdapter(catType.toString(), this@FoldersActivity, this@FoldersActivity)
+            foldersAdapter = FoldersAdapter(catType.toString(), this@FoldersActivity, this@FoldersActivity)
             foldersRCV.adapter = foldersAdapter
         }
 
@@ -119,7 +122,7 @@ class FoldersActivity : AppCompatActivity(), FolderItemClick {
     }
 
     fun showBottomSheetDialog(title: String, btnText: String, value: String) {
-        var bsd = BottomSheetDialog(this, R.style.BottomSheetDialogStyle)
+        val bsd = BottomSheetDialog(this, R.style.BottomSheetDialogStyle)
         var bottomView: View? = null
         var sheetBinding: FolderBottomSheetBinding? = null
         sheetBinding = FolderBottomSheetBinding.inflate(layoutInflater)
@@ -133,51 +136,49 @@ class FoldersActivity : AppCompatActivity(), FolderItemClick {
             b1.text = btnText
 
             b1.setOnClickListener {
-                var folderName = et1.text.toString().trim()
-                var createdTime = System.currentTimeMillis().toString()
-                var catType = catType
-                runBlocking {
-                    var btnType = b1.text.toString()
-                    val folderModel =
-                        FolderTable(0, folderName, createdTime, catType.toString(), "", false)
-                    if (btnType == this@FoldersActivity.resources.getString(R.string.create)) {
-                        var res = viewModel.createNewFolder(folderModel)
+                val folderName = et1.text.toString().trim()
+                val createdTime = System.currentTimeMillis().toString()
+                val catType = catType
+                if (folderName.isNotEmpty()){
+                    runBlocking {
+                        val btnType = b1.text.toString()
+                        val folderModel =
+                            FolderTable(0, folderName, createdTime, catType.toString(), "", false)
+                        if (btnType == this@FoldersActivity.resources.getString(R.string.create)) {
+                            val res = viewModel.createNewFolder(folderModel)
 //                        var res: Long =viewModel.checkDataANdCreateFolder(folderName,createdTime.toString(),catType.toString())
-                        if (res == 2067L) {
-                            Toast.makeText(
-                                this@FoldersActivity,
-                                getString(R.string.already_existed),
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            et1.error = getString(R.string.already_existed)
-                            et1.requestFocus()
+                            if (res == 2067L) {
+                                Toast.makeText(this@FoldersActivity, getString(R.string.already_existed), Toast.LENGTH_SHORT).show()
+                                et1.error = getString(R.string.already_existed)
+                                et1.requestFocus()
+                            } else {
+                                createFolder(catType.toString(),folderName)
+                                bsd.dismiss()
+                                showSnackBar("Created")
+                            }
+                            Log.d(TAG, "showBottomSheetDialog: ${res}")
                         } else {
-                            bsd.dismiss()
-                            showSnackBar("Created")
+                            val res: Int = viewModel.renameFolder(folderName, folderId)
+                            if (res == 2067) {
+                                Toast.makeText(this@FoldersActivity, getString(R.string.already_existed), Toast.LENGTH_SHORT).show()
+                                et1.error = getString(R.string.already_existed)
+                                et1.requestFocus()
+                            } else {
+                                updateFolder(value,folderName)
+                                bsd.dismiss()
+                                showSnackBar("Updated Successfully!")
+                            }
                         }
-                        Log.d(TAG, "showBottomSheetDialog: ${res}")
-                    } else {
-                        var res: Int = viewModel.renameFolder(folderName, folderId)
-                        if (res == 2067) {
-                            Toast.makeText(
-                                this@FoldersActivity,
-                                getString(R.string.already_existed),
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            et1.error = getString(R.string.already_existed)
-                            et1.requestFocus()
-                        } else {
-                            bsd.dismiss()
-                            showSnackBar("Updated Successfully!")
-                        }
-                    }
 
+                    }
+                }else{
+                    et1.error = "empty"
+                    et1.requestFocus()
                 }
 
             }
 
         }
-
 
         bsd.show()
     }
@@ -193,23 +194,59 @@ class FoldersActivity : AppCompatActivity(), FolderItemClick {
                 )
             }
             "Delete" -> {
-                runBlocking {
-//                    viewModel.deleteFolder(folderId)
-                    showDeleteDialog()
+                val res = FileSize.checkIsAnyProcessGoing()
+                if (res.isNotEmpty()) {
+                    showSnackBar(res)
+                } else {
+                    //process continue here
+                    showDeleteDialog(oldFolderName, folderId.toString())
                 }
             }
         }
 
     }
 
-    private fun showDeleteDialog() {
+    private fun showDeleteDialog(itemName: String, folderId: String) {
         dialog = Dialog(this, R.style.Theme_MaterialComponents_DayNight_Dialog_MinWidth)
         dialog.setCancelable(true)
         deleteDialogBinding = DeleteDialogBinding.inflate(layoutInflater)
         dialog.setContentView(deleteDialogBinding.root)
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        dialog.show()
+        deleteDialogBinding.fileName.text = itemName
+        deleteDialogBinding.yes.setOnClickListener {
+            if (InternetUtil.isInternetAvail(this)) {
+                //online Delete and local delete
+                lifecycleScope.launch(Dispatchers.IO) {
+                    //first get all items based on Folder id
+                    val itemList = getItemsBasedOnFolderId(folderId)
+                    val folderObj = viewModel.getFolderObjWithFolderID(folderId)
+                    if (itemList.isEmpty()) {
+                        viewModel.deleteFolder(folderId = folderId.toInt())
+                    } else {
+                        //Second Delete all Files in Local Folder
+                        itemList.forEach {
+                            val file = File(it.itemCurrentPath)
+                            if (file.exists()) {
+                                val isDeleted = file.delete()
+                            }
+                        }
+                    }
+                }
+            } else {
+                showSnackBar("Check Internet Connection")
+            }
 
+        }
+        dialog.show()
+    }
+
+    fun getItemsBasedOnFolderId(folderId: String): List<ItemModel> {
+        var itemsListOnFolderId = ArrayList<ItemModel>()
+        runBlocking {
+            itemsListOnFolderId =
+                viewModel.getItemsBasedOnFolderId(folderId) as ArrayList<ItemModel>
+        }
+        return itemsListOnFolderId
     }
 
     fun showSnackBar(message: String) {
@@ -233,6 +270,29 @@ class FoldersActivity : AppCompatActivity(), FolderItemClick {
         withContext(Dispatchers.Main) {
             progressDialog.dismiss()
         }
+    }
+
+    fun createFolder(catName:String,folderName: String) {
+       lifecycleScope.launch(Dispatchers.IO){
+           val newdir: File = this@FoldersActivity.getDir(catName, Context.MODE_PRIVATE)
+           val testFolder = File("$newdir/$folderName")
+           if (!testFolder.exists()) {
+               testFolder.mkdirs()
+               Log.d(TAG, "createFolder: Creating")
+           }
+           Log.d(TAG, "createFolder: ${testFolder.toString()}")
+       }
+    }
+
+    fun updateFolder(oldFolderName:String,newFolderName:String)
+    {
+      lifecycleScope.launch(Dispatchers.IO){
+          val newdir: File = this@FoldersActivity.getDir(catType, Context.MODE_PRIVATE)
+          val oldFolder = File("$newdir/$oldFolderName")
+          val newFolder = File("$newdir/$newFolderName")
+          val success = oldFolder.renameTo(newFolder)
+          Log.d(TAG, "updateFolder: $success")
+      }
     }
 
 }

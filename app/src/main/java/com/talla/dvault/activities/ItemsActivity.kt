@@ -32,6 +32,7 @@ import com.google.api.client.json.jackson2.JacksonFactory
 import com.google.api.services.drive.Drive
 import com.google.api.services.drive.DriveScopes
 import com.talla.dvault.adapters.ItemsAdapter
+import com.talla.dvault.database.entities.FolderTable
 import com.talla.dvault.database.entities.ItemModel
 import com.talla.dvault.database.entities.SourcesModel
 import com.talla.dvault.databinding.CopyingFileDialogBinding
@@ -50,9 +51,7 @@ private const val TAG = "ItemsActivity"
 @AndroidEntryPoint
 class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
     private lateinit var binding: ActivityItemsBinding
-    private var catType: String = ""
-    private var folderName: String = ""
-    private var folderId: Int? = null
+    private lateinit var folderTable:FolderTable
     private lateinit var itemsAdapter: ItemsAdapter
     private var itemsList: List<ItemModel> = ArrayList()
 //    private var mBound: Boolean = false
@@ -87,33 +86,31 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
         super.onCreate(savedInstanceState)
         binding = ActivityItemsBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        var bundle: Bundle? = intent.extras
+        val bundle: Bundle? = intent.extras
         if (bundle != null) {
-            catType = bundle.getString(resources.getString(R.string.catType))!!
-            folderName = bundle.getString(resources.getString(R.string.folderName))!!
-            folderId = bundle.getInt(resources.getString(R.string.folderId))
-            binding.titleScrnTitle.text = folderName
-            Log.d("FolderName", "onCreate: $folderName")
-            changeFolderColor(catType)
+             folderTable= intent.getSerializableExtra(this.resources.getString(R.string.key)) as FolderTable
+            binding.titleScrnTitle.text = folderTable.folderName
+            Log.d("FolderName", "onCreate: $folderTable.folderName")
+            changeFolderColor(folderTable.folderCatType)
         }
 
-        var res: ActivityResultLauncher<Intent> =
+        val res: ActivityResultLauncher<Intent> =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
                 if (result.resultCode == Activity.RESULT_OK) {
-                    var receivedData: Intent? = result.data
+                    val receivedData: Intent? = result.data
                     Log.d(TAG, "onCreate: ${receivedData?.data?.path.toString()}")
                     if (null != receivedData) {
-                        var sourceList = ArrayList<SourcesModel>()
+                        val sourceList = ArrayList<SourcesModel>()
                         if (null != receivedData.clipData) {
                             for (i in 0 until receivedData.clipData!!.itemCount) {
                                 val uri = receivedData.clipData!!.getItemAt(i).uri
-                                var sourceModel = SourcesModel(uri.toString(), folderId!!, catType)
+                                val sourceModel = SourcesModel(uri.toString(), folderTable)
                                 sourceList.add(sourceModel)
 
                             }
                         } else {
                             val uri: Uri? = receivedData.data
-                            var sourceModel = SourcesModel(uri.toString(), folderId!!, catType)
+                            val sourceModel = SourcesModel(uri.toString(), folderTable)
                             sourceList.add(sourceModel)
                         }
 
@@ -136,7 +133,7 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
             if (!FileSize.FILE_COPYING && !FileSize.UNLOCK_FILE_COPYING) {
 
                 val openFileIntent = Intent()
-                when (catType) {
+                when (folderTable.folderCatType) {
                     "Img" -> {
                         openFileIntent.type = "image/*"
                         Log.d(TAG, "Img")
@@ -184,7 +181,7 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
 
         }
 
-        viewModel.getItemsBasedOnCatType(catType, folderId!!).observe(this, Observer {
+        viewModel.getItemsBasedOnCatType(folderTable.folderCatType, folderTable.folderId).observe(this, Observer {
             Log.d(TAG, "ItemsActivty Observer")
             if (it.isEmpty()) {
                 binding.nofolderFound.visibility = View.VISIBLE
@@ -316,7 +313,7 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
 
     fun getFolderNameBasedOnCat(): String {
         var folderName: String? = null
-        when (catType) {
+        when (folderTable.folderCatType) {
             "Img" -> {
                 folderName = "Img"
             }

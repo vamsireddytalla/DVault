@@ -69,5 +69,12 @@ class ItemViewModel @Inject constructor(private val repository:VaultRepository) 
         }
     }
 
+    suspend fun getFolderObjWithFolderID(folderId:String):FolderTable{
+        var res=viewModelScope.async(Dispatchers.Default) {
+            repository.getFolderObjWithFolderID(folderId)
+        }
+       return res.await()
+    }
+
 
 }

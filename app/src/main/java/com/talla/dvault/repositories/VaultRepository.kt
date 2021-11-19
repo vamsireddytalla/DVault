@@ -71,11 +71,15 @@ class VaultRepository @Inject constructor(private val appDao:DVaultDao)
 
     suspend fun getCategoriesData()=appDao.getCategoriesData()
 
+    suspend fun getFolderObjWithFolderID(folderId:String)=appDao.getFolderObjWithFolderID(folderId)
+
     suspend fun getDbFilesList()=appDao.getDbFilesList()
 
     suspend fun getCategoriesIfNotEmpty()=appDao.getCategoriesIfNotEmpty()
 
     suspend fun getDbServerFolderId(catId:String)=appDao.getDbServerFolderId(catId)
+
+    suspend fun getItemsBasedOnFolderId(folderId:String)=appDao.getItemsBasedOnFolderId(folderId)
 
 
     suspend fun renameFolder(folderName:String,folderId:Int):Int

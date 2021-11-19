@@ -30,12 +30,15 @@ interface DVaultDao {
     @Insert(onConflict = REPLACE)
     suspend fun updateUser(userDetails: User): Long
 
+    @Transaction
     @Query("SELECT * FROM User ORDER BY userloginTime DESC LIMIT 1")
     suspend fun getUserDetails(): User
 
+    @Transaction
     @Query("SELECT count(*) FROM User Where userEmail=:userEmail")
     suspend fun checkIsUserExist(userEmail: String): Int
 
+    @Transaction
     @Query("SELECT * FROM User WHERE userloginTime = (SELECT MAX(userloginTime) FROM User) ")
     fun getUserLastLogin(): User
 
@@ -49,18 +52,23 @@ interface DVaultDao {
     suspend fun insertDefaultCatData(categoriesModel: List<CategoriesModel>)
 
     //settings screen quries
+    @Transaction
     @Query("Select * from AppLockModel order by timeStamp Desc Limit 1")
     fun getApplockState(): LiveData<AppLockModel>
 
+    @Transaction
     @Query("Select * from ItemModel Where serverId Is Null or serverId=''")
     fun checkDataAndGetCount(): LiveData<List<ItemModel>>
 
+    @Transaction
     @Query("Select * from AppLockModel order by timeStamp Desc Limit 1")
     suspend fun getAppLockModel(): AppLockModel
 
+    @Transaction
     @Query("Select isLocked from AppLockModel ORDER BY timeStamp DESC LIMIT 1")
     fun isLockedOrNot(): Boolean
 
+    @Transaction
     @Query("Select Count(*) from CategoriesModel Where (serverId IS NOT NULL AND serverId!='')")
     fun isLoggedInPerfectly(): Int
 
@@ -70,9 +78,11 @@ interface DVaultDao {
     @Insert(onConflict = REPLACE)
     suspend fun saveAppLockData(appLockModel: AppLockModel): Long
 
+    @Transaction
     @Query("SELECT count(*) FROM AppLockModel WHERE userPin=:password")
     suspend fun checkPassword(password: String): Int
 
+    @Transaction
     @Query("Select count(*) FROM AppLockModel Where hintQuestion=:question AND hintAnswer=:answer")
     suspend fun checkQuesAndAns(question: String, answer: String): Int
 
@@ -80,13 +90,12 @@ interface DVaultDao {
     suspend fun deleteAppLock(): Int
 
     //dashboard data
+    @Transaction
     @Query("Select * from categoriesmodel")
     fun getDashBoardData(): LiveData<List<CategoriesModel>>
 
     @Insert
     suspend fun createNewFolder(folderTable: FolderTable):Long
-
-
 
     @Query("INSERT INTO FolderTable (folderName, folderCreatedAt, folderCatType) SELECT * FROM (SELECT :folderName, :folderCreatedAt, :catType) AS tmp WHERE NOT EXISTS (SELECT :folderName FROM FolderTable WHERE folderName = :folderName and folderCatType=:catType) LIMIT 1;")
     suspend fun checkDataANdCreateFolder(
@@ -95,6 +104,7 @@ interface DVaultDao {
         catType: String
     ): Long
 
+    @Transaction
     @Query("Select * from FolderTable where folderCatType=:catType")
     fun getFoldersData(catType: String): LiveData<List<FolderTable>>
 
@@ -115,7 +125,7 @@ interface DVaultDao {
     @Insert
     suspend fun insertSingleItem(itemsList: ItemModel)
 
-
+    @Transaction
     @Query("Select * from ItemModel Where itemCatType=:catType AND folderId=:folderId")
     fun getItemsBasedOnCatType(catType: String, folderId: Int): LiveData<List<ItemModel>>
 
@@ -125,24 +135,31 @@ interface DVaultDao {
     @Query("Delete from CategoriesModel where catId=:catId")
     suspend fun deleteParticularCat(catId: String)
 
+    @Transaction
     @Query("Select * from ItemModel Where (itemCatType=:categoryType AND (serverId Is Null OR serverId=''))")
     fun getBRItems(categoryType: String): List<ItemModel>
 
+    @Transaction
     @Query("Select * from ItemModel Where itemCatType=:catType")
     fun getRBItems(catType: String): List<ItemModel>
 
+    @Transaction
     @Query("Select * from CategoriesModel Where (serverId IS NULL OR serverId='')")
     suspend fun getCategoriesData(): List<CategoriesModel>
 
+    @Transaction
     @Query("Select * from CategoriesModel Where (serverId IS NOT NULL AND serverId!='' AND catType='file/*')")
     suspend fun getCategoriesIfNotEmpty(): List<CategoriesModel>
 
+    @Transaction
     @Query("Select * from CategoriesModel Where (catId=:catId AND (serverId IS NOT NULL OR serverId!='')) Limit 1")
     suspend fun getDbServerFolderId(catId: String): CategoriesModel
 
+    @Transaction
     @Query("Select * from CategoriesModel")
     suspend fun getDbFilesList(): List<CategoriesModel>
 
+    @Transaction
     @Query("Update ItemModel Set serverId=:serverId where itemId=:itemId")
     suspend fun updateItemServerId(serverId: String, itemId: Int): Int
 
@@ -177,13 +194,25 @@ interface DVaultDao {
     @RawQuery
     fun checkpoint(supportSQLiteQuery: SupportSQLiteQuery?): Int
 
+    @Transaction
     @Query("Select * from FolderTable Where folderCatType=:catType")
     suspend fun getFolderAndItemWithCatType(catType: String):FolderAndItem
 
+    @Transaction
     @Query("Select serverId from CategoriesModel Where catId=:catId")
     suspend fun getCatServerId(catId: String):String
 
+    @Transaction
     @Query("Select * from FolderTable Where folderCatType=:catId")
     suspend fun getFolderObject(catId: String):FolderTable
+
+    @Transaction
+    @Query("Select * from ItemModel Where folderId=:folderid")
+    fun getItemsBasedOnFolderId(folderid:String): List<ItemModel>
+
+    @Transaction
+    @Query("Select * from FolderTable Where folderId=:folderId")
+    fun getFolderObjWithFolderID(folderId:String):FolderTable
+
 
 }

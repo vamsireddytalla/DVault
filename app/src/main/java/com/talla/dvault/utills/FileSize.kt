@@ -4,6 +4,7 @@ import android.os.Build
 import java.text.DecimalFormat
 import android.os.Environment
 import android.os.StatFs
+import android.util.Log
 import android.view.View
 import com.talla.dvault.database.entities.ItemModel
 import java.io.File
@@ -95,6 +96,20 @@ object FileSize {
 
     fun showSnackBar(message: String,view:View) {
         Snackbar.make(view, message, Snackbar.LENGTH_LONG).show()
+    }
+
+    fun checkIsAnyProcessGoing():String
+    {
+        var returnMsg=""
+        if (FileSize.backUpRestoreEnabled){
+            returnMsg="Backup or Restore is in Processing.Please Wait!"
+        }
+        else if (FileSize.FILE_COPYING){
+            returnMsg="File Copying is under Processing.Please Wait!"
+        }else if (FileSize.UNLOCK_FILE_COPYING){
+            returnMsg="Some Files are Unlocking.Please Wait!"
+        }
+        return returnMsg
     }
 
 
