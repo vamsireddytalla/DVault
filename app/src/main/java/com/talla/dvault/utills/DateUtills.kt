@@ -30,6 +30,20 @@ class DateUtills
             return simpleDateFormat.format(date)
         }
 
+        fun driveDateToTimeStamp(myDate:String):Long{
+            val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+            val date = sdf.parse(myDate)
+            val millis = date.time
+            return millis
+        }
+
+        fun converTimeStampToDate(context: Context,millis:Long): String? {
+            val date = millis
+            val pattern = context.resources.getString(R.string.dateFormat)
+            val simpleDateFormat = SimpleDateFormat(pattern)
+            return simpleDateFormat.format(date)
+        }
+
     }
 
 }

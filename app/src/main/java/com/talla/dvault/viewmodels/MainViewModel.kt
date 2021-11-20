@@ -4,6 +4,8 @@ import android.util.Log
 import androidx.lifecycle.*
 import com.talla.dvault.database.dao.DVaultDao
 import com.talla.dvault.database.entities.CategoriesModel
+import com.talla.dvault.database.entities.FolderTable
+import com.talla.dvault.database.entities.ItemModel
 import com.talla.dvault.database.entities.User
 import com.talla.dvault.repositories.Resource
 import com.talla.dvault.repositories.VaultRepository
@@ -47,13 +49,37 @@ class MainViewModel @Inject constructor(
     }
 
     suspend fun insertCatItem(catList:ArrayList<CategoriesModel>) {
-        var res: Deferred<Unit> = viewModelScope.async {
+        val res: Deferred<Unit> = viewModelScope.async(Dispatchers.Default) {
             try {
-//                repository.deleteCategories()
                 repository.insertCatList(catList)
             }catch (e:Exception){
                 e.printStackTrace()
                 Log.d(TAG, "insertUpdateCatList: ${e.message}")
+            }
+        }
+        res.await()
+    }
+
+
+    suspend fun insertFoldertList(folderList:ArrayList<FolderTable>) {
+        val res: Deferred<Unit> = viewModelScope.async(Dispatchers.Default) {
+            try {
+                repository.insertFoldertList(folderList)
+            }catch (e:Exception){
+                e.printStackTrace()
+                Log.d(TAG, "insertFoldertList: ${e.message}")
+            }
+        }
+        res.await()
+    }
+
+    suspend fun insertItemsList(itemsList:ArrayList<ItemModel>) {
+        val res: Deferred<Unit> = viewModelScope.async(Dispatchers.Default) {
+            try {
+                repository.insertItemsList(itemsList)
+            }catch (e:Exception){
+                e.printStackTrace()
+                Log.d(TAG, "insertItemsList: ${e.message}")
             }
         }
         res.await()
@@ -107,16 +133,32 @@ class MainViewModel @Inject constructor(
     }
 
     suspend fun checkEnteredPassword(password: String): Int {
-        var res: Deferred<Int> = viewModelScope.async(Dispatchers.IO) {
+        val res: Deferred<Int> = viewModelScope.async(Dispatchers.IO) {
             repository.checkPassword(password)
         }
         return res.await()
     }
 
-    suspend fun getCategoriesData(): List<CategoriesModel> {
-        return repository.getCategoriesData()
+    suspend fun getCategoriesDataIfServIdNull(): List<CategoriesModel> {
+        val res: Deferred<List<CategoriesModel>> = viewModelScope.async(Dispatchers.IO) {
+            repository.getCategoriesDataIfServIdNull()
+        }
+        return res.await()
     }
 
+    suspend fun getCategoriesData(): List<CategoriesModel> {
+        val res: Deferred<List<CategoriesModel>> = viewModelScope.async(Dispatchers.IO) {
+            repository.getCategoriesData()
+        }
+        return res.await()
+    }
+
+    suspend fun getFoldersDataList(): List<FolderTable> {
+        val res: Deferred<List<FolderTable>> = viewModelScope.async(Dispatchers.IO) {
+            repository.getFoldersDataList()
+        }
+        return res.await()
+    }
 
     suspend fun getCategoriesIfNotEmpty(): List<CategoriesModel> {
         return repository.getCategoriesIfNotEmpty()
@@ -126,8 +168,8 @@ class MainViewModel @Inject constructor(
         return repository.checkPoint()
     }
 
-    suspend fun updateCatServId(catId:String,servId:String):Int {
-        return repository.updateCatServId(catId,servId)
+    suspend fun updateCatServId(catId:String,servId:String,parentId:String):Int {
+        return repository.updateCatServId(catId,servId,parentId)
     }
 
     suspend fun getDbFilesList():List<CategoriesModel> {

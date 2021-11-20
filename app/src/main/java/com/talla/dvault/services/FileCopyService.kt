@@ -443,7 +443,6 @@ class FileCopyService : Service() {
             itemSize = filesize.toString(),
             itemCreatedAt = System.currentTimeMillis().toString(),
             itemMimeType = FileSize.getMimeType(file.toString()).toString(),
-            itemOriPath = fileRealPath.toString(),
             folderId = sourcesModel.folderTable.folderId.toString(),
             itemCurrentPath = newFilePath.toString(),
             itemCatType = sourcesModel.folderTable.folderCatType

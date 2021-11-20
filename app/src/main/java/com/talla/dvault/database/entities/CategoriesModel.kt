@@ -8,8 +8,10 @@ import org.jetbrains.annotations.NotNull
 data class CategoriesModel(
     @PrimaryKey(autoGenerate = false)
     @NotNull
-    var catId:String,
+    var catId: String,
     @NotNull
-    var categoryName:String,
-    var serverId:String,
-    var catType:String)
+    var categoryName: String,
+    var catType: String,
+    var serverId: String,
+    var driveRootId: String = ""
+)

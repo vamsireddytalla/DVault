@@ -75,9 +75,9 @@ class DriveService : Service() {
         startServiceOreoCondition()
         isInterrupted = false
         backgroundScope.launch {
-//            getFilesUnderParticularFolder()
+            getFilesUnderParticularFolder()
             getTotalDriveStorages()
-            getDriveFiles()
+//            getDriveFiles()
         }
     }
 
@@ -88,7 +88,7 @@ class DriveService : Service() {
             itemModelList.clear()
             if (intent.extras != null) {
                 val type: Any? = intent.extras!!.get(this.resources.getString(R.string.key))
-                val bkpString=this@DriveService.resources.getString(R.string.backup)
+                val bkpString = this@DriveService.resources.getString(R.string.backup)
                 when (actionMaker) {
                     FileSize.ACTION_SETTINGS_START_FOREGROUND_SERVICE -> {
                         Log.d(TAG, "onStartCommand: Started Service")
@@ -99,14 +99,16 @@ class DriveService : Service() {
                                 Log.d(TAG, "onStartCommand: $catType")
                                 if (type == bkpString) {
                                     Log.d(TAG, "onStartCommand: BackUp Inner")
-                                    val itemList = repository.getBRItems(catType) as ArrayList<ItemModel>
+                                    val itemList =
+                                        repository.getBRItems(catType) as ArrayList<ItemModel>
                                     itemList.forEach {
                                         itemModelList.add(it)
                                     }
 
                                 } else {
                                     Log.d(TAG, "onStartCommand: Restore Inner")
-                                    val itemList = repository.getRBItems(catType) as ArrayList<ItemModel>
+                                    val itemList =
+                                        repository.getRBItems(catType) as ArrayList<ItemModel>
                                     itemList.forEach {
                                         itemModelList.add(it)
                                     }
@@ -124,59 +126,60 @@ class DriveService : Service() {
                                     FileSize.BR_CHANNEl_ID,
                                     FileSize.BR_CHANNEL_NAME,
                                     FileSize.BR_NOTIFY_ID,
-                                    FileSize.ACTION_SETTINGS_STOP_FOREGROUND_SERVICE)
-                                var dummyMsg=" Completed!"
+                                    FileSize.ACTION_SETTINGS_STOP_FOREGROUND_SERVICE
+                                )
+                                var dummyMsg = " Completed!"
                                 for ((index, source) in itemModelList.withIndex()) {
                                     if (!isInterrupted!!) {
                                         try {
-                                            val folderObj=repository.getFolderObjWithFolderID(source.folderId)
-                                            if (type==bkpString) {
+                                            val folderObj = repository.getFolderObjWithFolderID(source.folderId)
+                                            if (type == bkpString) {
                                                 try {
                                                     Log.d(TAG, "onStartCommand: BackUp Process")
                                                     val newFolderServId = getFolderBasedOnCategory(source.itemCatType)
                                                     source.folderId = newFolderServId
                                                     Log.d(TAG, "onStartCommand: Final Channel ${source.folderId}")
-                                                    uploadLargeFiles(source, index + 1,folderObj)
+                                                    uploadLargeFiles(source, index + 1, folderObj)
                                                 } catch (e: Exception) {
                                                     e.printStackTrace()
-                                                    dummyMsg=" Cancelled!"
+                                                    dummyMsg = " Cancelled!"
                                                     Log.d(TAG, "onStartCommand: Exception Occured-----> ${e.message}")
                                                 }
                                             } else {
-                                                var searchFile:java.io.File?=null
+                                                var searchFile: java.io.File? = null
                                                 try {
                                                     Log.d(TAG, "onStartCommand: Restore Process")
-                                                    val orgDir=this@DriveService.resources.getString(R.string.db_folder_path)
-                                                    searchFile = File(orgDir.toString() + "/"+"app_"+ folderObj.folderCatType +"/"+ folderObj.folderName)
+                                                    Log.d(TAG, "onStartCommand: ${folderObj.toString()}")
+                                                    val orgDir = this@DriveService.resources.getString(R.string.db_folder_path)
+                                                    searchFile = File(orgDir.toString() + "/" + "app_" + folderObj.folderCatType + "/" + folderObj.folderName)
                                                     Log.d(TAG, "onStartCommand: Secret File Path $searchFile")
                                                     if (!searchFile.exists()) {
-                                                        searchFile.mkdir()
-                                                    }else{
-                                                        val finalFile=File(searchFile.toString()+ "/" + source.itemName)
-                                                        if (finalFile.exists()){
+                                                        searchFile.mkdirs()
+                                                    }
+                                                        val finalFile = File(searchFile.toString() + "/" + source.itemName)
+                                                        Log.d(TAG, "onStartCommand Final File: $finalFile")
+                                                        if (finalFile.exists()) {
                                                             Log.d(TAG, "onStartCommand: File Already Exists")
                                                             continue
                                                         }
                                                         downloadDBFiles(source, index + 1, finalFile.toString())
-                                                    }
 
                                                 } catch (e: Exception) {
                                                     e.printStackTrace()
                                                     if (e.message.toString().contains("No such file or directory")) {
                                                         Log.d(TAG, "onStartCommand: No Local File available")
-                                                        downloadDBFiles(source, index + 1, searchFile.toString())
                                                     }
                                                     Log.d(TAG, "onStartCommand: Excep ${e.message}")
                                                 }
                                             }
                                         } catch (e: Exception) {
                                             e.printStackTrace()
-                                            dummyMsg=" Cancelled!"
+                                            dummyMsg = " Cancelled!"
                                             Log.d(TAG, "onStartCommand New Exception: ${e.message}")
                                         }
                                     } else break
                                 }
-                                stopServiceMethod(type.toString()+dummyMsg )
+                                stopServiceMethod(type.toString() + dummyMsg)
                                 cancelProcessJob?.join()
                             }
                         }
@@ -251,7 +254,12 @@ class DriveService : Service() {
                     res.files.forEach { file ->
                         Log.d(
                             "FILE",
-                            " ${file.name} ${file.id} ${file.mimeType} ${file.thumbnailLink} ${FileSize.bytesToHuman(file.quotaBytesUsed)}")
+                            " ${file.name} ${file.id} ${file.mimeType} ${file.thumbnailLink} ${
+                                FileSize.bytesToHuman(
+                                    file.quotaBytesUsed
+                                )
+                            }"
+                        )
 //                        Log.d(TAG, "getDriveFiles: $${file.createdTime} ${file.modifiedTime} ${file.modifiedByMeTime}")
 //                        deleteData(file.id)
                     }
@@ -359,7 +367,7 @@ class DriveService : Service() {
         request?.let {
             val uploader: MediaHttpDownloader = it.mediaHttpDownloader
             uploader.isDirectDownloadEnabled = false
-            uploader.chunkSize = 5*MediaHttpUploader.MINIMUM_CHUNK_SIZE
+            uploader.chunkSize = 5 * MediaHttpUploader.MINIMUM_CHUNK_SIZE
             val downloadListner = CustomProgressListener(
                 itemModel,
                 itemNo,
@@ -371,13 +379,14 @@ class DriveService : Service() {
         }
     }
 
-    suspend fun uploadLargeFiles(itemModel: ItemModel, itemNo: Int,folderObj:FolderTable) {
+    suspend fun uploadLargeFiles(itemModel: ItemModel, itemNo: Int, folderObj: FolderTable) {
         val fileMetadata = File()
         fileMetadata.name = itemModel.itemName
 //        val catModel = repository.getDbServerFolderId(itemModel.itemCatType)
-        val defLocation=this.resources.getString(R.string.db_folder_path)
-        val folderNameCreation="app_"+folderObj.folderCatType
-        val sourceLoc="$defLocation/$folderNameCreation/${folderObj.folderName}/${itemModel.itemName}"
+        val defLocation = this.resources.getString(R.string.db_folder_path)
+        val folderNameCreation = "app_" + folderObj.folderCatType
+        val sourceLoc =
+            "$defLocation/$folderNameCreation/${folderObj.folderName}/${itemModel.itemName}"
         fileMetadata.parents = Collections.singletonList(itemModel.folderId)
         fileMetadata.mimeType = FileSize.getMimeType(sourceLoc)
 
@@ -392,8 +401,9 @@ class DriveService : Service() {
             val uploader: MediaHttpUploader = it.mediaHttpUploader
             uploader.isDirectUploadEnabled = false
             Log.d(TAG, "uploadLargeFiles: Process One")
-            uploader.chunkSize = 5*MediaHttpUploader.MINIMUM_CHUNK_SIZE
-            val listner: CustomUploadProgressListener = CustomUploadProgressListener(itemModel, itemNo, fileSize!!)
+            uploader.chunkSize = 5 * MediaHttpUploader.MINIMUM_CHUNK_SIZE
+            val listner: CustomUploadProgressListener =
+                CustomUploadProgressListener(itemModel, itemNo, fileSize!!)
             it.mediaHttpUploader?.progressListener = listner
             Log.d(TAG, "uploadLargeFiles: Process Two")
             it.execute()
@@ -404,21 +414,9 @@ class DriveService : Service() {
             val res = repository.updateItemServerId(it.id, itemModel.itemId)
             Log.d(TAG, "uploadLargeFiles: $res")
             if ((itemModelList.size) == itemNo) {
-                runBlocking {
-                    val catDbLocalFileList = repository.getCategoriesIfNotEmpty()
-                    Log.d(TAG, "uploadData: ${catDbLocalFileList.toString()}")
-                    Log.d(TAG, "uploadData: CatList Check Server Ids List ${catDbLocalFileList.size}")
-                    var updateJob = backgroundScope.launch(Dispatchers.IO) {
-                        catDbLocalFileList.forEach {
-                            updateDbFiles(getDriveService()!!, it.serverId, it.catId)
-                        }
-                    }
-                    updateJob.join()
-                    var msg="Back-up Completed!"
-                    if (isInterrupted == true) msg="Back-up Cancelled"
-                    stopServiceMethod(msg)
-                }
-
+                var msg = "Back-up Completed!"
+                if (isInterrupted == true) msg = "Back-up Cancelled"
+                stopServiceMethod(msg)
             }
         }
     }
@@ -443,7 +441,8 @@ class DriveService : Service() {
                         settingsCallbackListner?.fileServerDealing(
                             respo.toInt(),
                             "$mbCount/$itemSize",
-                            "$itemNo/$totalItems")
+                            "$itemNo/$totalItems"
+                        )
                         updateNotification(
                             respo.toInt(),
                             "$mbCount/$itemSize",
@@ -492,8 +491,16 @@ class DriveService : Service() {
                         val mbCount = FileSize.bytesToHuman(uploader.numBytesUploaded)
                         Log.d(TAG, "progressChanged: Upload Byte Done $mbCount")
                         val totalItems = itemModelList.size
-                        settingsCallbackListner?.fileServerDealing(respo.toInt(), "$mbCount/$itemSize", "$itemNo/$totalItems")
-                        updateNotification(respo.toInt(), "$mbCount/$itemSize", "$itemNo/$totalItems")
+                        settingsCallbackListner?.fileServerDealing(
+                            respo.toInt(),
+                            "$mbCount/$itemSize",
+                            "$itemNo/$totalItems"
+                        )
+                        updateNotification(
+                            respo.toInt(),
+                            "$mbCount/$itemSize",
+                            "$itemNo/$totalItems"
+                        )
                         FileSize.backUpRestoreEnabled = true
                     } else {
                         isInterrupted = true
@@ -525,7 +532,6 @@ class DriveService : Service() {
                 "getTotalDriveStorages: ${usedStorage.toString()}, ${totalStorage.toString()}"
             )
         }
-        getDriveFiles()
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -613,19 +619,22 @@ class DriveService : Service() {
 
     // .setQ("'${folderId}' in parents and mimeType='application/vnd.google-apps.folder'")
     fun getFilesUnderParticularFolder() {
-        var folderId = "1Dyhhb0POX6kxqbBGNNtPnvBPuDctuZZXo_BmWC1CSfOjZ5ft9Q"
+        var folderId = "1Hy6XCqJKvcjDcClRKO5XErK5_tfWaQ7a_ORwzyasGctEjaIl2w"
         Log.d(TAG, "getFilesUnderParticularFolder: $folderId")
         val files: FileList? = getDriveService()?.let {
             it.files().list()
                 .setSpaces("appDataFolder")
-                .setQ("'${folderId}' in parents and mimeType='application/vnd.google-apps.folder'")
+                .setQ("'${folderId}' in parents")
                 .setFields("nextPageToken, files(id, name,quotaBytesUsed,permissions)")
                 .execute()
         }
         files?.let {
             Log.d(TAG, "Db Files Under Folder in Server : Total List  ${it.files.size}")
             for (file in it.files) {
-                Log.d(TAG, "getFilesUnderParticularFolder: ${file.name} ${file.quotaBytesUsed} ${file.permissions}")
+                Log.d(
+                    TAG,
+                    "getFilesUnderParticularFolder: ${file.name} ${file.quotaBytesUsed} ${file.permissions}"
+                )
             }
         }
     }
@@ -637,12 +646,13 @@ class DriveService : Service() {
         }
         val folderTable = res.await()
 
-       val opRes = backgroundScope.launch(Dispatchers.IO) {
+        val opRes = backgroundScope.launch(Dispatchers.IO) {
             if (!folderTable.folderTrash) {
                 if (folderTable.folderServerId.isEmpty()) {
                     newFoldServId = createFolderAndReturnServId(
                         folderTable.folderName,
-                        repository.getCatServerId(folderTable.folderCatType))
+                        repository.getCatServerId(folderTable.folderCatType)
+                    )
                     repository.updateFolderServId(folderTable.folderCatType, newFoldServId)
                 } else {
                     updateFolderName(folderTable)
@@ -657,7 +667,7 @@ class DriveService : Service() {
         return newFoldServId
     }
 
-    fun updateFolderName(folerTable:FolderTable){
+    fun updateFolderName(folerTable: FolderTable) {
         try {
             val mimeType = this.resources.getString(R.string.folder_mime_type)
             // File's new content.
@@ -668,7 +678,10 @@ class DriveService : Service() {
             val fileRes = getDriveService()!!.files().update(folerTable.folderServerId, newMetadata)
                 .setFields("id, name, appProperties,quotaBytesUsed").execute()
             fileRes?.let {
-                Log.d(TAG, "updateFolderName: Successfully ${fileRes.name} ${fileRes.id} ${fileRes.quotaBytesUsed}")
+                Log.d(
+                    TAG,
+                    "updateFolderName: Successfully ${fileRes.name} ${fileRes.id} ${fileRes.quotaBytesUsed}"
+                )
             }
         } catch (e: IOException) {
             println("An error occurred: $e")

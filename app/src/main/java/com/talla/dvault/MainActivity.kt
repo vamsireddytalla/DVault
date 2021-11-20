@@ -35,6 +35,7 @@ import com.google.api.services.drive.model.FileList
 import com.talla.dvault.activities.DashBoardActivity
 import com.talla.dvault.database.VaultDatabase
 import com.talla.dvault.database.entities.CategoriesModel
+import com.talla.dvault.database.entities.FolderTable
 import com.talla.dvault.database.entities.ItemModel
 import com.talla.dvault.database.entities.User
 import com.talla.dvault.databinding.ActivityMainBinding
@@ -67,6 +68,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var launchIntent: ActivityResultLauncher<Intent>
     private val viewModel: MainViewModel by viewModels()
     private lateinit var progressDialog: Dialog
+    private lateinit var gDriveService: Drive
 
     @Inject
     lateinit var databaseInstance: VaultDatabase
@@ -106,12 +108,13 @@ class MainActivity : AppCompatActivity() {
     private fun openIntent() {
         lifecycleScope.launch {
             val res = viewModel.isLoggedInPerfectly()
-            if (res >= 8 && isUserSignedIn()) {
+            stopProgressDialog()
+            if (res >= 4 && isUserSignedIn()) {
                 Log.d(TAG, "openIntent: Called")
                 val intent: Intent = Intent(this@MainActivity, DashBoardActivity::class.java)
                 startActivity(intent)
                 finish()
-                exitProcess(0)
+//                exitProcess(0)
             } else {
                 FileSize.showSnackBar("Error occured retry", binding.root)
             }
@@ -154,20 +157,12 @@ class MainActivity : AppCompatActivity() {
                             val userEmail = it.result?.email
                             val userProfilePic: Uri? = it.result?.photoUrl
                             val currentDT: String? = System.currentTimeMillis().toString()
-                            val user = User(
-                                userName.toString(),
-                                userEmail.toString(),
-                                userProfilePic.toString(),
-                                currentDT.toString(),
-                                "DVault")
+                            val user = User(userName.toString(), userEmail.toString(), userProfilePic.toString(), currentDT.toString(), "DVault")
                             try {
                                 showProgressDialog()
-                                val driveScope = lifecycleScope.launch(Dispatchers.Default) {
-//                                    getDriveFiles(user)
-                                    getCategoriesData()
+                                lifecycleScope.launch(Dispatchers.Default) {
+                                    getCategoriesData(user)
                                 }
-                                driveScope.join()
-                                stopProgressDialog()
                             } catch (e: Exception) {
                                 e.printStackTrace()
                                 stopProgressDialog()
@@ -197,138 +192,6 @@ class MainActivity : AppCompatActivity() {
             }
     }
 
-    suspend fun getDriveFiles(user: User) {
-        try {
-
-            getDriveService()?.let { gdService ->
-                val pagetoken: String? = null
-                do {
-                    val result: FileList = gdService.files().list().apply {
-                        spaces = "appDataFolder"
-                        fields = "nextPageToken, files(id,name,mimeType,quotaBytesUsed)"
-                        pageToken = this.pageToken
-                    }.execute()
-
-                    result?.let { res ->
-                        Log.d(TAG, "getDriveFiles Count From Server : ${res.files}")
-                        Log.d(TAG, "getDriveFiles: Server Files Count  ${res.files.size}")
-                        if (res.files.size < 8) {
-                            Log.d(TAG, "getDriveFiles: New User")
-                            withContext(Dispatchers.Main) {
-                                var res = viewModel.insertData(user)
-                            }
-                            //Upload local Databases to Server and get ids and store in local db and update in server again
-//                            res.files.forEach {
-//                                deleteData(it.id)
-//                            }
-                            createFolder(res)
-                            FileSize.showSnackBar("Welcome !", binding.root)
-                        } else {
-                            //Download Database files from server .Delete local db files and Replace new files in that
-                            Log.d(TAG, "getDriveFiles: Old User")
-                            var catList = ArrayList<CategoriesModel>()
-                            res.files.forEach { fileee ->
-                                Log.d(TAG, "getDriveFiles: Server File Sizes ${FileSize.bytesToHuman(fileee.quotaBytesUsed)} ${fileee.name}")
-                                var name = ""
-                                when (fileee.name) {
-                                    "Img" -> name = "Images"
-                                    "Aud" -> name = "Audios"
-                                    "Vdo" -> name = "Videos"
-                                    "Doc" -> name = "Docs"
-                                    "DB" -> name = "DataBases"
-                                    "DVault.db" -> name = "DVault.db"
-                                    "DVault.db-wal" -> name = "DVault.db-wal"
-                                    "DVault.db-shm" -> name = "DVault.db-shm"
-                                }
-                                var catModel =
-                                    CategoriesModel(fileee.name, name, fileee.id, fileee.mimeType)
-                                catList.add(catModel)
-                            }
-                            Log.d(TAG, "Category List Retrieved: ${catList.toString()}")
-                            FileSize.showSnackBar("Welcome Back!", binding.root)
-                            withContext(Dispatchers.Main) {
-                                Log.d(TAG, "getDriveFiles: ${Thread.currentThread().name}")
-                                Log.d(TAG, "getDriveFiles: ${catList.size}")
-                                catList.forEach {
-                                    var res = viewModel.updateCatItem(it)
-                                    Log.d(TAG, "getDriveFiles: Updated Res-> $res")
-                                }
-                                val userRes = viewModel.insertData(user)
-                                Log.d(TAG, "getDriveFiles: After User Data Insertion $userRes")
-                                if (userRes > 0) {
-                                    downloadDbFiles()
-                                } else {
-                                    logout("getDriveFiles()")
-                                    showSnackBar("Error occured retry")
-                                }
-                            }
-                        }
-                    }
-
-                } while (pagetoken != null)
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            FileSize.showSnackBar(e.message.toString(), binding.root)
-            Log.d(TAG, "getDriveFiles: Exception Occured -> ${e.message}")
-            logout("getDriveFiles()")
-        }
-    }
-
-    suspend fun createFolder(res: FileList) {
-        try {
-            FileSize.showSnackBar("New User Registering",binding.root)
-            viewModel.resetCatServerId()
-            var deleteJob = lifecycleScope.async(Dispatchers.IO) {
-                res.files.forEach { serverFile ->
-                    deleteData(serverFile.id)
-                }
-            }
-            deleteJob.await()
-            val categoriesListNew: ArrayList<CategoriesModel> =
-                viewModel.getCategoriesData() as ArrayList<CategoriesModel>
-            categoriesListNew.forEach { catModel ->
-                val folderMime = "application/vnd.google-apps.folder"
-                if (catModel.catType == folderMime) {
-                    val fileMetadata = com.google.api.services.drive.model.File()
-                    fileMetadata.name = catModel.catId
-                    fileMetadata.parents = Collections.singletonList("appDataFolder")
-                    fileMetadata.mimeType = folderMime
-
-                    val file = getDriveService()?.let {
-                        it.files().create(fileMetadata)
-                            .setFields("id,name")
-                            .execute()
-                    }
-                    Log.d(TAG, "Created New Folder : ${file?.id} ${file?.name}")
-                    file?.let {
-                        var res = viewModel.updateCatServId(it.name, it.id)
-                        Log.d(TAG, "createFolder: UpdateCatServId $res")
-                    }
-                }
-            }
-            val catModel = viewModel.getDbServerFolderId("DB")
-            val categoriesListFinal: ArrayList<CategoriesModel> =
-                viewModel.getCategoriesData() as ArrayList<CategoriesModel>
-            Log.d(TAG, "Local Db serverFolder Id---> ${catModel.serverId}")
-            Log.d(TAG, "createFolder: ${categoriesListFinal.toString()}")
-            if (catModel.serverId.isNotEmpty()) {
-                Log.d(TAG, "DB Folder : server Id is avilable")
-                uploadData(catModel.serverId)
-            } else {
-                stopProgressDialog()
-                FileSize.showSnackBar("DB folder not created retry.", binding.root)
-                Log.d(TAG, "createFolder: No Server Id Found in Database")
-            }
-
-        } catch (e: Exception) {
-            e.printStackTrace()
-            FileSize.showSnackBar(e.message.toString(), binding.root)
-            Log.d(TAG, "createFolder: Exception Occured ->${e.message}")
-//            logout("createFolder()")
-        }
-    }
-
     fun dialogInit() {
         progressDialog = Dialog(this)
         val customProgressDialogBinding = CustonProgressDialogBinding.inflate(this.layoutInflater)
@@ -352,176 +215,14 @@ class MainActivity : AppCompatActivity() {
         return null
     }
 
-    suspend fun uploadData(folderServId: String) {
-        try {
-            var fileRootPath = this.resources.getString(R.string.db_path)
-            val fileMetadata = com.google.api.services.drive.model.File()
-            val children: Array<String> = File(fileRootPath).list()
-            var uploadJob = lifecycleScope.launch(Dispatchers.IO) {
-                for (i in children.indices) {
-                    var dbFilePath = File(fileRootPath, children[i])
-                    fileMetadata.name = dbFilePath.name
-                    fileMetadata.parents = Collections.singletonList(folderServId)
-                    val mediaContent = FileContent("file/*", dbFilePath)
-                    val fileRes = getDriveService()?.let {
-                        it.files().create(fileMetadata, mediaContent)
-                            .setFields("id, parents,name,quotaBytesUsed")
-                            .execute()
-                    }
-
-                    fileRes?.let { Log.d(TAG, "Database Files Uploaded : ${fileRes.id} ${fileRes.name} ${fileRes.quotaBytesUsed}")
-                        viewModel.updateCatServId(it.name.toString(), it.id.toString())
-                    }
-                }
-            }
-            uploadJob.join()
-            val catDbLocalFileList = viewModel.getCategoriesIfNotEmpty()
-            Log.d(TAG, "uploadData: ${catDbLocalFileList.toString()}")
-            Log.d(TAG, "uploadData: CatList Check Server Ids List ${catDbLocalFileList.size}")
-            var updateJob = lifecycleScope.launch(Dispatchers.IO) {
-                catDbLocalFileList.forEach {
-                    updateDbFiles(getDriveService()!!, it.serverId, it.catId)
-                }
-            }
-            updateJob.join()
-            openIntent()
-        } catch (e: Exception) {
-            e.printStackTrace()
-            FileSize.showSnackBar(e.message.toString(), binding.root)
-            Log.d(TAG, "uploadData: Exception Occured->${e.message}")
-            logout("uploadData()")
-        }
-    }
-
-    //quotaBytesUsed
-    private fun updateDbFiles(service: Drive, fileId: String, fileName: String) {
-        try {
-
-            var mimeType = "file/*"
-            // File's new content.
-            val file = File(this.resources.getString(R.string.db_path) + fileName)
-            val newMetadata = com.google.api.services.drive.model.File()
-            newMetadata.name = file.name
-
-            // Convert content to an AbstractInputStreamContent instance.
-            val contentStream = ByteArrayContent.fromString(mimeType, file.toString())
-            val mediaContentNew =
-                InputStreamContent("file/*", BufferedInputStream(FileInputStream(file)))
-            // Send the request to the API.
-            var fileRes = service.files().update(fileId, newMetadata, mediaContentNew)
-                .setFields("id, name, appProperties,quotaBytesUsed").execute()
-            fileRes?.let {
-                Log.d(
-                    TAG,
-                    "UpdateDbFiles: Successfully ${fileRes.name} ${fileRes.id} ${fileRes.quotaBytesUsed}"
-                )
-            }
-        } catch (e: IOException) {
-            logout("updateDbFiles()")
-            println("An error occurred: $e")
-            Log.d(TAG, "UpdateDbFile Error --> : ${e.message}")
-
-        }
-    }
-
-    fun getFilesUnderDBFolder(DbFolderId: String){
-        Log.d(TAG, "getFilesUnderDBFolder: $DbFolderId")
-        val files: FileList? = getDriveService()?.let {
-            it.files().list()
-                .setSpaces("appDataFolder")
-                .setQ("'${DbFolderId}' in parents")
-                .setFields("nextPageToken, files(id, name,quotaBytesUsed,permissions)")
-                .execute()
-        }
-        files?.let {
-            Log.d(TAG, "Db Files Under Folder in Server : Total List  ${it.files.size}")
-            for (file in it.files) {
-                Log.d(TAG, "getFilesUnderDBFolder: ${file.name} ${file.quotaBytesUsed} ${file.permissions}")
-            }
-        }
-    }
-
-    suspend fun downloadDbFiles() {
-        try {
-            val categoriesList: ArrayList<CategoriesModel> =
-                viewModel.getCategoriesIfNotEmpty() as ArrayList<CategoriesModel>
-            Log.d(TAG, "downloadDbFiles: Before Download LogFile ${categoriesList.toString()}")
-
-            var downloadFileJob = lifecycleScope.launch(Dispatchers.IO) {
-                var file = java.io.File(this@MainActivity.resources.getString(R.string.db_path))
-                deleteAllDbFiles(file)
-                categoriesList.forEach {
-                    downloadFile(it.serverId, it.catId)
-                }
-            }
-            downloadFileJob.join()
-            val res = viewModel.isLoggedInPerfectly()
-            var newFile = java.io.File(this@MainActivity.resources.getString(R.string.db_path))
-            if (newFile.list().size >= 3 && isUserSignedIn() && res >= 8) {
-                FileSize.showSnackBar("Welcome Back!", binding.root)
-                Log.d(TAG, "downloadDbFiles: Ready to open Intent")
-                openIntent()
-            } else {
-                FileSize.showSnackBar("Error occured retry", binding.root)
-                logout("downloadDbFiles()")
-            }
-        } catch (e: Exception) {
-            logout("downloadDbFiles()")
-            e.printStackTrace()
-            Log.d(TAG, "downloadDbFiles: ${e.message}")
-        }
-    }
-
-    fun downloadFile(fileId: String, fileName: String) {
-        try {
-            Log.d(TAG, "downloadFile: ${fileId}  ${fileName}")
-            var file = java.io.File(this@MainActivity.resources.getString(R.string.db_path))
-
-            val out: OutputStream = FileOutputStream("$file/$fileName")
-            val request: Drive.Files.Get? =
-                getDriveService()?.files()?.get(fileId)?.setFields("id, name, appProperties")
-            request?.let {
-                it.executeMediaAndDownloadTo(out)
-                Log.d(TAG, "downloadedFile: ${it.fileId}")
-            }
-//                out.flush()
-//                out.close()
-//                request?.clear()
-        } catch (e: Exception) {
-            logout("downloadFile()")
-            e.printStackTrace()
-            Log.d(TAG, "downloadFile: ${e.message}")
-        }
-    }
-
-    fun logout(message: String) {
+    suspend fun logout(message: String) {
+        stopProgressDialog()
         Log.d(TAG, "logout Called From $message")
         val mGoogleSignInClient = GoogleSignIn.getClient(this, gso)
         mGoogleSignInClient?.signOut()
             ?.addOnCompleteListener(
                 this
             ) { }
-    }
-
-    fun deleteData(fileId: String) {
-        try {
-            val files: Void? = getDriveService()?.let {
-                it.files().delete(fileId).execute()
-            }
-            Log.d(TAG, "deleteData: $files")
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Log.d(TAG, "deleteData: ${e.message}")
-        }
-    }
-
-    fun deleteAllDbFiles(file: File) {
-        if (file.isDirectory) {
-            val children: Array<String> = file.list()
-            for (i in children.indices) {
-                File(file, children[i]).delete()
-            }
-        }
     }
 
     private fun showAccessPermission() {
@@ -550,34 +251,241 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun getCategoriesData()
+    fun getCategoriesData(user:User)
     {
-        try {
-            getDriveService()?.let { gdFiles ->
-                val pagetoken: String? = null
-                do {
-                    val result: FileList = gdFiles.files().list().apply {
-                        spaces = "parents"
-                        q = "mimeType='application/vnd.google-apps.folder'"
-                        fields = "nextPageToken, files(id,name,mimeType,quotaBytesUsed)"
-                        pageToken = this.pageToken
-                    }.execute()
-
+        lifecycleScope.launch(Dispatchers.IO){
+            try {
+                getDriveService()?.let { gdFiles ->
+                    gDriveService=gdFiles
+                    val rootFolderId: String = gdFiles.files().get("appDataFolder").setFields("id").execute().getId()
+                    Log.d(TAG, "getCategoriesData: $rootFolderId")
+                    val mimetype=this@MainActivity.resources.getString(R.string.folder_mime_type)
+                    val result=getDataBasedOnParentId(rootFolderId,mimetype)
                     result?.let { res ->
                         Log.d(TAG, "getDriveFiles Count From Server : ${res.files}")
                         Log.d(TAG, "getDriveFiles: Server Files Count  ${res.files.size}")
+                        withContext(Dispatchers.Main) {
+                            viewModel.insertData(user)
+                        }
+                        if (res.files.size<4){
+                            Log.d(TAG, "getCategoriesData: Sign Up Bad")
+                            Log.d(TAG, "getCategoriesData: New User")
+                            FileSize.showSnackBar("Welcome !", binding.root)
+                            //insert into categories table and get remaining folders to be created on server
+                            cacheCatListAndInsertInLocalDB(res)
+                        }else{
+                            Log.d(TAG, "getCategoriesData: Sign Up Good")
+                            Log.d(TAG, "getCategoriesData: Old User")
+                            FileSize.showSnackBar("Welcome Back !", binding.root)
+                            // get all categories folders and store in room database
+                            cacheCatListAndInsertInLocalDB(res)
+                        }
                     }
+                }
+            }catch (e:Exception){
+                e.printStackTrace()
+                FileSize.showSnackBar(e.message.toString(), binding.root)
+                Log.d(TAG, "getCategoriesData: Exception Occured -> ${e.message}")
+                logout("getCategoriesData()")
+            }
+        }
 
-                } while (pagetoken != null)
-                logout("Testing")
+    }
+
+    suspend fun cacheCatListAndInsertInLocalDB(res:FileList){
+        Log.d(TAG, "cacheCatListAndInsertInLocalDB: Called")
+        try {
+            lifecycleScope.launch(Dispatchers.IO){
+                val catList = ArrayList<CategoriesModel>()
+                if (res.files.isNotEmpty()){
+                    res.files.forEach { fileee ->
+                        val driveTimeStamp=DateUtills.driveDateToTimeStamp(fileee.createdTime.toString())
+                        Log.d(TAG, "cacheCatListAndInsertInLocalDB: $driveTimeStamp")
+                        Log.d(TAG, "cacheCatListAndInsertInLocalDB: ${DateUtills.converTimeStampToDate(this@MainActivity,driveTimeStamp)}")
+                        Log.d(TAG, "cacheCatListAndInsertInLocalDB: Server File Sizes ${FileSize.bytesToHuman(fileee.quotaBytesUsed)} ${fileee.name}")
+                        var name = ""
+                        when (fileee.name) {
+                            "Img" -> name = "Images"
+                            "Aud" -> name = "Audios"
+                            "Vdo" -> name = "Videos"
+                            "Doc" -> name = "Docs"
+                        }
+                        val catModel = CategoriesModel(fileee.name, name,fileee.mimeType,fileee.id,fileee.parents.get(0))
+                        catList.add(catModel)
+                    }
+                }
+                withContext(Dispatchers.Main){
+                    val insertCatResponse=lifecycleScope.launch{
+                        Log.d(TAG, "cacheCatListAndInsertInLocalDB: Before Inserting In Local Db --> ${catList.toString()}")
+                        if (catList.isNotEmpty()) {
+                            viewModel.insertCatItem(catList)
+                        }
+                    }
+                    insertCatResponse.join()
+                    val requiredCatFolders: ArrayList<CategoriesModel> = viewModel.getCategoriesDataIfServIdNull() as ArrayList<CategoriesModel>
+                    createFoldersOnServer(requiredCatFolders)
+                }
             }
         }catch (e:Exception){
             e.printStackTrace()
-            FileSize.showSnackBar(e.message.toString(), binding.root)
-            Log.d(TAG, "getCategoriesData: Exception Occured -> ${e.message}")
-            logout("getDriveFiles()")
+            Log.d(TAG, "cacheCatListAndInsertInLocalDB: ${e.message}")
+            logout("cacheCatListAndInsertInLocalDB")
         }
+    }
 
+    suspend fun createFoldersOnServer(requiredCatFolders: ArrayList<CategoriesModel>) {
+        Log.d(TAG, "createFoldersOnServer: Called")
+        lifecycleScope.launch(Dispatchers.IO){
+            try {
+                if (requiredCatFolders.isNotEmpty()){
+                    Log.d(TAG, "createFoldersOnServer: Require Folders to be create in Server ${requiredCatFolders.toString()}")
+                    requiredCatFolders.forEach { catModel ->
+                        val folderMime = "application/vnd.google-apps.folder"
+                        if (catModel.catType == folderMime) {
+                            val fileMetadata = com.google.api.services.drive.model.File()
+                            fileMetadata.name = catModel.catId
+                            fileMetadata.parents = Collections.singletonList("appDataFolder")
+                            fileMetadata.mimeType = folderMime
+
+                            val file = getDriveService()?.let {
+                                it.files().create(fileMetadata)
+                                    .setFields("id,name,parents")
+                                    .execute()
+                            }
+                            Log.d(TAG, "Created New Folder : ${file?.id} ${file?.name}")
+                            file?.let {
+                                val res = viewModel.updateCatServId(it.name, it.id,it.parents.get(0))
+                                Log.d(TAG, "createFoldersOnServer: UpdateCatServId in Local DB ---> $res")
+                            }
+                        }
+                    }
+//                    val catListData=viewModel.getCategoriesData()
+//                    Log.d(TAG, "createFoldersOnServer: ${catListData.toString()}")
+                }
+                getSubFoldersDataCache()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                FileSize.showSnackBar(e.message.toString(), binding.root)
+                Log.d(TAG, "createFoldersOnServer: Exception Occured ->${e.message}")
+                logout("createFoldersOnServer()")
+            }
+        }
+    }
+
+    suspend fun getSubFoldersDataCache(){
+        Log.d(TAG, "getSubFoldersDataCache: Called")
+      try {
+          lifecycleScope.launch(Dispatchers.IO){
+              val catListData=viewModel.getCategoriesData()
+              val foldersList = ArrayList<FolderTable>()
+              val mimetype=this@MainActivity.resources.getString(R.string.folder_mime_type)
+              if (catListData.isNotEmpty()){
+                  catListData.forEach { catModel->
+                      Log.d(TAG, "getSubFoldersDataCache: SubFolder to be Cache in Local ${catListData.toString()}")
+                      val result=getDataBasedOnParentId(catModel.serverId,mimetype)
+                      result?.let { filesList->
+                          if (filesList.files.isNotEmpty()){
+                              filesList.files.forEach { file->
+                                  val driveTimeStamp=DateUtills.driveDateToTimeStamp(file.createdTime.toString())
+                                  val folderTable=FolderTable(0,file.name,driveTimeStamp.toString(),catModel.catId,file.id,false)
+                                  foldersList.add(folderTable)
+                              }
+                              if (foldersList.isNotEmpty()) viewModel.insertFoldertList(foldersList)
+                          }
+                      }
+                  }
+                  getItemDataCache()
+              }
+
+          }
+      }catch (e:Exception){
+          e.printStackTrace()
+          Log.d(TAG, "getSubFoldersDataCache: ${e.message}")
+          logout("getSubFoldersDataCache()")
+      }
+    }
+
+    suspend fun getItemDataCache(){
+        Log.d(TAG, "getItemDataCache: Called")
+       try {
+           val foldDataList=viewModel.getFoldersDataList()
+           val itemModelList = ArrayList<ItemModel>()
+           val mimetype="*/*"
+           val res=lifecycleScope.launch(Dispatchers.IO){
+               if (foldDataList.isNotEmpty()){
+                   foldDataList.forEach { folTable->
+                       Log.d(TAG, "getItemDataCache: Item Data Cache in Local Db ${foldDataList.toString()}")
+                       val result: FileList? = gDriveService?.let {
+                           it.files().list()
+                               .setSpaces("appDataFolder")
+                               .setQ("'${folTable.folderServerId}' in parents")
+                               .setFields("nextPageToken, files(permissions,id,name,size,parents,mimeType,quotaBytesUsed,modifiedTime,createdTime)")
+                               .execute()
+                       }
+                       result?.let {
+                           Log.d(TAG, "getItemDataCache Size: ${it.files.size}")
+                           if (it.files.isNotEmpty()){
+                               it.files.forEach { file->
+                                   val driveTimeStamp=DateUtills.driveDateToTimeStamp(file.createdTime.toString())
+                                   val defLocation=this@MainActivity.resources.getString(R.string.db_folder_path)
+                                   val catNameCreation="app_"+folTable.folderCatType
+                                   val path=defLocation+catNameCreation
+                                   val itemModel=ItemModel(0,file.name,file.quotaBytesUsed.toString(),driveTimeStamp.toString(),file.mimeType,path,file.id,folTable.folderId.toString(),folTable.folderCatType,false)
+                                   itemModelList.add(itemModel)
+                                   Log.d(TAG, "getItemDataCache: ${itemModel.toString()}")
+                               }
+                               Log.d(TAG, "getItemDataCache: ${itemModelList.toString()}")
+                               if (itemModelList.isNotEmpty()) {
+                                   Log.d(TAG, "getItemDataCache: ${itemModelList.toString()}")
+                                   viewModel.insertItemsList(itemModelList)
+                               }
+                           }
+                       }
+                   }
+               }
+           }
+           res.join()
+           openIntent()
+       }catch (e:Exception){
+           e.printStackTrace()
+           Log.d(TAG, "getItemDataCache: ${e.message}")
+           logout("getItemDataCache()")
+       }
+    }
+
+    suspend fun getDataBasedOnParentId(parentFolderId:String,mimeType:String): FileList?
+    {
+        Log.d(TAG, "getDataBasedOnParentId: Called")
+        val pagetoken: String? = null
+        var result: FileList?=null
+        try {
+            do {
+                result = gDriveService.files().list().apply {
+                    spaces = "appDataFolder"
+                    q = "'${parentFolderId}' in parents and mimeType='${mimeType}'"
+                    fields = "nextPageToken, files(id,name,size,parents,mimeType,quotaBytesUsed,modifiedTime,createdTime)"
+                    pageToken = this.pageToken
+                }.execute()
+
+            } while (pagetoken != null)
+        }catch (e:Exception){
+            e.printStackTrace()
+            Log.d(TAG, "getDataBasedOnParentId: ${e.message}")
+            logout("getDataBasedOnParentId")
+        }
+        return result
+    }
+
+    fun deleteData(fileId: String) {
+        try {
+            val files: Void? = getDriveService()?.let {
+                it.files().delete(fileId).execute()
+            }
+            Log.d(TAG, "deleteData: $files")
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Log.d(TAG, "deleteData: ${e.message}")
+        }
     }
 
 }

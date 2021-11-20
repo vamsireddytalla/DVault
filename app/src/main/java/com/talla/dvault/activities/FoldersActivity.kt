@@ -251,6 +251,7 @@ class FoldersActivity : AppCompatActivity(), FolderItemClick {
                     onlineFileDelete(folderObj.folderServerId)
                 }
                 localFileDelete(folderObj)
+                viewModel.deleteFolder(folderId = folderId.toInt())
             }
         } else {
             showSnackBar("Check Internet Connection")
@@ -264,7 +265,6 @@ class FoldersActivity : AppCompatActivity(), FolderItemClick {
         if (sourceFile.exists()) {
             val isDeleted = sourceFile.deleteRecursively()
         }
-        viewModel.deleteFolder(folderId = folderId.toInt())
         progressDialog.dismiss()
     }
 

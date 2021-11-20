@@ -1,6 +1,5 @@
 package com.talla.dvault.repositories
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.sqlite.db.SimpleSQLiteQuery
 import com.talla.dvault.database.dao.DVaultDao
@@ -29,6 +28,10 @@ class VaultRepository @Inject constructor(private val appDao:DVaultDao)
    }
 
     suspend fun insertCatList(catList:ArrayList<CategoriesModel>)=appDao.insertCartList(catList)
+
+    suspend fun insertFoldertList(folderList:ArrayList<FolderTable>)=appDao.insertFoldertList(folderList)
+
+    suspend fun insertItemsList(itemList:ArrayList<ItemModel>)=appDao.insertItemsList(itemList)
 
     suspend fun updateCategory(catModel:CategoriesModel):Int{
       return appDao.updateCategory(catModel.serverId,catModel.categoryName,catModel.catId)
@@ -70,7 +73,11 @@ class VaultRepository @Inject constructor(private val appDao:DVaultDao)
 
     fun getRBItems(catType:String)=appDao.getRBItems(catType)
 
+    suspend fun getCategoriesDataIfServIdNull()=appDao.getCategoriesDataIfServIdNull()
+
     suspend fun getCategoriesData()=appDao.getCategoriesData()
+
+    suspend fun getFoldersDataList()=appDao.getFoldersDataList()
 
     suspend fun getFolderObjWithFolderID(folderId:String)=appDao.getFolderObjWithFolderID(folderId)
 
@@ -102,7 +109,7 @@ class VaultRepository @Inject constructor(private val appDao:DVaultDao)
 
     suspend fun insertSingleItem(itemsList:ItemModel)=appDao.insertSingleItem(itemsList)
 
-    suspend fun updateCatServId(catId:String,servId:String)=appDao.updateCatServId(catId, servId)
+    suspend fun updateCatServId(catId:String,servId:String,parentId:String)=appDao.updateCatServId(catId, servId,parentId)
 
     fun getItemsBasedOnCatType(catType:String,folderId:Int)=appDao.getItemsBasedOnCatType(catType,folderId)
 

@@ -24,6 +24,12 @@ interface DVaultDao {
     @Insert(onConflict = REPLACE)
     suspend fun insertCartList(catList: ArrayList<CategoriesModel>)
 
+    @Insert(onConflict = REPLACE)
+    suspend fun insertFoldertList(folderList: ArrayList<FolderTable>)
+
+    @Insert(onConflict = REPLACE)
+    suspend fun insertItemsList(itemList: ArrayList<ItemModel>)
+
     @Query("Update CategoriesModel Set serverId=:serverId,categoryName=:catName Where catId=:catId")
     suspend fun updateCategory(serverId: String, catName: String, catId: String): Int
 
@@ -149,6 +155,10 @@ interface DVaultDao {
 
     @Transaction
     @Query("Select * from CategoriesModel Where (serverId IS NULL OR serverId='')")
+    suspend fun getCategoriesDataIfServIdNull(): List<CategoriesModel>
+
+    @Transaction
+    @Query("Select * from CategoriesModel")
     suspend fun getCategoriesData(): List<CategoriesModel>
 
     @Transaction
@@ -189,8 +199,8 @@ interface DVaultDao {
     @Query("Delete from CategoriesModel")
     suspend fun deleteCategories()
 
-    @Query("Update CategoriesModel Set serverId=:servId Where catId=:catId")
-    suspend fun updateCatServId(catId: String, servId: String): Int
+    @Query("Update CategoriesModel Set serverId=:servId,driveRootId=:parentId Where catId=:catId")
+    suspend fun updateCatServId(catId: String, servId: String,parentId:String): Int
 
     @Query("Update FolderTable Set folderServerId=:servId Where folderCatType=:folderCatType")
     suspend fun updateFolderServId(folderCatType: String, servId: String): Int
@@ -217,6 +227,11 @@ interface DVaultDao {
     @Transaction
     @Query("Select * from ItemModel Where folderId=:folderid")
     fun getItemsBasedOnFolderId(folderid:String): List<ItemModel>
+
+
+    @Transaction
+    @Query("Select * from FolderTable")
+    fun getFoldersDataList(): List<FolderTable>
 
     @Transaction
     @Query("Select * from FolderTable Where folderId=:folderId")
