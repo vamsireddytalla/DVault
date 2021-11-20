@@ -16,9 +16,15 @@ import com.talla.dvault.interfaces.ItemAdapterClick
 import android.graphics.drawable.GradientDrawable
 import android.media.ThumbnailUtils
 import android.provider.MediaStore
+import android.widget.ImageView
 import android.widget.PopupMenu
+import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.DrawableCompat
+import com.talla.dvault.database.entities.FolderTable
 import com.talla.dvault.utills.DateUtills
 import com.talla.dvault.utills.FileSize
+import java.io.File
 
 
 private const val TAG = "ItemsAdapter"
@@ -27,7 +33,8 @@ class ItemsAdapter(
     val mContext: Context,
     var itemModelList: List<ItemModel>,
     var glide: RequestManager,
-    val onclickListner: ItemAdapterClick
+    val onclickListner: ItemAdapterClick,
+    var folderObj: FolderTable
 ) :
     RecyclerView.Adapter<ItemsAdapter.MyViewHolder>() {
 
@@ -39,25 +46,29 @@ class ItemsAdapter(
             this.mbinding = binding
             mbinding?.item?.setOnLongClickListener(object : View.OnLongClickListener {
                 override fun onLongClick(v: View?): Boolean {
-                    FileSize.OnLongItemClick = true
+                    val itemPosition = adapterPosition
+                    val obj: ItemModel = itemModelList.get(itemPosition)
 
-                    var itemPosition = adapterPosition
-                    var obj: ItemModel = itemModelList.get(itemPosition)
-                    if (obj.isSelected) {
-                        obj.isSelected = false
-                        FileSize.selectedUnlockItems.remove(obj)
-                    } else {
-                        obj.isSelected = true
-                        FileSize.selectedUnlockItems.add(obj)
+                    val file = File(obj.itemCurrentPath)
+                    if (file.exists()) {
+                        FileSize.OnLongItemClick = true
+
+                        if (obj.isSelected) {
+                            obj.isSelected = false
+                            FileSize.selectedUnlockItems.remove(obj)
+                        } else {
+                            obj.isSelected = true
+                            FileSize.selectedUnlockItems.add(obj)
+                        }
+
+                        if (FileSize.selectedUnlockItems.isEmpty()) {
+                            FileSize.OnLongItemClick = false
+                            FileSize.SelectAll = false
+                        }
+
+                        notifyItemChanged(itemPosition, obj)
+                        onclickListner.onItemClick(FileSize.selectedUnlockItems)
                     }
-
-                    if (FileSize.selectedUnlockItems.isEmpty()) {
-                        FileSize.OnLongItemClick = false
-                        FileSize.SelectAll = false
-                    }
-
-                    notifyItemChanged(itemPosition, obj)
-                    onclickListner.onItemClick(FileSize.selectedUnlockItems)
 
                     return true
                 }
@@ -66,23 +77,26 @@ class ItemsAdapter(
 
             mbinding?.item?.setOnClickListener {
                 if (FileSize.OnLongItemClick) {
-                    var itemPosition = adapterPosition
-                    var obj: ItemModel = itemModelList.get(itemPosition)
-                    if (obj.isSelected) {
-                        obj.isSelected = false
-                        FileSize.selectedUnlockItems.remove(obj)
-                    } else {
-                        obj.isSelected = true
-                        FileSize.selectedUnlockItems.add(obj)
-                    }
+                    val itemPosition = adapterPosition
+                    val obj: ItemModel = itemModelList.get(itemPosition)
+                    val file = File(obj.itemCurrentPath)
+                    if (file.exists()) {
+                        if (obj.isSelected) {
+                            obj.isSelected = false
+                            FileSize.selectedUnlockItems.remove(obj)
+                        } else {
+                            obj.isSelected = true
+                            FileSize.selectedUnlockItems.add(obj)
+                        }
 
-                    if (FileSize.selectedUnlockItems.isEmpty()) {
-                        FileSize.OnLongItemClick = false
-                        FileSize.SelectAll = false
-                    }
+                        if (FileSize.selectedUnlockItems.isEmpty()) {
+                            FileSize.OnLongItemClick = false
+                            FileSize.SelectAll = false
+                        }
 
-                    notifyItemChanged(itemPosition, obj)
-                    onclickListner.onItemClick(FileSize.selectedUnlockItems)
+                        notifyItemChanged(itemPosition, obj)
+                        onclickListner.onItemClick(FileSize.selectedUnlockItems)
+                    }
 
                 }
             }
@@ -93,7 +107,7 @@ class ItemsAdapter(
 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
-        var inflater = LayoutInflater.from(parent.context)
+        val inflater = LayoutInflater.from(parent.context)
         val binding = FileItemBinding.inflate(inflater, parent, false)
         return MyViewHolder(binding)
     }
@@ -102,19 +116,54 @@ class ItemsAdapter(
         holder: MyViewHolder,
         @SuppressLint("RecyclerView") position: Int
     ) {
-        val itemObj = itemModelList.get(position)
+        var itemObj = itemModelList.get(position)
         holder.mbinding?.apply {
             itemName.text = itemObj.itemName
-            createdAndSize.text = DateUtills.convertMilToDate(mContext,itemObj.itemCreatedAt.toLong()) + " - " + FileSize.bytesToHuman(itemObj.itemSize.toLong())
-            //MICRO_KIND, size: 96 x 96 thumbnail
-            if (itemObj.itemCatType=="Vdo")
-            {
-                val bmThumbnail = ThumbnailUtils.createVideoThumbnail(itemObj.itemCurrentPath, MediaStore.Images.Thumbnails.MICRO_KIND);
-                thumbNail.setImageBitmap(bmThumbnail)
-            }else{
-                glide.load(itemObj.itemCurrentPath).into(thumbNail)
+            createdAndSize.text = DateUtills.convertMilToDate(
+                mContext,
+                itemObj.itemCreatedAt.toLong()
+            ) + " - " + FileSize.bytesToHuman(itemObj.itemSize.toLong())
+            val orgDir = mContext.resources.getString(R.string.db_folder_path)
+            val sourceFile =
+                File(orgDir.toString() + "/" + "app_" + itemObj.itemCatType + "/" + folderObj.folderName + "/" + itemObj.itemName)
+            itemObj.itemCurrentPath = sourceFile.toString()
+            var intColorCode: Int = 0
+            when (itemObj.itemCatType) {
+                "Img" -> {
+                    intColorCode = mContext.resources.getColor(R.color.light_pink)
+                }
+                "Aud" -> {
+                    intColorCode = mContext.resources.getColor(R.color.light_yellow)
+                }
+                "Doc" -> {
+                    intColorCode = mContext.resources.getColor(R.color.light_blue)
+                }
+                "Vdo" -> {
+                    intColorCode = mContext.resources.getColor(R.color.light_violet)
+                }
             }
-
+            if (sourceFile.exists()) {
+                //MICRO_KIND, size: 96 x 96 thumbnail
+                if (itemObj.itemCatType == "Vdo") {
+                    val bmThumbnail = ThumbnailUtils.createVideoThumbnail(
+                        itemObj.itemCurrentPath,
+                        MediaStore.Images.Thumbnails.MICRO_KIND
+                    );
+                    thumbNail.setImageBitmap(bmThumbnail)
+                    thumbNail.scaleType = ImageView.ScaleType.FIT_XY
+                } else {
+                    glide.load(itemObj.itemCurrentPath).into(thumbNail)
+                    thumbNail.scaleType = ImageView.ScaleType.FIT_XY
+                }
+            } else {
+                thumbNail.scaleType = ImageView.ScaleType.FIT_CENTER
+                val drawableItem =
+                    AppCompatResources.getDrawable(mContext, R.drawable.cloud_down_icon)
+                thumbNail.setImageDrawable(drawableItem)
+                thumbNail.setPadding(30, 30, 30, 30)
+                val wrappedDrawable = DrawableCompat.wrap(drawableItem!!)
+                DrawableCompat.setTint(wrappedDrawable, intColorCode)
+            }
 
             if (!itemObj.isSelected) {
                 Log.d(TAG, "Unselected")
@@ -125,21 +174,6 @@ class ItemsAdapter(
                 checkBoxe.visibility = View.VISIBLE
                 threeDots.visibility = View.GONE
                 Log.d(TAG, "Selected")
-                var intColorCode: Int = 0
-                when (itemObj.itemCatType) {
-                    "Img" -> {
-                        intColorCode = mContext.resources.getColor(R.color.light_pink)
-                    }
-                    "Aud" -> {
-                        intColorCode = mContext.resources.getColor(R.color.light_yellow)
-                    }
-                    "Doc" -> {
-                        intColorCode = mContext.resources.getColor(R.color.light_blue)
-                    }
-                    "Vdo" -> {
-                        intColorCode = mContext.resources.getColor(R.color.light_violet)
-                    }
-                }
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     checkBoxe.buttonTintList = ColorStateList.valueOf(intColorCode)
                 } else {
@@ -162,12 +196,12 @@ class ItemsAdapter(
             }
             Log.d(TAG, "onBindViewHolder: Called")
 
-            threeDots.setOnClickListener{
+            threeDots.setOnClickListener {
                 val popupMenu = PopupMenu(mContext, threeDots)
                 popupMenu.inflate(R.menu.item_menu)
                 popupMenu.setOnMenuItemClickListener { menuItem ->
                     when (menuItem.itemId) {
-                        R.id.delete -> onclickListner.deleteParticularItem(itemObj)
+                        R.id.delete -> onclickListner.deleteParticularItem(itemObj, position)
                     }
                     false
                 }
@@ -176,7 +210,6 @@ class ItemsAdapter(
 
 
         }
-
 
 
     }

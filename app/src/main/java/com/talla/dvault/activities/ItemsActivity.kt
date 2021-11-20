@@ -7,6 +7,8 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
@@ -36,9 +38,12 @@ import com.talla.dvault.database.entities.FolderTable
 import com.talla.dvault.database.entities.ItemModel
 import com.talla.dvault.database.entities.SourcesModel
 import com.talla.dvault.databinding.CopyingFileDialogBinding
+import com.talla.dvault.databinding.CustonProgressDialogBinding
+import com.talla.dvault.databinding.DeleteDialogBinding
 import com.talla.dvault.interfaces.ItemAdapterClick
 import com.talla.dvault.services.FileCopyService
 import com.talla.dvault.utills.FileSize
+import com.talla.dvault.utills.InternetUtil
 import com.talla.dvault.viewmodels.ItemViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
@@ -51,13 +56,17 @@ private const val TAG = "ItemsActivity"
 @AndroidEntryPoint
 class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
     private lateinit var binding: ActivityItemsBinding
-    private lateinit var folderTable:FolderTable
+    private lateinit var folderTable: FolderTable
     private lateinit var itemsAdapter: ItemsAdapter
     private var itemsList: List<ItemModel> = ArrayList()
-//    private var mBound: Boolean = false
+
+    //    private var mBound: Boolean = false
     private lateinit var dialog: Dialog
-    private var binder: FileCopyService.LocalBinder?=null
+    private var pos: Int? = null
+    private lateinit var progressDialog: Dialog
+    private var binder: FileCopyService.LocalBinder? = null
     private var serviceBinder: FileCopyService? = null
+    private lateinit var deleteDialogBinding: DeleteDialogBinding
     private lateinit var copyDialog: CopyingFileDialogBinding
 
 
@@ -88,11 +97,13 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
         setContentView(binding.root)
         val bundle: Bundle? = intent.extras
         if (bundle != null) {
-             folderTable= intent.getSerializableExtra(this.resources.getString(R.string.key)) as FolderTable
+            folderTable =
+                intent.getSerializableExtra(this.resources.getString(R.string.key)) as FolderTable
             binding.titleScrnTitle.text = folderTable.folderName
             Log.d("FolderName", "onCreate: $folderTable.folderName")
             changeFolderColor(folderTable.folderCatType)
         }
+        dialogInit()
 
         val res: ActivityResultLauncher<Intent> =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -172,7 +183,8 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
         }
 
         binding.apply {
-            itemsAdapter = ItemsAdapter(this@ItemsActivity, itemsList, glide, this@ItemsActivity)
+            itemsAdapter =
+                ItemsAdapter(this@ItemsActivity, itemsList, glide, this@ItemsActivity, folderTable)
             itemRCV.adapter = itemsAdapter
 
             backbtn.setOnClickListener {
@@ -181,34 +193,35 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
 
         }
 
-        viewModel.getItemsBasedOnCatType(folderTable.folderCatType, folderTable.folderId).observe(this, Observer {
-            Log.d(TAG, "ItemsActivty Observer")
-            if (it.isEmpty()) {
-                binding.nofolderFound.visibility = View.VISIBLE
-                binding.itemRCV.visibility = View.GONE
-            } else {
-                binding.nofolderFound.visibility = View.GONE
-                binding.itemRCV.visibility = View.VISIBLE
-                binding.itemRCV.isNestedScrollingEnabled = false
-                Log.d(TAG, "onCreate: ${it.toString()}")
-                itemsList = it
-                itemsAdapter.setListData(itemsList)
-            }
-        })
+        viewModel.getItemsBasedOnCatType(folderTable.folderCatType, folderTable.folderId)
+            .observe(this, Observer {
+                Log.d(TAG, "ItemsActivty Observer")
+                if (it.isEmpty()) {
+                    binding.nofolderFound.visibility = View.VISIBLE
+                    binding.itemRCV.visibility = View.GONE
+                } else {
+                    binding.nofolderFound.visibility = View.GONE
+                    binding.itemRCV.visibility = View.VISIBLE
+                    binding.itemRCV.isNestedScrollingEnabled = false
+                    Log.d(TAG, "onCreate: ${it.toString()}")
+                    itemsList = it
+                    itemsAdapter.setListData(itemsList)
+                }
+            })
 
         binding.selectAll.setOnClickListener {
             selectALlCall()
         }
 
         binding.unlock.setOnClickListener {
-            if (FileSize.selectedUnlockItems.isNotEmpty() && !FileSize.UNLOCK_FILE_COPYING && !FileSize.FILE_COPYING){
+            if (FileSize.selectedUnlockItems.isNotEmpty() && !FileSize.UNLOCK_FILE_COPYING && !FileSize.FILE_COPYING) {
                 binder?.unlockFilesService(FileSize.selectedUnlockItems)
-                FileSize.SelectAll=true
+                FileSize.SelectAll = true
                 selectALlCall()
                 binding.unlock.visibility = View.GONE
                 binding.selectAll.visibility = View.GONE
                 showFileCopyDialog("Unlock")
-            }else {
+            } else {
                 showSnackBar("Unlocking files already in Processing...")
                 binder?.let { showFileCopyDialog("Unlock") }
             }
@@ -216,7 +229,7 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
 
     }
 
-    fun selectALlCall(){
+    fun selectALlCall() {
         lifecycleScope.async {
 
             FileSize.SelectAll = !FileSize.SelectAll
@@ -237,10 +250,7 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
             itemsAdapter.setListData(itemsList)
             Log.d(TAG, "Select ALl Clicked Select All Value  ${FileSize.SelectAll}")
             Log.d(TAG, "Select ALl Clicked OnLon Value   ${FileSize.OnLongItemClick}")
-            Log.d(
-                TAG,
-                "Select ALl CLicked MyItems Ids ${FileSize.selectedUnlockItems.toString()}"
-            )
+            Log.d(TAG, "Select ALl CLicked MyItems Ids ${FileSize.selectedUnlockItems.toString()}")
         }
     }
 
@@ -259,7 +269,7 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
         Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).show()
     }
 
-    private fun showFileCopyDialog(flagType:String) {
+    private fun showFileCopyDialog(flagType: String) {
         dialog = Dialog(this, R.style.Theme_MaterialComponents_DayNight_Dialog_MinWidth)
         dialog.setCancelable(true)
         copyDialog = CopyingFileDialogBinding.inflate(layoutInflater)
@@ -267,10 +277,9 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
         copyDialog.progressFile.max = 100
 
         copyDialog.cancelFileProcess.setOnClickListener(View.OnClickListener {
-            var myTag="Copy"
-            if (flagType == "Unlock")
-            {
-                myTag="Unlock"
+            var myTag = "Copy"
+            if (flagType == "Unlock") {
+                myTag = "Unlock"
             }
             binder?.stopFileProcessing(myTag)
             dialog.dismiss()
@@ -302,7 +311,10 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
                     copyDialog.progressFile.progress = progress
                     copyDialog.totalElapsed.text = mbCount
                     copyDialog.totalCount.text = totalItems
-                    if (mbCount == "Completed") dialog.dismiss()
+                    if (mbCount == "Completed") {
+                        itemsAdapter.notifyDataSetChanged()
+                        dialog.dismiss()
+                    }
                 }
             }
         })
@@ -402,21 +414,23 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
             binding.unlock.visibility = View.GONE
             binding.selectAll.visibility = View.GONE
         }
-        showSnackBar(myItemIdsSet.toString())
+//        showSnackBar(myItemIdsSet.toString())
     }
 
-    override fun deleteParticularItem(itemModel: ItemModel) {
-        deleteItem(itemModel)
+    override fun deleteParticularItem(itemModel: ItemModel, pos: Int) {
+//        deleteItem(itemModel)
+        this.pos = pos
+        showDeleteDialog(itemModel)
     }
 
     override fun unlockParticularItem(itemModel: ItemModel) {
         lifecycleScope.async {
-            var fromLoc = File(itemModel.itemCurrentPath)
-            var toLoc = File(itemModel.itemOriPath)
+            val fromLoc = File(itemModel.itemCurrentPath)
+            val toLoc = File(itemModel.itemOriPath)
             fromLoc.renameTo(toLoc)
-            var file = File(itemModel.itemCurrentPath)
+            val file = File(itemModel.itemCurrentPath)
             if (file.exists()) {
-                var isDeleted = file.delete()
+                val isDeleted = file.delete()
                 if (isDeleted) viewModel.deleteItem(itemModel)
             }
         }
@@ -437,11 +451,106 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
     override fun onStart() {
         super.onStart()
 
-        if (binder==null) {
+        if (binder == null) {
             // Bind to LocalService
             Intent(this, FileCopyService::class.java).also { intent ->
                 bindService(intent, connection, Context.BIND_AUTO_CREATE)
             }
+        }
+    }
+
+    private fun showDeleteDialog(itemModel: ItemModel) {
+        dialog = Dialog(this, R.style.Theme_MaterialComponents_DayNight_Dialog_MinWidth)
+        dialog.setCancelable(true)
+        deleteDialogBinding = DeleteDialogBinding.inflate(layoutInflater)
+        dialog.setContentView(deleteDialogBinding.root)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        deleteDialogBinding.fileName.text = itemModel.itemName
+        //online Delete and local delete
+        deleteDialogBinding.yes.setOnClickListener {
+            val fileProcess = FileSize.checkIsAnyProcessGoing()
+            if (fileProcess.isEmpty()) {
+                runBlocking {
+                    dialog.dismiss()
+                    progressDialog.show()
+                    if (deleteDialogBinding.isServDel.isChecked) {
+                        Log.d(TAG, "showDeleteDialog: Server Delete")
+                        checkedServDelete(itemModel)
+                    } else {
+                        Log.d(TAG, "showDeleteDialog: Local Delete")
+                        localFileDelete(itemModel,false)
+                    }
+                }
+            } else {
+                dialog.dismiss()
+                showSnackBar(fileProcess)
+            }
+
+        }
+        dialog.show()
+    }
+
+    fun checkedServDelete(itemModel: ItemModel) {
+        if (InternetUtil.isInternetAvail(this)) {
+            lifecycleScope.launch(Dispatchers.IO) {
+                if (itemModel.serverId.isNotEmpty()) {
+                    onlineFileDelete(itemModel.serverId)
+                    localFileDelete(itemModel,true)
+                }else{
+                    localFileDelete(itemModel,false)
+                }
+            }
+        } else {
+            showSnackBar("Check Internet Connection")
+        }
+    }
+
+    suspend fun localFileDelete(itemModel: ItemModel,isServerDelete:Boolean) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val orgDir = this@ItemsActivity.resources.getString(R.string.db_folder_path)
+            val sourceFile =
+                File(orgDir.toString() + "/" + "app_" + folderTable.folderCatType + "/" + folderTable.folderName + "/" + itemModel.itemName)
+            Log.d(TAG, "localFileDelete: File Path --> ${sourceFile.toString()}")
+            if (sourceFile.exists()) {
+                val isDeleted = sourceFile.delete()
+            }
+            itemModel.isDeleted = true
+            withContext(Dispatchers.Main) {
+                if (isServerDelete || itemModel.serverId.isEmpty()) {
+                    viewModel.deleteItem(itemModel)
+                    Log.d(TAG, "localFileDelete: if called")
+                } else {
+                    Log.d(TAG, "localFileDelete: Else Called")
+                    itemsAdapter.notifyItemChanged(pos!!)
+                }
+                progressDialog.dismiss()
+            }
+        }
+
+    }
+
+    fun onlineFileDelete(servId: String) {
+        val files = getDriveService()?.let {
+            it.files().delete(servId).execute()
+        }
+    }
+
+    fun dialogInit() {
+        progressDialog = Dialog(this)
+        val customProgressDialogBinding = CustonProgressDialogBinding.inflate(this.layoutInflater)
+        progressDialog.setContentView(customProgressDialogBinding.root)
+        progressDialog.setCancelable(false)
+    }
+
+    suspend fun showProgressDialog() {
+        withContext(Dispatchers.Main) {
+            progressDialog.show()
+        }
+    }
+
+    suspend fun stopProgressDialog() {
+        withContext(Dispatchers.Main) {
+            progressDialog.dismiss()
         }
     }
 

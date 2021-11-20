@@ -7,11 +7,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.talla.dvault.database.entities.FolderTable
 import com.talla.dvault.database.entities.ItemModel
+import com.talla.dvault.database.relations.FolderAndItem
 import com.talla.dvault.repositories.VaultRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import java.io.File
+import java.lang.Exception
 import javax.inject.Inject
 
 private const val TAG = "ItemViewModel"
@@ -19,6 +22,7 @@ private const val TAG = "ItemViewModel"
 class ItemViewModel @Inject constructor(private val repository:VaultRepository) :ViewModel()
 {
     private var itemsMutableLiveData: LiveData<List<ItemModel>> = MutableLiveData()
+    private var itemsWithFolderLiveData: LiveData<FolderAndItem> = MutableLiveData()
     private var selectedItems: MutableLiveData<String> = MutableLiveData()
 
 
@@ -55,13 +59,20 @@ class ItemViewModel @Inject constructor(private val repository:VaultRepository) 
         return itemsMutableLiveData
     }
 
+    fun getFolderAndItemWithFolderId(folderId:String):LiveData<FolderAndItem>
+    {
+        repository.getFolderAndItemWithFolderId(folderId).also { itemsWithFolderLiveData = it }
+        return itemsWithFolderLiveData
+    }
+
 
     suspend fun deleteItem(itemModel:ItemModel)
     {
         var respo=viewModelScope.async(Dispatchers.Default) {
-            var file=File(itemModel.itemCurrentPath)
+            val file=File(itemModel.itemCurrentPath)
+
             if (file.exists()){
-                var isDeleted=file.delete()
+                val isDeleted=file.delete()
                 if (isDeleted) repository.deleteItem(itemModel.itemId)
             }else{
               repository.deleteItem(itemModel.itemId)
@@ -74,6 +85,19 @@ class ItemViewModel @Inject constructor(private val repository:VaultRepository) 
             repository.getFolderObjWithFolderID(folderId)
         }
        return res.await()
+    }
+
+
+    suspend fun deleteFolder(folderId: Int)
+    {
+        viewModelScope.launch(Dispatchers.IO){
+            try {
+                repository.deleteFolder(folderId)
+                repository.deleteItemBasedOnFolderId(folderId)
+            }catch (e: Exception){
+                e.printStackTrace()
+            }
+        }
     }
 
 

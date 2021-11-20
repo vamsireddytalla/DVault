@@ -38,6 +38,11 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import java.io.File
 import android.os.Environment
+import com.google.api.client.extensions.android.http.AndroidHttp
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
+import com.google.api.client.json.jackson2.JacksonFactory
+import com.google.api.services.drive.Drive
+import com.google.api.services.drive.DriveScopes
 
 private const val TAG = "FoldersActivity"
 @AndroidEntryPoint
@@ -213,38 +218,66 @@ class FoldersActivity : AppCompatActivity(), FolderItemClick {
         dialog.setContentView(deleteDialogBinding.root)
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         deleteDialogBinding.fileName.text = itemName
+        //online Delete and local delete
         deleteDialogBinding.yes.setOnClickListener {
-            if (InternetUtil.isInternetAvail(this)) {
-                //online Delete and local delete
-                lifecycleScope.launch(Dispatchers.IO) {
-                    //first get all items based on Folder id
-                    val itemList = getItemsBasedOnFolderId(folderId)
+            val fileProcess=FileSize.checkIsAnyProcessGoing()
+            if (fileProcess.isEmpty()){
+                runBlocking {
+                    dialog.dismiss()
+                    progressDialog.show()
+//                val itemList = getItemsBasedOnFolderId(folderId)
                     val folderObj = viewModel.getFolderObjWithFolderID(folderId)
-                    if (itemList.isEmpty()) {
-                        viewModel.deleteFolder(folderId = folderId.toInt())
-                    } else {
-                        //Second Delete all Files in Local Folder
-                        itemList.forEach {
-                            val file = File(it.itemCurrentPath)
-                            if (file.exists()) {
-                                val isDeleted = file.delete()
-                            }
-                        }
+                    if (deleteDialogBinding.isServDel.isChecked){
+                        Log.d(TAG, "showDeleteDialog: Server Delete")
+                        checkedServDelete(folderObj)
+                    }else{
+                        Log.d(TAG, "showDeleteDialog: Local Delete")
+                        localFileDelete(folderObj)
                     }
                 }
-            } else {
-                showSnackBar("Check Internet Connection")
+            }else{
+                dialog.dismiss()
+                showSnackBar(fileProcess)
             }
 
         }
         dialog.show()
     }
 
+    fun checkedServDelete(folderObj:FolderTable){
+        if (InternetUtil.isInternetAvail(this)) {
+            lifecycleScope.launch(Dispatchers.IO) {
+                if (folderObj.folderServerId.isNotEmpty()) {
+                    onlineFileDelete(folderObj.folderServerId)
+                }
+                localFileDelete(folderObj)
+            }
+        } else {
+            showSnackBar("Check Internet Connection")
+        }
+    }
+
+    suspend fun localFileDelete(folderTable: FolderTable){
+        val orgDir=this.resources.getString(R.string.db_folder_path)
+        val sourceFile = File(orgDir.toString() + "/"+"app_"+ folderTable.folderCatType +"/"+ folderTable.folderName)
+        Log.d(TAG, "localFileDelete: File Path --> ${sourceFile.toString()}")
+        if (sourceFile.exists()) {
+            val isDeleted = sourceFile.deleteRecursively()
+        }
+        viewModel.deleteFolder(folderId = folderId.toInt())
+        progressDialog.dismiss()
+    }
+
+    fun onlineFileDelete(servId:String){
+        val files = getDriveService()?.let {
+            it.files().delete(servId).execute()
+        }
+    }
+
     fun getItemsBasedOnFolderId(folderId: String): List<ItemModel> {
         var itemsListOnFolderId = ArrayList<ItemModel>()
         runBlocking {
-            itemsListOnFolderId =
-                viewModel.getItemsBasedOnFolderId(folderId) as ArrayList<ItemModel>
+            itemsListOnFolderId = viewModel.getItemsBasedOnFolderId(folderId) as ArrayList<ItemModel>
         }
         return itemsListOnFolderId
     }
@@ -293,6 +326,22 @@ class FoldersActivity : AppCompatActivity(), FolderItemClick {
           val success = oldFolder.renameTo(newFolder)
           Log.d(TAG, "updateFolder: $success")
       }
+    }
+
+    fun getDriveService(): Drive? {
+        GoogleSignIn.getLastSignedInAccount(this)?.let { googleAccount ->
+            val credential =
+                GoogleAccountCredential.usingOAuth2(this, listOf(DriveScopes.DRIVE_APPDATA))
+            credential.selectedAccount = googleAccount.account!!
+            return Drive.Builder(
+                AndroidHttp.newCompatibleTransport(),
+                JacksonFactory.getDefaultInstance(),
+                credential
+            )
+                .setApplicationName(this.getString(R.string.app_name))
+                .build()
+        }
+        return null
     }
 
 }

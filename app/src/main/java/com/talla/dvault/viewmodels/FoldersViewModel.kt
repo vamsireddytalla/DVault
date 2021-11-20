@@ -10,6 +10,7 @@ import com.talla.dvault.repositories.VaultRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import java.io.File
+import java.lang.Exception
 import javax.inject.Inject
 
 private const val TAG = "FoldersViewModel"
@@ -58,8 +59,16 @@ class FoldersViewModel @Inject constructor(private val repository: VaultReposito
 
     suspend fun deleteFolder(folderId: Int)
     {
-        repository.deleteFolder(folderId)
+        viewModelScope.launch(Dispatchers.IO){
+            try {
+                repository.deleteFolder(folderId)
+                repository.deleteItemBasedOnFolderId(folderId)
+            }catch (e:Exception){
+                e.printStackTrace()
+            }
+        }
     }
+
 
     suspend fun deleteItem(itemModel:ItemModel,tag:String)
     {
@@ -78,7 +87,10 @@ class FoldersViewModel @Inject constructor(private val repository: VaultReposito
 
     suspend fun getFolderObjWithFolderID(folderId: String):FolderTable
     {
-       return repository.getFolderObjWithFolderID(folderId)
+        val res: Deferred<FolderTable> = viewModelScope.async(Dispatchers.IO) {
+            repository.getFolderObjWithFolderID(folderId)
+        }
+        return res.await()
     }
 
 }

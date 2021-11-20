@@ -15,11 +15,14 @@ data class ItemModel(
     val itemCreatedAt:String="",
     val itemMimeType:String="",
     val itemOriPath:String="",
-    val itemCurrentPath:String="",
+    var itemCurrentPath:String="",
     val serverId:String="",
     var folderId:String="",
     val itemCatType:String="",
     val itemTrash:Boolean=false):Serializable{
     @Ignore
     var isSelected:Boolean=false
+    @Ignore
+    var isDeleted:Boolean=false
+
 }

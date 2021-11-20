@@ -60,11 +60,6 @@ import com.talla.dvault.utills.InternetUtil
 import kotlinx.coroutines.*
 import java.io.File
 import android.content.pm.PackageInfo
-
-
-
-
-
 private const val TAG = "DashBoardActivity"
 
 @AndroidEntryPoint
@@ -129,8 +124,7 @@ class DashBoardActivity : AppCompatActivity() {
                 }
             }
         }
-
-
+        
         binding.linearLayout.setOnClickListener {
             if (isNightMode) {
                 lifecycleScope.launch(Dispatchers.Default) {

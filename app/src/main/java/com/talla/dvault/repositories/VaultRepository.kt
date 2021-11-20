@@ -5,6 +5,7 @@ import androidx.lifecycle.LiveData
 import androidx.sqlite.db.SimpleSQLiteQuery
 import com.talla.dvault.database.dao.DVaultDao
 import com.talla.dvault.database.entities.*
+import com.talla.dvault.database.relations.FolderAndItem
 import java.lang.Exception
 import javax.inject.Inject
 
@@ -95,6 +96,8 @@ class VaultRepository @Inject constructor(private val appDao:DVaultDao)
 
     suspend fun deleteFolder(folderId: Int)=appDao.deleteFolder(folderId)
 
+    suspend fun deleteItemBasedOnFolderId(folderId: Int)=appDao.deleteItemBasedOnFolderId(folderId)
+
     suspend fun insertItemsData(itemsList:List<ItemModel>)=appDao.insertItemsData(itemsList)
 
     suspend fun insertSingleItem(itemsList:ItemModel)=appDao.insertSingleItem(itemsList)
@@ -126,5 +129,10 @@ class VaultRepository @Inject constructor(private val appDao:DVaultDao)
     suspend fun getCatServerId(catId:String)=appDao.getCatServerId(catId)
 
     suspend fun getFolderObject(catId: String)=appDao.getFolderObject(catId)
+
+    fun getFolderAndItemWithFolderId(folderID: String):LiveData<FolderAndItem>{
+        val res: LiveData<FolderAndItem> =appDao.getFolderAndItemWithFolderId(folderID)
+        return res
+    }
 
 }

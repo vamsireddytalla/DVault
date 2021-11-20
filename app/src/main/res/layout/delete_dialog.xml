@@ -73,7 +73,6 @@
       android:text="Delete from cloud"
       android:translationX="-5dp"
       android:checked="true"
-      android:clickable="false"
       android:buttonTint="@color/blue_color"
       android:textColor="@color/del_txt_color"/>
 

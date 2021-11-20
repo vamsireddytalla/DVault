@@ -150,7 +150,9 @@ class FileCopyService : Service() {
                                         val folderObj=repository.getFolderObjWithFolderID(source.folderId)
                                         unlockingFile(folderObj, source.itemName, index)
                                         if (!UNLOCK_INTERRUPT!!) {
-                                            repository.deleteItem(source.itemId)
+                                            if (source.serverId.isEmpty()){
+                                                repository.deleteItem(source.itemId)
+                                            }
                                             Log.d(TAG, "onStartCommand: ${source.itemMimeType}")
                                         }
                                     } catch (e: Exception) {

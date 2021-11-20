@@ -144,30 +144,27 @@ class MainActivity : AppCompatActivity() {
             .addOnCompleteListener {
                 if (it.isSuccessful) {
                     // user successfully logged-in
-                    Log.d(
-                        TAG,
-                        "handleSignData: ${it.result?.account}  ${it.result?.displayName} ${it.result?.email}"
-                    )
+                    Log.d(TAG, "handleSignData: ${it.result?.account}  ${it.result?.displayName} ${it.result?.email}")
                     Log.d(TAG, "handleSignData: ${it.result?.grantedScopes}")
                     Log.d(TAG, "handleSignData: ${it.result?.requestedScopes}")
                     if (it.result?.grantedScopes!!.contains(Scope(DriveScopes.DRIVE_APPDATA))) {
                         var job: Job = lifecycleScope.launch {
                             Log.d(TAG, "handleSignData: ---------->  Granted Scope")
-                            var userName = it.result?.displayName
-                            var userEmail = it.result?.email
-                            var userProfilePic: Uri? = it.result?.photoUrl
-                            var currentDT: String? = System.currentTimeMillis().toString()
+                            val userName = it.result?.displayName
+                            val userEmail = it.result?.email
+                            val userProfilePic: Uri? = it.result?.photoUrl
+                            val currentDT: String? = System.currentTimeMillis().toString()
                             val user = User(
                                 userName.toString(),
                                 userEmail.toString(),
                                 userProfilePic.toString(),
                                 currentDT.toString(),
-                                "DVault"
-                            )
+                                "DVault")
                             try {
                                 showProgressDialog()
-                                var driveScope = lifecycleScope.launch(Dispatchers.Default) {
-                                    getDriveFiles(user)
+                                val driveScope = lifecycleScope.launch(Dispatchers.Default) {
+//                                    getDriveFiles(user)
+                                    getCategoriesData()
                                 }
                                 driveScope.join()
                                 stopProgressDialog()
@@ -204,7 +201,7 @@ class MainActivity : AppCompatActivity() {
         try {
 
             getDriveService()?.let { gdService ->
-                var pagetoken: String? = null
+                val pagetoken: String? = null
                 do {
                     val result: FileList = gdService.files().list().apply {
                         spaces = "appDataFolder"
@@ -551,6 +548,36 @@ class MainActivity : AppCompatActivity() {
         withContext(Dispatchers.Main) {
             progressDialog.dismiss()
         }
+    }
+
+    fun getCategoriesData()
+    {
+        try {
+            getDriveService()?.let { gdFiles ->
+                val pagetoken: String? = null
+                do {
+                    val result: FileList = gdFiles.files().list().apply {
+                        spaces = "parents"
+                        q = "mimeType='application/vnd.google-apps.folder'"
+                        fields = "nextPageToken, files(id,name,mimeType,quotaBytesUsed)"
+                        pageToken = this.pageToken
+                    }.execute()
+
+                    result?.let { res ->
+                        Log.d(TAG, "getDriveFiles Count From Server : ${res.files}")
+                        Log.d(TAG, "getDriveFiles: Server Files Count  ${res.files.size}")
+                    }
+
+                } while (pagetoken != null)
+                logout("Testing")
+            }
+        }catch (e:Exception){
+            e.printStackTrace()
+            FileSize.showSnackBar(e.message.toString(), binding.root)
+            Log.d(TAG, "getCategoriesData: Exception Occured -> ${e.message}")
+            logout("getDriveFiles()")
+        }
+
     }
 
 }

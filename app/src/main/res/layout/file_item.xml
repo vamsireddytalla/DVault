@@ -31,8 +31,7 @@
             android:id="@+id/thumbNail"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@drawable/image_corner_radius"
-            android:scaleType="fitXY"/>
+            android:background="@drawable/image_corner_radius"/>
 
         <ImageView
             android:id="@+id/checkBox"

@@ -118,6 +118,10 @@ interface DVaultDao {
     @Query("Delete from FolderTable where folderId=:folderId")
     suspend fun deleteFolder(folderId: Int)
 
+
+    @Query("Delete from ItemModel where folderId=:folderId")
+    suspend fun deleteItemBasedOnFolderId(folderId: Int)
+
     //Items Data
     @Insert
     suspend fun insertItemsData(itemsList: List<ItemModel>)
@@ -197,6 +201,10 @@ interface DVaultDao {
     @Transaction
     @Query("Select * from FolderTable Where folderCatType=:catType")
     suspend fun getFolderAndItemWithCatType(catType: String):FolderAndItem
+
+    @Transaction
+    @Query("Select * from FolderTable Where folderId=:folderId")
+    fun getFolderAndItemWithFolderId(folderId: String):LiveData<FolderAndItem>
 
     @Transaction
     @Query("Select serverId from CategoriesModel Where catId=:catId")
