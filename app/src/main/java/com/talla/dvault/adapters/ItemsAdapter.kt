@@ -111,11 +111,11 @@ class ItemsAdapter(
                             io.putExtra(mContext.getString(R.string.key2),folderObj.folderCatType)
                             mContext.startActivity(io)
                         }else{
-                            Toast.makeText(mContext, "Unlock File and View in Downloads Folder", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(mContext, mContext.resources.getString(R.string.unlock_file_view), Toast.LENGTH_SHORT).show()
                         }
 
                     }else{
-                        Toast.makeText(mContext, "Restore Files in Settings", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(mContext, mContext.resources.getString(R.string.restore_from_settings), Toast.LENGTH_SHORT).show()
                     }
 
                 }
@@ -144,8 +144,7 @@ class ItemsAdapter(
                 itemObj.itemCreatedAt.toLong()
             ) + " - " + FileSize.bytesToHuman(itemObj.itemSize.toLong())
             val orgDir = mContext.resources.getString(R.string.db_folder_path)
-            val sourceFile =
-                File(orgDir.toString() + "/" + "app_" + itemObj.itemCatType + "/" + folderObj.folderName + "/" + itemObj.itemName)
+            val sourceFile = File(orgDir.toString() + "/" + "app_" + itemObj.itemCatType + "/" + folderObj.folderName + "/" + itemObj.itemName)
             itemObj.itemCurrentPath = sourceFile.toString()
             var intColorCode: Int = 0
             when (itemObj.itemCatType) {
@@ -164,17 +163,19 @@ class ItemsAdapter(
             }
             if (sourceFile.exists()) {
                 //MICRO_KIND, size: 96 x 96 thumbnail
-                if (itemObj.itemCatType == "Vdo") {
-                    val bmThumbnail = ThumbnailUtils.createVideoThumbnail(
-                        itemObj.itemCurrentPath,
-                        MediaStore.Images.Thumbnails.MICRO_KIND
-                    );
-                    thumbNail.setImageBitmap(bmThumbnail)
-                    thumbNail.scaleType = ImageView.ScaleType.FIT_XY
-                } else {
-                    glide.load(itemObj.itemCurrentPath).into(thumbNail)
-                    thumbNail.scaleType = ImageView.ScaleType.FIT_XY
-                }
+//                if (itemObj.itemCatType == "Vdo") {
+//                    val bmThumbnail = ThumbnailUtils.createVideoThumbnail(
+//                        itemObj.itemCurrentPath,
+//                        MediaStore.Images.Thumbnails.MICRO_KIND
+//                    );
+//                    thumbNail.setImageBitmap(bmThumbnail)
+//                    thumbNail.scaleType = ImageView.ScaleType.FIT_XY
+//                } else {
+//                    glide.load(itemObj.itemCurrentPath).into(thumbNail)
+//                    thumbNail.scaleType = ImageView.ScaleType.FIT_XY
+//                }
+                glide.load(itemObj.itemCurrentPath).into(thumbNail)
+                thumbNail.scaleType = ImageView.ScaleType.FIT_XY
             } else {
                 thumbNail.scaleType = ImageView.ScaleType.FIT_CENTER
                 val drawableItem = AppCompatResources.getDrawable(mContext, R.drawable.cloud_down_icon)

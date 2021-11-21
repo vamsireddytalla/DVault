@@ -50,7 +50,7 @@
             android:layout_height="match_parent"
             android:background="@drawable/image_corner_radius"
             android:id="@+id/userProfilePic"
-            android:src="@drawable/image" />
+            app:srcCompat="@drawable/ic_skaleten" />
     </LinearLayout>
 
 
@@ -174,7 +174,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="36dp"
-            android:fontFamily="@font/poppins_bold"
+            android:fontFamily="@font/popins_semi_bold"
             android:includeFontPadding="false"
             android:text="0"
             android:textAppearance="@style/TextAppearance.AppCompat.Display1"
@@ -221,7 +221,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="36dp"
-            android:fontFamily="@font/poppins_bold"
+            android:fontFamily="@font/popins_semi_bold"
             android:includeFontPadding="false"
             android:text="0"
             android:textAppearance="@style/TextAppearance.AppCompat.Display1"
@@ -269,7 +269,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="36dp"
-            android:fontFamily="@font/poppins_bold"
+            android:fontFamily="@font/popins_semi_bold"
             android:includeFontPadding="false"
             android:text="0"
             android:textAppearance="@style/TextAppearance.AppCompat.Display1"
@@ -316,7 +316,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="36dp"
-            android:fontFamily="@font/poppins_bold"
+            android:fontFamily="@font/popins_semi_bold"
             android:includeFontPadding="false"
             android:text="0"
             android:textAppearance="@style/TextAppearance.AppCompat.Display1"

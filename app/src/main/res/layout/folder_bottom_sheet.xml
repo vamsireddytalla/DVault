@@ -39,6 +39,7 @@
         android:layout_marginBottom="5dp"
         android:ems="10"
         android:paddingLeft="10dp"
+        android:imeOptions="actionDone"
         android:background="@drawable/linear_border_stroke"
         android:inputType="textPersonName"
         android:textColor="@color/hello_color"

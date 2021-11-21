@@ -38,12 +38,16 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import java.io.File
 import android.os.Environment
+import android.view.MotionEvent
 import android.view.animation.AnimationUtils
+import android.view.inputmethod.InputMethodManager
+import android.widget.EditText
 import com.google.api.client.extensions.android.http.AndroidHttp
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import com.google.api.client.json.jackson2.JacksonFactory
 import com.google.api.services.drive.Drive
 import com.google.api.services.drive.DriveScopes
+import java.io.IOException
 
 private const val TAG = "FoldersActivity"
 
@@ -150,8 +154,7 @@ class FoldersActivity : AppCompatActivity(), FolderItemClick {
                 if (folderName.isNotEmpty()) {
                     runBlocking {
                         val btnType = b1.text.toString()
-                        val folderModel =
-                            FolderTable(0, folderName, createdTime, catType.toString(), "", false)
+                        val folderModel = FolderTable(0, folderName, createdTime, catType.toString(), "", false)
                         if (btnType == this@FoldersActivity.resources.getString(R.string.create)) {
                             val res = viewModel.createNewFolder(folderModel)
 //                        var res: Long =viewModel.checkDataANdCreateFolder(folderName,createdTime.toString(),catType.toString())
@@ -170,19 +173,24 @@ class FoldersActivity : AppCompatActivity(), FolderItemClick {
                             }
                             Log.d(TAG, "showBottomSheetDialog: ${res}")
                         } else {
-                            val res: Int = viewModel.renameFolder(folderName, folderId)
-                            if (res == 2067) {
-                                Toast.makeText(
-                                    this@FoldersActivity,
-                                    getString(R.string.already_existed),
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                                et1.error = getString(R.string.already_existed)
-                                et1.requestFocus()
-                            } else {
-                                updateFolder(value, folderName)
-                                bsd.dismiss()
-                                showSnackBar("Updated Successfully!")
+                            if (InternetUtil.isInternetAvail(this@FoldersActivity)){
+                                progressDialog.show()
+                                val res: Int = viewModel.renameFolder(folderName, folderId)
+                                if (res == 2067) {
+                                    Toast.makeText(this@FoldersActivity, getString(R.string.already_existed), Toast.LENGTH_SHORT).show()
+                                    et1.error = getString(R.string.already_existed)
+                                    et1.requestFocus()
+                                    progressDialog.dismiss()
+                                } else {
+                                    updateFolder(value, folderName)
+                                    bsd.dismiss()
+                                    val folderObj=viewModel.getFolderObjWithFolderID(folderId.toString())
+                                    if (folderObj.folderServerId.isNotEmpty()) updateFolderName(folderObj)
+                                    showSnackBar("Updated Successfully!")
+                                    progressDialog.dismiss()
+                                }
+                            }else{
+                                Toast.makeText(this@FoldersActivity, "Check Internet!", Toast.LENGTH_SHORT).show()
                             }
                         }
 
@@ -197,6 +205,25 @@ class FoldersActivity : AppCompatActivity(), FolderItemClick {
         }
 
         bsd.show()
+    }
+
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        val view = currentFocus
+        if (view != null && (ev.action == MotionEvent.ACTION_UP || ev.action == MotionEvent.ACTION_MOVE) && view is EditText && !view.javaClass.name.startsWith(
+                "android.webkit."
+            )
+        ) {
+            val scrcoords = IntArray(2)
+            view.getLocationOnScreen(scrcoords)
+            val x = ev.rawX + view.getLeft() - scrcoords[0]
+            val y = ev.rawY + view.getTop() - scrcoords[1]
+            if (x < view.getLeft() || x > view.getRight() || y < view.getTop() || y > view.getBottom()) (this.getSystemService(
+                INPUT_METHOD_SERVICE
+            ) as InputMethodManager).hideSoftInputFromWindow(
+                this.window.decorView.applicationWindowToken, 0
+            )
+        }
+        return super.dispatchTouchEvent(ev)
     }
 
     override fun onMenuItemClick(oldFolderName: String, key: String, folderId: Int) {
@@ -375,5 +402,27 @@ class FoldersActivity : AppCompatActivity(), FolderItemClick {
         }
         return null
     }
+
+    suspend fun updateFolderName(folderObj: FolderTable) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val mimeType = this@FoldersActivity.resources.getString(R.string.folder_mime_type)
+                // File's new content.
+                val newMetadata = com.google.api.services.drive.model.File()
+                newMetadata.name = folderObj.folderName
+
+                // Send the request to the API.
+                val fileRes = getDriveService()!!.files().update(folderObj.folderServerId, newMetadata)
+                    .setFields("id, name, appProperties,quotaBytesUsed").execute()
+                fileRes?.let {
+                    Log.d(TAG, "updateFolderName: Successfully ${fileRes.name} ${fileRes.id} ${fileRes.quotaBytesUsed}")
+                }
+            } catch (e: IOException) {
+                println("An error occurred: $e")
+                Log.d(TAG, "updateFolderName Error --> : ${e.message}")
+            }
+        }
+    }
+
 
 }

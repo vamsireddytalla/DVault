@@ -3,11 +3,14 @@ package com.talla.dvault.activities
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.MotionEvent
 import android.view.WindowManager
+import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import androidx.activity.viewModels
@@ -27,7 +30,6 @@ class PasswordActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityPasswordBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {

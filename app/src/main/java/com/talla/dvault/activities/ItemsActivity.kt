@@ -271,6 +271,7 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
         dialog.setCancelable(true)
         copyDialog = CopyingFileDialogBinding.inflate(layoutInflater)
         dialog.setContentView(copyDialog.root)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         copyDialog.progressFile.max = 100
 
         copyDialog.cancelFileProcess.setOnClickListener(View.OnClickListener {

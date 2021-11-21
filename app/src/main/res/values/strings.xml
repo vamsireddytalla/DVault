@@ -4,7 +4,7 @@
     <string name="hello">Hello!</string>
     <string name="vault">Vault</string>
     <string name="date_format">yyyy-MM-dd hh:mm a</string>
-    <string name="welcome_to_dvault">Welcome to D-Vault!</string>
+    <string name="welcome_to_dvault">Welcome to DVault!</string>
     <string name="settings">Settings</string>
     <string name="backup_desc">Backup your media to your Google Drive.
 You can restore them when you reinstall.</string>
@@ -52,14 +52,17 @@ You can restore them when you reinstall.</string>
     <string name="check_internet">Check Internet</string>
     <string name="customer_Care">drivevaultonline@gmail.com</string>
     <string name="already_existed">Try new Name!</string>
-    <string name="logout_alert">Make sure to backup all your files. Logout may delete all your restored files.</string>
+    <string name="logout_alert">Make sure to backup all your files. Logout may delete all your Local Stored files.</string>
     <string name="restore_alert">Your Backup data available on the Server click OK to restore.</string>
     <string name="internet_alert">Make sure to turn on your Internet to proceed with this app.</string>
     <string name="google_drive_storage">Google Drive Storage</string>
     <string name="privacy_policy">https://4b89krifqzjejpo92l8rqw-on.drv.tw/www.drivevaultonline.com/dvault.html</string>
     <string name="designed_by_sathvik_developed_by_vamsi">Designed by Sathvik • Developed by Vamsi.</string>
     <string name="are_you_sure_you_wan_t_to_delete">Are you sure you wan\'t to delete</string>
-    <string name="app_info">One and Only place to store your files of any kind of file formats within your own cloud,without seen to anyone else and can be restored whenever you wish without any restrictions.</string>
+    <string name="app_info">A secure place to store all your files with local and cloud storage support which can be Connected to your Google Drive. Keeping your data secure is our priority. Your data stays safe and available to you whenever you need it. Access your data online anytime using your mobile Application.</string>
+    <string name="unlock_file_view">Unlock File and View in Downloads Folder</string>
+    <string name="restore_from_settings">Restore Files from Settings</string>
+    <string name="so_far">Rate your experience using DVault so far</string>
 
 
     <string-array name="security_questions">

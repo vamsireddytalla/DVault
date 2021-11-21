@@ -105,13 +105,11 @@ class FoldersAdapter(val folderCat:String,val mContext:Context,val onOptionClick
         }
         val orgDir=mContext.resources.getString(R.string.db_folder_path)
         val sourceFile = File(orgDir.toString() + "/"+"app_"+ folderObj.folderCatType +"/"+ folderObj.folderName)
-        if (sourceFile.exists()){
-            folderCardBinding.folderLogo.setColorFilter(ContextCompat.getColor(mContext,selectedColor!!))
-            DrawableCompat.setTint(DrawableCompat.wrap(folderCardBinding.folderCard.background), ContextCompat.getColor(mContext,selectedColor))
-        }else{
+        if (!sourceFile.exists()){
             folderCardBinding.folderLogo.setImageResource(R.drawable.cloud_down_icon)
-            folderCardBinding.folderLogo.setColorFilter(ContextCompat.getColor(mContext,selectedColor!!))
         }
+        folderCardBinding.folderLogo.setColorFilter(ContextCompat.getColor(mContext,selectedColor!!))
+        DrawableCompat.setTint(DrawableCompat.wrap(folderCardBinding.folderCard.background), ContextCompat.getColor(mContext,selectedColor))
     }
 
     override fun getItemCount(): Int {

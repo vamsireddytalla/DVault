@@ -4,6 +4,7 @@ import android.app.Application
 import android.app.Dialog
 import android.content.Context
 import com.bumptech.glide.Glide
+import com.bumptech.glide.RequestManager
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -63,12 +64,13 @@ object AppModule {
     @Singleton
     @Provides
     fun provideGlideInstance(
-        @ApplicationContext context: Context
-    ) = Glide.with(context).setDefaultRequestOptions(
-        RequestOptions()
-            .placeholder(R.drawable.skeleton_icon)
+        @ApplicationContext context: Context):RequestManager {
+        return  Glide.with(context).setDefaultRequestOptions(
+            RequestOptions()
+                .placeholder(R.drawable.ic_skaleten)
 //            .error(R.drawable.ic_image)
-            .diskCacheStrategy(DiskCacheStrategy.DATA)
-    )
+                .diskCacheStrategy(DiskCacheStrategy.DATA)
+        )
+    }
 
 }

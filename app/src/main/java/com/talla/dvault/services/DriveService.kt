@@ -68,6 +68,7 @@ class DriveService : Service() {
     private var cancelProcessJob: Job? = null
     private var mediaContent: FileContent? = null
     private val backgroundScope = CoroutineScope(Dispatchers.Default)
+    private lateinit var gDriveService: Drive
 
 
     override fun onCreate() {
@@ -370,7 +371,7 @@ class DriveService : Service() {
         request?.let {
             val uploader: MediaHttpDownloader = it.mediaHttpDownloader
             uploader.isDirectDownloadEnabled = false
-            uploader.chunkSize = 5 * MediaHttpUploader.MINIMUM_CHUNK_SIZE
+            uploader.chunkSize = 10 * MediaHttpUploader.MINIMUM_CHUNK_SIZE
             val downloadListner = CustomProgressListener(
                 itemModel,
                 itemNo,
@@ -403,7 +404,7 @@ class DriveService : Service() {
             val uploader: MediaHttpUploader = it.mediaHttpUploader
             uploader.isDirectUploadEnabled = false
             Log.d(TAG, "uploadLargeFiles: Process One")
-            uploader.chunkSize = 5 * MediaHttpUploader.MINIMUM_CHUNK_SIZE
+            uploader.chunkSize = 8 * MediaHttpUploader.MINIMUM_CHUNK_SIZE
             val listner: CustomUploadProgressListener =
                 CustomUploadProgressListener(itemModel, itemNo, fileSize!!)
             it.mediaHttpUploader?.progressListener = listner
@@ -523,17 +524,15 @@ class DriveService : Service() {
 
     fun getTotalDriveStorages() {
         val about: About? = getDriveService()?.let {
+            gDriveService=it
             it.about().get().setFields("user, storageQuota").execute()
         }
         about?.let {
             val usedStorage = FileSize.bytesToHuman(about.storageQuota.usage)
             val totalStorage = FileSize.bytesToHuman(about.storageQuota.limit)
             settingsCallbackListner?.storageQuote(usedStorage.toString(), totalStorage.toString())
-            Log.d(
-                "MainActivity",
-                "getTotalDriveStorages: ${usedStorage.toString()}, ${totalStorage.toString()}"
-            )
-            getDriveFiles()
+            Log.d("MainActivity", "getTotalDriveStorages: ${usedStorage.toString()}, ${totalStorage.toString()}")
+//            getDriveFiles()
         }
     }
 

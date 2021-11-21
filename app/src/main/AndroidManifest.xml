@@ -24,31 +24,37 @@
         android:theme="@style/Theme.DVault.LightMode">
         <activity
             android:name=".activities.ExtraActivity"
-            android:exported="false" />
+            android:configChanges="orientation|screenSize"/>
         <activity
             android:name=".activities.AboutActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:screenOrientation="portrait"/>
         <activity
             android:name=".activities.ItemsActivity"
             android:exported="true"
-            android:hardwareAccelerated="true" />
+            android:hardwareAccelerated="true"
+            android:screenOrientation="portrait"/>
         <activity
             android:name=".activities.FoldersActivity"
             android:exported="true"
-            android:windowSoftInputMode="adjustResize" />
+            android:windowSoftInputMode="adjustResize"
+            android:screenOrientation="portrait"/>
         <activity
             android:name=".activities.PasswordActivity"
             android:exported="true"
             android:screenOrientation="portrait" />
         <activity
             android:name=".activities.SecureQueActivity"
-            android:exported="true" />
+            android:exported="true"
+            android:screenOrientation="portrait"/>
         <activity
             android:name=".activities.AppLockActivity"
-            android:exported="true" />
+            android:exported="true"
+            android:screenOrientation="portrait"/>
         <activity
             android:name=".activities.SettingsActivity"
-            android:exported="true" />
+            android:exported="true"
+            android:screenOrientation="portrait"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -76,7 +82,6 @@
         <service android:name=".services.FileCopyService" />
         <service android:name=".services.DriveService" />
         <service android:name=".services.DashBoardService" />
-
         <receiver android:name=".BroadcastReceiver.FIleProcessingReceiver" />
     </application>
 
