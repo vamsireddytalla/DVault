@@ -245,5 +245,8 @@ interface DVaultDao {
     @Query("Select * from FolderTable Where folderId=:folderId")
     fun getFolderObjWithFolderID(folderId:String):FolderTable
 
+    @Transaction
+    @Query("SELECT itemCatType, COUNT(*) as count FROM ItemModel GROUP BY itemCatType")
+    fun getDashBoardCount():LiveData<List<DashBoardCount>>
 
 }

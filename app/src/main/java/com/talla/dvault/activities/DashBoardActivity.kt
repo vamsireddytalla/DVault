@@ -60,6 +60,9 @@ import com.talla.dvault.utills.InternetUtil
 import kotlinx.coroutines.*
 import java.io.File
 import android.content.pm.PackageInfo
+import android.view.animation.AnimationUtils
+import com.talla.dvault.databinding.CloudLoadingBinding
+
 private const val TAG = "DashBoardActivity"
 
 @AndroidEntryPoint
@@ -93,19 +96,20 @@ class DashBoardActivity : AppCompatActivity() {
             checkInternetDialog()
         }
 
-
-        viewModel.getLiveData().observe(this, Observer {
+        viewModel.getDashBoardCount().observe(this, Observer {
             it?.let {
-                it.forEach { catModel ->
-                    if (catModel.catId == "Img") binding.totalImages.text = "0"
-                    if (catModel.catId == "Vdo") binding.totalVIdeos.text = "0"
-                    if (catModel.catId == "Doc") binding.totalDocs.text = "0"
-                    if (catModel.catId == "Aud") binding.totalAudios.text ="0"
+                it.forEach { dashModel ->
+                    if (dashModel.itemCatType == "Img") binding.totalImages.text = dashModel.count.toString()
+                    if (dashModel.itemCatType == "Vdo") binding.totalVIdeos.text = dashModel.count.toString()
+                    if (dashModel.itemCatType == "Doc") binding.totalDocs.text = dashModel.count.toString()
+                    if (dashModel.itemCatType == "Aud") binding.totalAudios.text = dashModel.count.toString()
                 }
             }
         })
 
+
         lifecycleScope.launch(Dispatchers.IO) {
+
             appSettingsPrefs.getBooleanData(UserPreferences.NIGHT_MODE).collect { value ->
                 withContext(Dispatchers.Main) {
                     appVersion()
@@ -176,6 +180,10 @@ class DashBoardActivity : AppCompatActivity() {
         binding.imageSelection.setOnClickListener {
             val intent: Intent = Intent(this, FoldersActivity::class.java)
             intent.putExtra(getString(R.string.cat_key), "Img")
+            startActivity(intent)
+        }
+        binding.aboutRoot.setOnClickListener {
+            val intent: Intent = Intent(this, AboutActivity::class.java)
             startActivity(intent)
         }
 
@@ -302,8 +310,11 @@ class DashBoardActivity : AppCompatActivity() {
 
     fun dialogIninit() {
         progressDialog = Dialog(this)
-        val customProgressDialogBinding = CustonProgressDialogBinding.inflate(this.layoutInflater)
-        progressDialog.setContentView(customProgressDialogBinding.root)
+        val cloudDialogBinding = CloudLoadingBinding.inflate(this.layoutInflater)
+        val rotationAnimation= AnimationUtils.loadAnimation(this,R.anim.loading_anim)
+        cloudDialogBinding.prog.startAnimation(rotationAnimation)
+        progressDialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        progressDialog.setContentView(cloudDialogBinding.root)
         progressDialog.setCancelable(false)
     }
 
@@ -336,9 +347,9 @@ class DashBoardActivity : AppCompatActivity() {
     private fun oldDataDelete() {
         runBlocking {
             progressDialog.show()
-            var deleteJob = lifecycleScope.launch(Dispatchers.Default) {
+            val deleteJob = lifecycleScope.launch(Dispatchers.Default) {
                 appSettingsPrefs.storeStringData(UserPreferences.LAST_BACKUP_TIME, "No BackUp found")
-                var pathsArray = arrayListOf<String>(
+                val pathsArray = arrayListOf<String>(
                     "app_Img",
                     "app_Vdo",
                     "app_Aud",

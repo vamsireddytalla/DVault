@@ -40,6 +40,7 @@ import com.talla.dvault.utills.DateUtills
 import com.talla.dvault.utills.FileSize
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
+import java.lang.Exception
 import javax.inject.Inject
 
 
@@ -120,7 +121,7 @@ class SettingsActivity : AppCompatActivity() {
                 binder?.stopSettingsService("Restore-Cancelled!")
             }
             binding.googleCloudLayout.refreshStorage.setOnClickListener {
-                var rotationAnimation=AnimationUtils.loadAnimation(this@SettingsActivity,R.anim.rotate_image)
+                val rotationAnimation=AnimationUtils.loadAnimation(this@SettingsActivity,R.anim.rotate_image)
                 binding.googleCloudLayout.refreshStorage.startAnimation(rotationAnimation)
                 lifecycleScope.async(Dispatchers.IO){
                     binder?.getDriveStorage()
@@ -189,19 +190,21 @@ class SettingsActivity : AppCompatActivity() {
 
                 override fun storageQuote(usedStorage: String,totalStorage: String) {
                     Log.d(TAG, "storageQuote: $totalStorage $usedStorage")
-                    var usedOutPut=totalStorage?.let {
-                        it.length-3
-                    }
-                    var totalOutPut=usedStorage?.let {
-                        it.length-3
-                    }
-                    var storageBinding=StorageLayoutBinding.bind(binding.root)
-                    lifecycleScope.launch(Dispatchers.Main) {
-                        storageBinding.storageProgress.max=totalOutPut
-                        storageBinding.storageProgress.progress=usedOutPut
-                        storageBinding.totalSpace.text=totalStorage
-                        storageBinding.usedSpace.text=usedStorage
-                    }
+                   try {
+                       val usedSpaceInDrive: Int =Math.round(usedStorage.replace(Regex("""[^0-9.]"""), "").toFloat()).toInt()
+                       val totalSpaceInDrive=Math.round(totalStorage.replace(Regex("""[^0-9.]"""), "").toFloat()).toInt()
+                       Log.d(TAG, "storageQuote: ${usedSpaceInDrive}/$usedStorage/$totalStorage/$totalSpaceInDrive")
+                       val storageBinding=StorageLayoutBinding.bind(binding.root)
+                       lifecycleScope.launch(Dispatchers.Main) {
+                           storageBinding.storageProgress.max=totalSpaceInDrive
+                           storageBinding.storageProgress.progress=usedSpaceInDrive
+                           storageBinding.totalSpace.text=totalStorage
+                           storageBinding.usedSpace.text=usedStorage
+                       }
+                   }catch (e:Exception){
+                       e.printStackTrace()
+                       Log.d(TAG, "storageQuote: ${e.message}")
+                   }
                 }
 
             })
@@ -223,7 +226,7 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     fun showBottomSheetDialog(title: String) {
-        var bsd = BottomSheetDialog(this, R.style.bottomSheetStyle)
+        val bsd = BottomSheetDialog(this, R.style.bottomSheetStyle)
         var bottomView: View? = null
         var sheetBinding: SettingsBtmSheetBinding? = null
         sheetBinding = SettingsBtmSheetBinding.inflate(layoutInflater)

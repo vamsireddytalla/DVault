@@ -16,6 +16,7 @@ import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
 import android.view.View
+import android.view.animation.AnimationUtils
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -26,7 +27,6 @@ import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.RequestManager
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.talla.dvault.R
-import com.talla.dvault.databinding.ActivityItemsBinding
 import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.extensions.android.http.AndroidHttp
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
@@ -37,9 +37,7 @@ import com.talla.dvault.adapters.ItemsAdapter
 import com.talla.dvault.database.entities.FolderTable
 import com.talla.dvault.database.entities.ItemModel
 import com.talla.dvault.database.entities.SourcesModel
-import com.talla.dvault.databinding.CopyingFileDialogBinding
-import com.talla.dvault.databinding.CustonProgressDialogBinding
-import com.talla.dvault.databinding.DeleteDialogBinding
+import com.talla.dvault.databinding.*
 import com.talla.dvault.interfaces.ItemAdapterClick
 import com.talla.dvault.services.FileCopyService
 import com.talla.dvault.utills.FileSize
@@ -97,8 +95,7 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
         setContentView(binding.root)
         val bundle: Bundle? = intent.extras
         if (bundle != null) {
-            folderTable =
-                intent.getSerializableExtra(this.resources.getString(R.string.key)) as FolderTable
+            folderTable = intent.getSerializableExtra(this.resources.getString(R.string.key)) as FolderTable
             binding.titleScrnTitle.text = folderTable.folderName
             Log.d("FolderName", "onCreate: $folderTable.folderName")
             changeFolderColor(folderTable.folderCatType)
@@ -468,24 +465,30 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
         deleteDialogBinding.fileName.text = itemModel.itemName
         //online Delete and local delete
         deleteDialogBinding.yes.setOnClickListener {
-            val fileProcess = FileSize.checkIsAnyProcessGoing()
-            if (fileProcess.isEmpty()) {
-                runBlocking {
-                    dialog.dismiss()
-                    progressDialog.show()
-                    if (deleteDialogBinding.isServDel.isChecked) {
-                        Log.d(TAG, "showDeleteDialog: Server Delete")
-                        checkedServDelete(itemModel)
-                    } else {
-                        Log.d(TAG, "showDeleteDialog: Local Delete")
-                        localFileDelete(itemModel,false)
-                    }
-                }
-            } else {
-                dialog.dismiss()
-                showSnackBar(fileProcess)
-            }
-
+         if (InternetUtil.isInternetAvail(this)){
+             val fileProcess = FileSize.checkIsAnyProcessGoing()
+             if (fileProcess.isEmpty()) {
+                 runBlocking {
+                     dialog.dismiss()
+                     progressDialog.show()
+                     if (deleteDialogBinding.isServDel.isChecked) {
+                         Log.d(TAG, "showDeleteDialog: Server Delete")
+                         checkedServDelete(itemModel)
+                     } else {
+                         Log.d(TAG, "showDeleteDialog: Local Delete")
+                         localFileDelete(itemModel,false)
+                     }
+                 }
+             } else {
+                 dialog.dismiss()
+                 showSnackBar(fileProcess)
+             }
+         }else{
+             FileSize.showSnackBar("Check Internet",binding.root)
+         }
+        }
+        deleteDialogBinding.no.setOnClickListener {
+            dialog.dismiss()
         }
         dialog.show()
     }
@@ -537,8 +540,12 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
 
     fun dialogInit() {
         progressDialog = Dialog(this)
+        val cloudDialogBinding= CloudLoadingBinding.inflate(this.layoutInflater)
         val customProgressDialogBinding = CustonProgressDialogBinding.inflate(this.layoutInflater)
-        progressDialog.setContentView(customProgressDialogBinding.root)
+        progressDialog.setContentView(cloudDialogBinding.root)
+        val rotationAnimation= AnimationUtils.loadAnimation(this,R.anim.loading_anim)
+        cloudDialogBinding.prog.startAnimation(rotationAnimation)
+        progressDialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         progressDialog.setCancelable(false)
     }
 

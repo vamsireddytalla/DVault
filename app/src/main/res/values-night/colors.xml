@@ -20,6 +20,7 @@
     <color name="hello_color">#FFFFFFFF</color>
     <color name="card_bg_color">#1E1E1E</color>
     <color name="dialog_bg_color">#FFFFFFFF</color>
+    <color name="transparent">#A05D6063</color>
     <color name="line_color">#222222</color>
     <color name="edit_text_bg_color">#000000</color>
     <color name="white_black">#FFFFFFFF</color>

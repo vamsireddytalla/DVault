@@ -38,6 +38,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import java.io.File
 import android.os.Environment
+import android.view.animation.AnimationUtils
 import com.google.api.client.extensions.android.http.AndroidHttp
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import com.google.api.client.json.jackson2.JacksonFactory
@@ -45,6 +46,7 @@ import com.google.api.services.drive.Drive
 import com.google.api.services.drive.DriveScopes
 
 private const val TAG = "FoldersActivity"
+
 @AndroidEntryPoint
 class FoldersActivity : AppCompatActivity(), FolderItemClick {
     private lateinit var binding: ActivityFoldersBinding
@@ -75,7 +77,8 @@ class FoldersActivity : AppCompatActivity(), FolderItemClick {
                     "New Folder"
                 )
             }
-            foldersAdapter = FoldersAdapter(catType.toString(), this@FoldersActivity, this@FoldersActivity)
+            foldersAdapter =
+                FoldersAdapter(catType.toString(), this@FoldersActivity, this@FoldersActivity)
             foldersRCV.adapter = foldersAdapter
         }
 
@@ -144,7 +147,7 @@ class FoldersActivity : AppCompatActivity(), FolderItemClick {
                 val folderName = et1.text.toString().trim()
                 val createdTime = System.currentTimeMillis().toString()
                 val catType = catType
-                if (folderName.isNotEmpty()){
+                if (folderName.isNotEmpty()) {
                     runBlocking {
                         val btnType = b1.text.toString()
                         val folderModel =
@@ -153,11 +156,15 @@ class FoldersActivity : AppCompatActivity(), FolderItemClick {
                             val res = viewModel.createNewFolder(folderModel)
 //                        var res: Long =viewModel.checkDataANdCreateFolder(folderName,createdTime.toString(),catType.toString())
                             if (res == 2067L) {
-                                Toast.makeText(this@FoldersActivity, getString(R.string.already_existed), Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    this@FoldersActivity,
+                                    getString(R.string.already_existed),
+                                    Toast.LENGTH_SHORT
+                                ).show()
                                 et1.error = getString(R.string.already_existed)
                                 et1.requestFocus()
                             } else {
-                                createFolder(catType.toString(),folderName)
+                                createFolder(catType.toString(), folderName)
                                 bsd.dismiss()
                                 showSnackBar("Created")
                             }
@@ -165,18 +172,22 @@ class FoldersActivity : AppCompatActivity(), FolderItemClick {
                         } else {
                             val res: Int = viewModel.renameFolder(folderName, folderId)
                             if (res == 2067) {
-                                Toast.makeText(this@FoldersActivity, getString(R.string.already_existed), Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    this@FoldersActivity,
+                                    getString(R.string.already_existed),
+                                    Toast.LENGTH_SHORT
+                                ).show()
                                 et1.error = getString(R.string.already_existed)
                                 et1.requestFocus()
                             } else {
-                                updateFolder(value,folderName)
+                                updateFolder(value, folderName)
                                 bsd.dismiss()
                                 showSnackBar("Updated Successfully!")
                             }
                         }
 
                     }
-                }else{
+                } else {
                     et1.error = "empty"
                     et1.requestFocus()
                 }
@@ -220,59 +231,63 @@ class FoldersActivity : AppCompatActivity(), FolderItemClick {
         deleteDialogBinding.fileName.text = itemName
         //online Delete and local delete
         deleteDialogBinding.yes.setOnClickListener {
-            val fileProcess=FileSize.checkIsAnyProcessGoing()
-            if (fileProcess.isEmpty()){
+            val fileProcess = FileSize.checkIsAnyProcessGoing()
+            if (fileProcess.isEmpty()) {
                 runBlocking {
                     dialog.dismiss()
                     progressDialog.show()
                     val folderObj = viewModel.getFolderObjWithFolderID(folderId)
-                    if (deleteDialogBinding.isServDel.isChecked){
+                    if (deleteDialogBinding.isServDel.isChecked) {
                         Log.d(TAG, "showDeleteDialog: Server Delete")
                         checkedServDelete(folderObj)
-                    }else{
+                    } else {
                         Log.d(TAG, "showDeleteDialog: Local Delete")
                         localFileDelete(folderObj)
                     }
                 }
-            }else{
+            } else {
                 dialog.dismiss()
                 showSnackBar(fileProcess)
             }
 
         }
+        deleteDialogBinding.no.setOnClickListener {
+                dialog.dismiss()
+            }
         dialog.show()
     }
 
-    suspend fun checkedServDelete(folderObj:FolderTable){
-      lifecycleScope.launch(Dispatchers.IO){
-          if (InternetUtil.isInternetAvail(this@FoldersActivity)) {
-              val eeee = lifecycleScope.launch(Dispatchers.IO) {
-                  if (folderObj.folderServerId.isNotEmpty()) {
-                      onlineFileDelete(folderObj)
-                  }
-              }
-              eeee.join()
-              val newFolderObj = viewModel.getFolderObjWithFolderID(folderObj.folderId.toString())
-              localFileDelete(newFolderObj)
-          } else {
-              showSnackBar("Check Internet Connection")
-          }
-      }
+    suspend fun checkedServDelete(folderObj: FolderTable) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            if (InternetUtil.isInternetAvail(this@FoldersActivity)) {
+                val eeee = lifecycleScope.launch(Dispatchers.IO) {
+                    if (folderObj.folderServerId.isNotEmpty()) {
+                        onlineFileDelete(folderObj)
+                    }
+                }
+                eeee.join()
+                val newFolderObj = viewModel.getFolderObjWithFolderID(folderObj.folderId.toString())
+                localFileDelete(newFolderObj)
+            } else {
+                showSnackBar("Check Internet Connection")
+            }
+        }
     }
 
-    suspend fun localFileDelete(folderTable: FolderTable){
-        lifecycleScope.launch(Dispatchers.IO){
-            val orgDir=this@FoldersActivity.resources.getString(R.string.db_folder_path)
-            val sourceFile = File(orgDir.toString() + "/"+"app_"+ folderTable.folderCatType +"/"+ folderTable.folderName)
+    suspend fun localFileDelete(folderTable: FolderTable) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val orgDir = this@FoldersActivity.resources.getString(R.string.db_folder_path)
+            val sourceFile =
+                File(orgDir.toString() + "/" + "app_" + folderTable.folderCatType + "/" + folderTable.folderName)
             Log.d(TAG, "localFileDelete: File Path --> ${sourceFile.toString()}")
             if (sourceFile.exists()) {
                 val isDeleted = sourceFile.deleteRecursively()
             }
-            if (folderTable.folderServerId.isEmpty()){
+            if (folderTable.folderServerId.isEmpty()) {
                 Log.d(TAG, "localFileDelete: Folder Delete Locally Called")
                 viewModel.deleteFolder(folderId = folderId.toInt())
-            }else{
-                withContext(Dispatchers.Main){
+            } else {
+                withContext(Dispatchers.Main) {
                     foldersAdapter.notifyDataSetChanged()
                 }
             }
@@ -280,17 +295,18 @@ class FoldersActivity : AppCompatActivity(), FolderItemClick {
         progressDialog.dismiss()
     }
 
-   suspend fun onlineFileDelete(folderObj:FolderTable){
+    suspend fun onlineFileDelete(folderObj: FolderTable) {
         val files = getDriveService()?.let {
             it.files().delete(folderObj.folderServerId).execute()
         }
-        viewModel.updateFolderServIdBasedOnFolderId(folderObj.folderId.toString(),"")
+        viewModel.updateFolderServIdBasedOnFolderId(folderObj.folderId.toString(), "")
     }
 
     fun getItemsBasedOnFolderId(folderId: String): List<ItemModel> {
         var itemsListOnFolderId = ArrayList<ItemModel>()
         runBlocking {
-            itemsListOnFolderId = viewModel.getItemsBasedOnFolderId(folderId) as ArrayList<ItemModel>
+            itemsListOnFolderId =
+                viewModel.getItemsBasedOnFolderId(folderId) as ArrayList<ItemModel>
         }
         return itemsListOnFolderId
     }
@@ -301,8 +317,12 @@ class FoldersActivity : AppCompatActivity(), FolderItemClick {
 
     fun dialogInit() {
         progressDialog = Dialog(this)
+        val cloudDialogBinding = CloudLoadingBinding.inflate(this.layoutInflater)
         val customProgressDialogBinding = CustonProgressDialogBinding.inflate(this.layoutInflater)
-        progressDialog.setContentView(customProgressDialogBinding.root)
+        progressDialog.setContentView(cloudDialogBinding.root)
+        val rotationAnimation = AnimationUtils.loadAnimation(this, R.anim.loading_anim)
+        cloudDialogBinding.prog.startAnimation(rotationAnimation)
+        progressDialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         progressDialog.setCancelable(false)
     }
 
@@ -318,27 +338,26 @@ class FoldersActivity : AppCompatActivity(), FolderItemClick {
         }
     }
 
-    fun createFolder(catName:String,folderName: String) {
-       lifecycleScope.launch(Dispatchers.IO){
-           val newdir: File = this@FoldersActivity.getDir(catName, Context.MODE_PRIVATE)
-           val testFolder = File("$newdir/$folderName")
-           if (!testFolder.exists()) {
-               testFolder.mkdirs()
-               Log.d(TAG, "createFolder: Creating")
-           }
-           Log.d(TAG, "createFolder: ${testFolder.toString()}")
-       }
+    fun createFolder(catName: String, folderName: String) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val newdir: File = this@FoldersActivity.getDir(catName, Context.MODE_PRIVATE)
+            val testFolder = File("$newdir/$folderName")
+            if (!testFolder.exists()) {
+                testFolder.mkdirs()
+                Log.d(TAG, "createFolder: Creating")
+            }
+            Log.d(TAG, "createFolder: ${testFolder.toString()}")
+        }
     }
 
-    fun updateFolder(oldFolderName:String,newFolderName:String)
-    {
-      lifecycleScope.launch(Dispatchers.IO){
-          val newdir: File = this@FoldersActivity.getDir(catType, Context.MODE_PRIVATE)
-          val oldFolder = File("$newdir/$oldFolderName")
-          val newFolder = File("$newdir/$newFolderName")
-          val success = oldFolder.renameTo(newFolder)
-          Log.d(TAG, "updateFolder: $success")
-      }
+    fun updateFolder(oldFolderName: String, newFolderName: String) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val newdir: File = this@FoldersActivity.getDir(catType, Context.MODE_PRIVATE)
+            val oldFolder = File("$newdir/$oldFolderName")
+            val newFolder = File("$newdir/$newFolderName")
+            val success = oldFolder.renameTo(newFolder)
+            Log.d(TAG, "updateFolder: $success")
+        }
     }
 
     fun getDriveService(): Drive? {

@@ -46,16 +46,20 @@ You can restore them when you reinstall.</string>
     <string name="video_mime_type">application/vnd.google-apps.video</string>
     <string name="file_sys_dst">/storage/emulated/0/Download/DVault</string>
     <string name="key">key</string>
+    <string name="key2">key2</string>
     <string name="initializing">Initializing...</string>
     <string name="dateFormat">E, dd MMM yyyy hh:mm a</string>
     <string name="check_internet">Check Internet</string>
+    <string name="customer_Care">drivevaultonline@gmail.com</string>
     <string name="already_existed">Try new Name!</string>
     <string name="logout_alert">Make sure to backup all your files. Logout may delete all your restored files.</string>
     <string name="restore_alert">Your Backup data available on the Server click OK to restore.</string>
     <string name="internet_alert">Make sure to turn on your Internet to proceed with this app.</string>
     <string name="google_drive_storage">Google Drive Storage</string>
+    <string name="privacy_policy">https://4b89krifqzjejpo92l8rqw-on.drv.tw/www.drivevaultonline.com/dvault.html</string>
     <string name="designed_by_sathvik_developed_by_vamsi">Designed by Sathvik • Developed by Vamsi.</string>
     <string name="are_you_sure_you_wan_t_to_delete">Are you sure you wan\'t to delete</string>
+    <string name="app_info">One and Only place to store your files of any kind of file formats within your own cloud,without seen to anyone else and can be restored whenever you wish without any restrictions.</string>
 
 
     <string-array name="security_questions">

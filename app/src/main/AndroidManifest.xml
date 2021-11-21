@@ -23,6 +23,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.DVault.LightMode">
         <activity
+            android:name=".activities.ExtraActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activities.AboutActivity"
+            android:exported="false" />
+        <activity
             android:name=".activities.ItemsActivity"
             android:exported="true"
             android:hardwareAccelerated="true" />

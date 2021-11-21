@@ -2,6 +2,7 @@ package com.talla.dvault.adapters
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Build
@@ -18,9 +19,12 @@ import android.media.ThumbnailUtils
 import android.provider.MediaStore
 import android.widget.ImageView
 import android.widget.PopupMenu
+import android.widget.Toast
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
+import com.talla.dvault.activities.ExtraActivity
+import com.talla.dvault.activities.ItemsActivity
 import com.talla.dvault.database.entities.FolderTable
 import com.talla.dvault.utills.DateUtills
 import com.talla.dvault.utills.FileSize
@@ -96,6 +100,22 @@ class ItemsAdapter(
 
                         notifyItemChanged(itemPosition, obj)
                         onclickListner.onItemClick(FileSize.selectedUnlockItems)
+                    }
+
+                }else{
+                    val path=itemModelList.get(adapterPosition).itemCurrentPath
+                    if (File(path).exists()){
+                        if (folderObj.folderCatType=="Img" || folderObj.folderCatType=="Vdo"){
+                            val io= Intent(mContext, ExtraActivity::class.java)
+                            io.putExtra(mContext.getString(R.string.key),path)
+                            io.putExtra(mContext.getString(R.string.key2),folderObj.folderCatType)
+                            mContext.startActivity(io)
+                        }else{
+                            Toast.makeText(mContext, "Unlock File and View in Downloads Folder", Toast.LENGTH_SHORT).show()
+                        }
+
+                    }else{
+                        Toast.makeText(mContext, "Restore Files in Settings", Toast.LENGTH_SHORT).show()
                     }
 
                 }

@@ -3,10 +3,7 @@ package com.talla.dvault.viewmodels
 import android.util.Log
 import androidx.lifecycle.*
 import com.talla.dvault.database.dao.DVaultDao
-import com.talla.dvault.database.entities.CategoriesModel
-import com.talla.dvault.database.entities.FolderTable
-import com.talla.dvault.database.entities.ItemModel
-import com.talla.dvault.database.entities.User
+import com.talla.dvault.database.entities.*
 import com.talla.dvault.repositories.Resource
 import com.talla.dvault.repositories.VaultRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,6 +23,7 @@ class MainViewModel @Inject constructor(
 ) : ViewModel() {
     private var dashMutableData: LiveData<List<CategoriesModel>> =
         MutableLiveData<List<CategoriesModel>>()
+    private var dashBoardCountMutableData: LiveData<List<DashBoardCount>> = MutableLiveData()
 
     init {
         Log.d(TAG, " Init Executed ")
@@ -34,15 +32,22 @@ class MainViewModel @Inject constructor(
 
     fun getLiveData() = repository.getDashBoardData()
 
+    fun getDashBoardCount():LiveData<List<DashBoardCount>>
+    {
+        dashBoardCountMutableData=repository.getDashBoardCount()
+        return dashBoardCountMutableData
+    }
+
+
 
     suspend fun getUserObj(): User {
-        var userData = repository.getUserData()
+        val userData = repository.getUserData()
         Log.d(TAG, "getUserObj: ${userData.toString()}")
         return userData
     }
 
     suspend fun insertData(user: User): Long {
-        var res: Deferred<Long> = viewModelScope.async {
+        val res: Deferred<Long> = viewModelScope.async {
             repository.insertUser(user)
         }
         return res.await()

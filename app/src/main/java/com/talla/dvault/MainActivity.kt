@@ -4,11 +4,15 @@ import android.app.Activity
 import android.app.Dialog
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.util.Log
+import android.view.animation.Animation
+import android.view.animation.AnimationUtils
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -39,6 +43,7 @@ import com.talla.dvault.database.entities.FolderTable
 import com.talla.dvault.database.entities.ItemModel
 import com.talla.dvault.database.entities.User
 import com.talla.dvault.databinding.ActivityMainBinding
+import com.talla.dvault.databinding.CloudLoadingBinding
 import com.talla.dvault.databinding.CustonProgressDialogBinding
 import com.talla.dvault.preferences.UserPreferences
 import com.talla.dvault.repositories.VaultRepository
@@ -194,8 +199,12 @@ class MainActivity : AppCompatActivity() {
 
     fun dialogInit() {
         progressDialog = Dialog(this)
+        val cloudDialogBinding=CloudLoadingBinding.inflate(this.layoutInflater)
         val customProgressDialogBinding = CustonProgressDialogBinding.inflate(this.layoutInflater)
-        progressDialog.setContentView(customProgressDialogBinding.root)
+        progressDialog.setContentView(cloudDialogBinding.root)
+        val rotationAnimation= AnimationUtils.loadAnimation(this,R.anim.loading_anim)
+        cloudDialogBinding.prog.startAnimation(rotationAnimation)
+        progressDialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         progressDialog.setCancelable(false)
     }
 
