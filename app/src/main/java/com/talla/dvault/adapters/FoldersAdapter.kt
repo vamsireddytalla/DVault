@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.PopupMenu
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.recyclerview.widget.AsyncListDiffer
@@ -17,6 +18,8 @@ import com.talla.dvault.database.entities.FolderTable
 import com.talla.dvault.databinding.FolderCardBinding
 import com.talla.dvault.interfaces.FolderItemClick
 import com.talla.dvault.utills.DateUtills
+import com.talla.dvault.utills.FileSize
+import java.io.File
 
 class FoldersAdapter(val folderCat:String,val mContext:Context,val onOptionClick:FolderItemClick) : RecyclerView.Adapter<FoldersAdapter.MyViewHolder>()
 {
@@ -52,19 +55,21 @@ class FoldersAdapter(val folderCat:String,val mContext:Context,val onOptionClick
         holder.mbinding?.apply {
             folderName.text = folderObj.folderName
             folderCreatedAt.text = DateUtills.convertMilToDate(mContext,folderObj.folderCreatedAt.toLong())
-            setCustomFolderIcon(this)
+            setCustomFolderIcon(this,folderObj)
 
-            threeDots?.setOnClickListener{
-                val popupMenu = PopupMenu(mContext, threeDots)
-                popupMenu.inflate(R.menu.folder_menu)
-                popupMenu.setOnMenuItemClickListener { menuItem ->
-                    when (menuItem.itemId) {
-                        R.id.rename -> onOptionClick.onMenuItemClick(folderObj.folderName,mContext.getString(R.string.rename),folderObj.folderId)
-                        R.id.delete -> onOptionClick.onMenuItemClick(folderObj.folderName,mContext.getString(R.string.delete),folderObj.folderId)
+            threeDots.setOnClickListener{
+                if (!FileSize.SelectAll){
+                    val popupMenu = PopupMenu(mContext, threeDots)
+                    popupMenu.inflate(R.menu.folder_menu)
+                    popupMenu.setOnMenuItemClickListener { menuItem ->
+                        when (menuItem.itemId) {
+                            R.id.rename -> onOptionClick.onMenuItemClick(folderObj.folderName,mContext.getString(R.string.rename),folderObj.folderId)
+                            R.id.delete -> onOptionClick.onMenuItemClick(folderObj.folderName,mContext.getString(R.string.delete),folderObj.folderId)
+                        }
+                        false
                     }
-                    false
+                    popupMenu.show()
                 }
-                popupMenu.show()
             }
 
             folderCard.setOnClickListener {
@@ -78,7 +83,7 @@ class FoldersAdapter(val folderCat:String,val mContext:Context,val onOptionClick
         }
     }
 
-    fun setCustomFolderIcon(folderCardBinding: FolderCardBinding) {
+    fun setCustomFolderIcon(folderCardBinding: FolderCardBinding,folderObj:FolderTable) {
         var selectedColor: Int? =null
         when(folderCat){
             "Img" -> {
@@ -98,11 +103,15 @@ class FoldersAdapter(val folderCat:String,val mContext:Context,val onOptionClick
                 folderCardBinding.folderLogo.setImageResource(R.drawable.ic_videos_icon)
             }
         }
-        folderCardBinding.folderLogo.setColorFilter(ContextCompat.getColor(mContext,selectedColor!!))
-        DrawableCompat.setTint(DrawableCompat.wrap(folderCardBinding.folderCard.background), ContextCompat.getColor(mContext,selectedColor!!))
-
-
-
+        val orgDir=mContext.resources.getString(R.string.db_folder_path)
+        val sourceFile = File(orgDir.toString() + "/"+"app_"+ folderObj.folderCatType +"/"+ folderObj.folderName)
+        if (sourceFile.exists()){
+            folderCardBinding.folderLogo.setColorFilter(ContextCompat.getColor(mContext,selectedColor!!))
+            DrawableCompat.setTint(DrawableCompat.wrap(folderCardBinding.folderCard.background), ContextCompat.getColor(mContext,selectedColor))
+        }else{
+            folderCardBinding.folderLogo.setImageResource(R.drawable.cloud_down_icon)
+            folderCardBinding.folderLogo.setColorFilter(ContextCompat.getColor(mContext,selectedColor!!))
+        }
     }
 
     override fun getItemCount(): Int {

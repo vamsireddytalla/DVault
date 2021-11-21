@@ -116,7 +116,7 @@ class ItemsAdapter(
         holder: MyViewHolder,
         @SuppressLint("RecyclerView") position: Int
     ) {
-        var itemObj = itemModelList.get(position)
+        val itemObj = itemModelList.get(position)
         holder.mbinding?.apply {
             itemName.text = itemObj.itemName
             createdAndSize.text = DateUtills.convertMilToDate(
@@ -157,8 +157,7 @@ class ItemsAdapter(
                 }
             } else {
                 thumbNail.scaleType = ImageView.ScaleType.FIT_CENTER
-                val drawableItem =
-                    AppCompatResources.getDrawable(mContext, R.drawable.cloud_down_icon)
+                val drawableItem = AppCompatResources.getDrawable(mContext, R.drawable.cloud_down_icon)
                 thumbNail.setImageDrawable(drawableItem)
                 thumbNail.setPadding(30, 30, 30, 30)
                 val wrappedDrawable = DrawableCompat.wrap(drawableItem!!)
@@ -197,7 +196,8 @@ class ItemsAdapter(
             Log.d(TAG, "onBindViewHolder: Called")
 
             threeDots.setOnClickListener {
-                val popupMenu = PopupMenu(mContext, threeDots)
+               if (FileSize.selectedUnlockItems.isEmpty()){
+                    val popupMenu = PopupMenu(mContext, threeDots)
                 popupMenu.inflate(R.menu.item_menu)
                 popupMenu.setOnMenuItemClickListener { menuItem ->
                     when (menuItem.itemId) {
@@ -206,6 +206,7 @@ class ItemsAdapter(
                     false
                 }
                 popupMenu.show()
+               }
             }
 
 

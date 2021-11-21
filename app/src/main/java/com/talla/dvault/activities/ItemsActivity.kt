@@ -255,7 +255,7 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
     }
 
     fun startFileCopyService(sourceList: List<SourcesModel>) {
-        var fileService = Intent(this@ItemsActivity, FileCopyService::class.java)
+        val fileService = Intent(this@ItemsActivity, FileCopyService::class.java)
         fileService.putExtra(getString(R.string.fileCopy), sourceList as Serializable)
         fileService.action = FileSize.ACTION_START_FOREGROUND_SERVICE
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -343,7 +343,7 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
     }
 
     fun getAllFiles() {
-        var catFolderName = getFolderNameBasedOnCat()
+        val catFolderName = getFolderNameBasedOnCat()
         val newdir: File = this.getDir(catFolderName, Context.MODE_PRIVATE)
         val files: Array<File> = newdir.listFiles()
         Log.d("Files", "Size: " + files.size)

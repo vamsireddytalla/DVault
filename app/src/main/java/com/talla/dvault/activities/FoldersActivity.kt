@@ -225,7 +225,6 @@ class FoldersActivity : AppCompatActivity(), FolderItemClick {
                 runBlocking {
                     dialog.dismiss()
                     progressDialog.show()
-//                val itemList = getItemsBasedOnFolderId(folderId)
                     val folderObj = viewModel.getFolderObjWithFolderID(folderId)
                     if (deleteDialogBinding.isServDel.isChecked){
                         Log.d(TAG, "showDeleteDialog: Server Delete")
@@ -244,34 +243,48 @@ class FoldersActivity : AppCompatActivity(), FolderItemClick {
         dialog.show()
     }
 
-    fun checkedServDelete(folderObj:FolderTable){
-        if (InternetUtil.isInternetAvail(this)) {
-            lifecycleScope.launch(Dispatchers.IO) {
-                if (folderObj.folderServerId.isNotEmpty()) {
-                    onlineFileDelete(folderObj.folderServerId)
-                }
-                localFileDelete(folderObj)
-                viewModel.deleteFolder(folderId = folderId.toInt())
-            }
-        } else {
-            showSnackBar("Check Internet Connection")
-        }
+    suspend fun checkedServDelete(folderObj:FolderTable){
+      lifecycleScope.launch(Dispatchers.IO){
+          if (InternetUtil.isInternetAvail(this@FoldersActivity)) {
+              val eeee = lifecycleScope.launch(Dispatchers.IO) {
+                  if (folderObj.folderServerId.isNotEmpty()) {
+                      onlineFileDelete(folderObj)
+                  }
+              }
+              eeee.join()
+              val newFolderObj = viewModel.getFolderObjWithFolderID(folderObj.folderId.toString())
+              localFileDelete(newFolderObj)
+          } else {
+              showSnackBar("Check Internet Connection")
+          }
+      }
     }
 
     suspend fun localFileDelete(folderTable: FolderTable){
-        val orgDir=this.resources.getString(R.string.db_folder_path)
-        val sourceFile = File(orgDir.toString() + "/"+"app_"+ folderTable.folderCatType +"/"+ folderTable.folderName)
-        Log.d(TAG, "localFileDelete: File Path --> ${sourceFile.toString()}")
-        if (sourceFile.exists()) {
-            val isDeleted = sourceFile.deleteRecursively()
+        lifecycleScope.launch(Dispatchers.IO){
+            val orgDir=this@FoldersActivity.resources.getString(R.string.db_folder_path)
+            val sourceFile = File(orgDir.toString() + "/"+"app_"+ folderTable.folderCatType +"/"+ folderTable.folderName)
+            Log.d(TAG, "localFileDelete: File Path --> ${sourceFile.toString()}")
+            if (sourceFile.exists()) {
+                val isDeleted = sourceFile.deleteRecursively()
+            }
+            if (folderTable.folderServerId.isEmpty()){
+                Log.d(TAG, "localFileDelete: Folder Delete Locally Called")
+                viewModel.deleteFolder(folderId = folderId.toInt())
+            }else{
+                withContext(Dispatchers.Main){
+                    foldersAdapter.notifyDataSetChanged()
+                }
+            }
         }
         progressDialog.dismiss()
     }
 
-    fun onlineFileDelete(servId:String){
+   suspend fun onlineFileDelete(folderObj:FolderTable){
         val files = getDriveService()?.let {
-            it.files().delete(servId).execute()
+            it.files().delete(folderObj.folderServerId).execute()
         }
+        viewModel.updateFolderServIdBasedOnFolderId(folderObj.folderId.toString(),"")
     }
 
     fun getItemsBasedOnFolderId(folderId: String): List<ItemModel> {

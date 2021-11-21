@@ -415,7 +415,7 @@ class MainActivity : AppCompatActivity() {
                if (foldDataList.isNotEmpty()){
                    foldDataList.forEach { folTable->
                        Log.d(TAG, "getItemDataCache: Item Data Cache in Local Db ${foldDataList.toString()}")
-                       val result: FileList? = gDriveService?.let {
+                       val result: FileList? = gDriveService.let {
                            it.files().list()
                                .setSpaces("appDataFolder")
                                .setQ("'${folTable.folderServerId}' in parents")
@@ -434,13 +434,13 @@ class MainActivity : AppCompatActivity() {
                                    itemModelList.add(itemModel)
                                    Log.d(TAG, "getItemDataCache: ${itemModel.toString()}")
                                }
-                               Log.d(TAG, "getItemDataCache: ${itemModelList.toString()}")
-                               if (itemModelList.isNotEmpty()) {
-                                   Log.d(TAG, "getItemDataCache: ${itemModelList.toString()}")
-                                   viewModel.insertItemsList(itemModelList)
-                               }
                            }
                        }
+                   }
+                   Log.d(TAG, "getItemDataCache: ${itemModelList.toString()}")
+                   if (itemModelList.isNotEmpty()) {
+                       Log.d(TAG, "getItemDataCache: ${itemModelList.toString()}")
+                       viewModel.insertItemsList(itemModelList)
                    }
                }
            }

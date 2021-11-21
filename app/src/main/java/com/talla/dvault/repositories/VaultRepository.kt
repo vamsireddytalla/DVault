@@ -131,11 +131,18 @@ class VaultRepository @Inject constructor(private val appDao:DVaultDao)
         return appDao.updateFolderServId(folderCatType,servId)
     }
 
+    suspend fun updateFolderServIdBasedOnFolderId(folderId: String, servId: String):Int
+    {
+        return appDao.updateFolderServIdBasedOnFolderId(folderId,servId)
+    }
+
     suspend fun getFoldersBasedOnCategory(catId:String)=appDao.getFolderAndItemWithCatType(catId)
 
     suspend fun getCatServerId(catId:String)=appDao.getCatServerId(catId)
 
     suspend fun getFolderObject(catId: String)=appDao.getFolderObject(catId)
+
+    suspend fun getFolderObjBasedOnCatAndFolderID(catId: String,folderId:String)=appDao.getFolderObjBasedOnCatAndFolderID(catId,folderId)
 
     fun getFolderAndItemWithFolderId(folderID: String):LiveData<FolderAndItem>{
         val res: LiveData<FolderAndItem> =appDao.getFolderAndItemWithFolderId(folderID)

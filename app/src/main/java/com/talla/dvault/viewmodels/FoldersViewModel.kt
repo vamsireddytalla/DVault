@@ -57,6 +57,11 @@ class FoldersViewModel @Inject constructor(private val repository: VaultReposito
        return repository.updateFolderIfNotExists(folderName,folderId)
     }
 
+    suspend fun updateFolderServIdBasedOnFolderId(folderId:String,folderServID:String):Int
+    {
+        return repository.updateFolderServIdBasedOnFolderId(folderId,folderServID)
+    }
+
     suspend fun deleteFolder(folderId: Int)
     {
         viewModelScope.launch(Dispatchers.IO){
@@ -68,7 +73,6 @@ class FoldersViewModel @Inject constructor(private val repository: VaultReposito
             }
         }
     }
-
 
     suspend fun deleteItem(itemModel:ItemModel,tag:String)
     {

@@ -75,7 +75,7 @@ class DriveService : Service() {
         startServiceOreoCondition()
         isInterrupted = false
         backgroundScope.launch {
-            getFilesUnderParticularFolder()
+//            getFilesUnderParticularFolder()
             getTotalDriveStorages()
 //            getDriveFiles()
         }
@@ -132,11 +132,14 @@ class DriveService : Service() {
                                 for ((index, source) in itemModelList.withIndex()) {
                                     if (!isInterrupted!!) {
                                         try {
+                                            Log.d(TAG, "onStartCommand: ${source.folderId}")
                                             val folderObj = repository.getFolderObjWithFolderID(source.folderId)
+                                            Log.d(TAG, "onStartCommand: ${folderObj.toString()}")
                                             if (type == bkpString) {
                                                 try {
                                                     Log.d(TAG, "onStartCommand: BackUp Process")
-                                                    val newFolderServId = getFolderBasedOnCategory(source.itemCatType)
+                                                    Log.d(TAG, "onStartCommand: ${source.itemCatType}/${source.folderId}")
+                                                    val newFolderServId = getFolderBasedOnCategory(source.itemCatType,source.folderId)
                                                     source.folderId = newFolderServId
                                                     Log.d(TAG, "onStartCommand: Final Channel ${source.folderId}")
                                                     uploadLargeFiles(source, index + 1, folderObj)
@@ -205,7 +208,7 @@ class DriveService : Service() {
     fun stopServiceMethod(message: String) {
         Log.d(TAG, "stopServiceMethod: Called")
         settingsCallbackListner?.fileServerDealing(0, message, "")
-        var clickIntent = Intent(this@DriveService, DriveService::class.java)
+        val clickIntent = Intent(this@DriveService, DriveService::class.java)
         clickIntent.action = FileSize.ACTION_SETTINGS_STOP_FOREGROUND_SERVICE
         clickIntent.putExtra(this@DriveService.resources.getString(R.string.key), message)
         startService(clickIntent)
@@ -238,7 +241,7 @@ class DriveService : Service() {
 
     fun getDriveFiles() {
         getDriveService()?.let { gdService ->
-            var pagetoken: String? = null
+            val pagetoken: String? = null
             do {
                 val result = gdService.files().list().apply {
                     spaces = "appDataFolder"
@@ -385,8 +388,7 @@ class DriveService : Service() {
 //        val catModel = repository.getDbServerFolderId(itemModel.itemCatType)
         val defLocation = this.resources.getString(R.string.db_folder_path)
         val folderNameCreation = "app_" + folderObj.folderCatType
-        val sourceLoc =
-            "$defLocation/$folderNameCreation/${folderObj.folderName}/${itemModel.itemName}"
+        val sourceLoc = "$defLocation/$folderNameCreation/${folderObj.folderName}/${itemModel.itemName}"
         fileMetadata.parents = Collections.singletonList(itemModel.folderId)
         fileMetadata.mimeType = FileSize.getMimeType(sourceLoc)
 
@@ -524,13 +526,14 @@ class DriveService : Service() {
             it.about().get().setFields("user, storageQuota").execute()
         }
         about?.let {
-            var usedStorage = FileSize.bytesToHuman(about.storageQuota.usage)
-            var totalStorage = FileSize.bytesToHuman(about.storageQuota.limit)
+            val usedStorage = FileSize.bytesToHuman(about.storageQuota.usage)
+            val totalStorage = FileSize.bytesToHuman(about.storageQuota.limit)
             settingsCallbackListner?.storageQuote(usedStorage.toString(), totalStorage.toString())
             Log.d(
                 "MainActivity",
                 "getTotalDriveStorages: ${usedStorage.toString()}, ${totalStorage.toString()}"
             )
+            getDriveFiles()
         }
     }
 
@@ -619,7 +622,7 @@ class DriveService : Service() {
 
     // .setQ("'${folderId}' in parents and mimeType='application/vnd.google-apps.folder'")
     fun getFilesUnderParticularFolder() {
-        var folderId = "1Hy6XCqJKvcjDcClRKO5XErK5_tfWaQ7a_ORwzyasGctEjaIl2w"
+        val folderId = "1Hy6XCqJKvcjDcClRKO5XErK5_tfWaQ7a_ORwzyasGctEjaIl2w"
         Log.d(TAG, "getFilesUnderParticularFolder: $folderId")
         val files: FileList? = getDriveService()?.let {
             it.files().list()
@@ -639,26 +642,29 @@ class DriveService : Service() {
         }
     }
 
-    suspend fun getFolderBasedOnCategory(catId: String): String {
+    suspend fun getFolderBasedOnCategory(catId: String,folderId:String): String {
         var newFoldServId = ""
+        Log.d(TAG, "getFolderBasedOnCategory: $folderId/$catId")
         val res: Deferred<FolderTable> = backgroundScope.async(Dispatchers.IO) {
-            repository.getFolderObject(catId)
+            repository.getFolderObjBasedOnCatAndFolderID(catId,folderId)
         }
         val folderTable = res.await()
-
+        Log.d(TAG, "getFolderBasedOnCategory: ${res.toString()}")
         val opRes = backgroundScope.launch(Dispatchers.IO) {
             if (!folderTable.folderTrash) {
+                Log.d(TAG, "getFolderBasedOnCategory: Folder is Not Trash")
                 if (folderTable.folderServerId.isEmpty()) {
-                    newFoldServId = createFolderAndReturnServId(
-                        folderTable.folderName,
-                        repository.getCatServerId(folderTable.folderCatType)
-                    )
-                    repository.updateFolderServId(folderTable.folderCatType, newFoldServId)
+                    Log.d(TAG, "getFolderBasedOnCategory: Folder Table Server Id is Empty")
+                    newFoldServId = createFolderAndReturnServId(folderTable.folderName, repository.getCatServerId(folderTable.folderCatType))
+                    Log.d(TAG, "getFolderBasedOnCategory: ${folderTable.folderCatType}/${newFoldServId}")
+                    repository.updateFolderServIdBasedOnFolderId(folderTable.folderId.toString(), newFoldServId)
                 } else {
+                    Log.d(TAG, "getFolderBasedOnCategory: Folder Table Server Id is Not Empty")
                     updateFolderName(folderTable)
                     newFoldServId = folderTable.folderServerId
                 }
             } else {
+                Log.d(TAG, "getFolderBasedOnCategory: Folder is in Trash")
                 newFoldServId = "Trash"
             }
         }
@@ -668,24 +674,23 @@ class DriveService : Service() {
     }
 
     fun updateFolderName(folerTable: FolderTable) {
-        try {
-            val mimeType = this.resources.getString(R.string.folder_mime_type)
-            // File's new content.
-            val newMetadata = com.google.api.services.drive.model.File()
-            newMetadata.name = folerTable.folderName
+        backgroundScope.launch(Dispatchers.IO) {
+            try {
+                val mimeType = this@DriveService.resources.getString(R.string.folder_mime_type)
+                // File's new content.
+                val newMetadata = com.google.api.services.drive.model.File()
+                newMetadata.name = folerTable.folderName
 
-            // Send the request to the API.
-            val fileRes = getDriveService()!!.files().update(folerTable.folderServerId, newMetadata)
-                .setFields("id, name, appProperties,quotaBytesUsed").execute()
-            fileRes?.let {
-                Log.d(
-                    TAG,
-                    "updateFolderName: Successfully ${fileRes.name} ${fileRes.id} ${fileRes.quotaBytesUsed}"
-                )
+                // Send the request to the API.
+                val fileRes = getDriveService()!!.files().update(folerTable.folderServerId, newMetadata)
+                    .setFields("id, name, appProperties,quotaBytesUsed").execute()
+                fileRes?.let {
+                    Log.d(TAG, "updateFolderName: Successfully ${fileRes.name} ${fileRes.id} ${fileRes.quotaBytesUsed}")
+                }
+            } catch (e: IOException) {
+                println("An error occurred: $e")
+                Log.d(TAG, "updateFolderName Error --> : ${e.message}")
             }
-        } catch (e: IOException) {
-            println("An error occurred: $e")
-            Log.d(TAG, "updateFolderName Error --> : ${e.message}")
         }
     }
 

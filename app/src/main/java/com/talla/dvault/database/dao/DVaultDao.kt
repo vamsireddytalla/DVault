@@ -205,6 +205,9 @@ interface DVaultDao {
     @Query("Update FolderTable Set folderServerId=:servId Where folderCatType=:folderCatType")
     suspend fun updateFolderServId(folderCatType: String, servId: String): Int
 
+    @Query("Update FolderTable Set folderServerId=:servId Where folderId=:folderId")
+    suspend fun updateFolderServIdBasedOnFolderId(folderId: String, servId: String): Int
+
     @RawQuery
     fun checkpoint(supportSQLiteQuery: SupportSQLiteQuery?): Int
 
@@ -223,6 +226,11 @@ interface DVaultDao {
     @Transaction
     @Query("Select * from FolderTable Where folderCatType=:catId")
     suspend fun getFolderObject(catId: String):FolderTable
+
+
+    @Transaction
+    @Query("Select * from FolderTable Where (folderCatType=:catId and folderId=:folderId)")
+    suspend fun getFolderObjBasedOnCatAndFolderID(catId: String,folderId:String):FolderTable
 
     @Transaction
     @Query("Select * from ItemModel Where folderId=:folderid")
