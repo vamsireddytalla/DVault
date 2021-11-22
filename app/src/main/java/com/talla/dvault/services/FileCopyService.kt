@@ -457,12 +457,15 @@ class FileCopyService : Service() {
         contentUri: Uri, itemNo: Int
     ): String {
         val newdir: File = this.getDir(folderTable.folderCatType, Context.MODE_PRIVATE)
-        Log.d(TAG, "File Path Vamsi "+newdir.toString())
-        if (!newdir.exists()) {
-            newdir.mkdirs()
+        val defLocation = this.resources.getString(R.string.db_folder_path)
+        val folderNameCreation = "app_" + folderTable.folderCatType
+        val sourceLoc = "$defLocation/$folderNameCreation/${folderTable.folderName}"
+        Log.d(TAG, "File Path "+sourceLoc.toString())
+        if (!File(sourceLoc).exists()) {
+            File(sourceLoc).mkdirs()
             Log.d(TAG, "createFolder: Creating")
         }
-        val to = File("$newdir/${folderTable.folderName}/$fileName")
+        val to = File("$sourceLoc/$fileName")
         val from = File(oldFileLoc)
         Log.d(TAG, "Old File Location $oldFileLoc")
         try {

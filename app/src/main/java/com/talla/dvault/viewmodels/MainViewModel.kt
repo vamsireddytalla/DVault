@@ -32,12 +32,10 @@ class MainViewModel @Inject constructor(
 
     fun getLiveData() = repository.getDashBoardData()
 
-    fun getDashBoardCount():LiveData<List<DashBoardCount>>
-    {
-        dashBoardCountMutableData=repository.getDashBoardCount()
+    fun getDashBoardCount(): LiveData<List<DashBoardCount>> {
+         dashBoardCountMutableData = repository.getDashBoardCount()
         return dashBoardCountMutableData
     }
-
 
 
     suspend fun getUserObj(): User {
@@ -53,11 +51,11 @@ class MainViewModel @Inject constructor(
         return res.await()
     }
 
-    suspend fun insertCatItem(catList:ArrayList<CategoriesModel>) {
+    suspend fun insertCatItem(catList: ArrayList<CategoriesModel>) {
         val res: Deferred<Unit> = viewModelScope.async(Dispatchers.Default) {
             try {
                 repository.insertCatList(catList)
-            }catch (e:Exception){
+            } catch (e: Exception) {
                 e.printStackTrace()
                 Log.d(TAG, "insertUpdateCatList: ${e.message}")
             }
@@ -66,11 +64,11 @@ class MainViewModel @Inject constructor(
     }
 
 
-    suspend fun insertFoldertList(folderList:ArrayList<FolderTable>) {
+    suspend fun insertFoldertList(folderList: ArrayList<FolderTable>) {
         val res: Deferred<Unit> = viewModelScope.async(Dispatchers.Default) {
             try {
                 repository.insertFoldertList(folderList)
-            }catch (e:Exception){
+            } catch (e: Exception) {
                 e.printStackTrace()
                 Log.d(TAG, "insertFoldertList: ${e.message}")
             }
@@ -78,11 +76,11 @@ class MainViewModel @Inject constructor(
         res.await()
     }
 
-    suspend fun insertItemsList(itemsList:ArrayList<ItemModel>) {
+    suspend fun insertItemsList(itemsList: ArrayList<ItemModel>) {
         val res: Deferred<Unit> = viewModelScope.async(Dispatchers.Default) {
             try {
                 repository.insertItemsList(itemsList)
-            }catch (e:Exception){
+            } catch (e: Exception) {
                 e.printStackTrace()
                 Log.d(TAG, "insertItemsList: ${e.message}")
             }
@@ -90,16 +88,16 @@ class MainViewModel @Inject constructor(
         res.await()
     }
 
-    suspend fun updateCatItem(catModel:CategoriesModel):Int {
+    suspend fun updateCatItem(catModel: CategoriesModel): Int {
         var res: Deferred<Int> = viewModelScope.async {
             try {
                 repository.updateCategory(catModel)
-            }catch (e:Exception){
+            } catch (e: Exception) {
                 e.printStackTrace()
                 Log.d("MainActiivty", "insertUpdateCatList: ${e.message}")
             }
         }
-       return res.await()
+        return res.await()
     }
 
 
@@ -173,16 +171,16 @@ class MainViewModel @Inject constructor(
         return repository.checkPoint()
     }
 
-    suspend fun updateCatServId(catId:String,servId:String,parentId:String):Int {
-        return repository.updateCatServId(catId,servId,parentId)
+    suspend fun updateCatServId(catId: String, servId: String, parentId: String): Int {
+        return repository.updateCatServId(catId, servId, parentId)
     }
 
-    suspend fun getDbFilesList():List<CategoriesModel> {
+    suspend fun getDbFilesList(): List<CategoriesModel> {
         return repository.getDbFilesList()
     }
 
-    suspend fun deleteParticularCat(catId:String) {
-         repository.deleteParticularCat(catId)
+    suspend fun deleteParticularCat(catId: String) {
+        repository.deleteParticularCat(catId)
     }
 
 
@@ -198,7 +196,7 @@ class MainViewModel @Inject constructor(
         dao.resetCategoriesTable()
     }
 
-    suspend fun resetCatServerId(){
+    suspend fun resetCatServerId() {
         viewModelScope.async(Dispatchers.IO) {
             dao.resetCategoriesTable()
         }

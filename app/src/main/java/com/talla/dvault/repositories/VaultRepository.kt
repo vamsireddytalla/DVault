@@ -5,6 +5,7 @@ import androidx.sqlite.db.SimpleSQLiteQuery
 import com.talla.dvault.database.dao.DVaultDao
 import com.talla.dvault.database.entities.*
 import com.talla.dvault.database.relations.FolderAndItem
+import java.io.File
 import java.lang.Exception
 import javax.inject.Inject
 
@@ -73,7 +74,22 @@ class VaultRepository @Inject constructor(private val appDao:DVaultDao)
 
     fun getBRItems(catType:String)=appDao.getBRItems(catType)
 
-    fun getRBItems(catType:String)=appDao.getRBItems(catType)
+    fun getRBItems(catType:String):List<ItemModel>
+    {
+        val itemsList=appDao.getRBItems(catType)
+        val def_path="/data/data/com.talla.dvault/"
+        var folderObj:FolderTable
+        var newItemsList=ArrayList<ItemModel>()
+        itemsList.forEach {
+            folderObj=getFolderObjBasedOnCatAndFolderID(catType,it.folderId)
+            val searchFile = File(def_path + "/" + "app_" + folderObj.folderCatType + "/" + folderObj.folderName+"/"+it.itemName)
+            if (!searchFile.exists() && (searchFile.length().toDouble()!=it.itemSize.toDouble())){
+                it.itemOriPath=searchFile.toString()
+                newItemsList.add(it)
+            }
+        }
+        return newItemsList
+    }
 
     suspend fun getCategoriesDataIfServIdNull()=appDao.getCategoriesDataIfServIdNull()
 
@@ -144,7 +160,7 @@ class VaultRepository @Inject constructor(private val appDao:DVaultDao)
 
     suspend fun getFolderObject(catId: String)=appDao.getFolderObject(catId)
 
-    suspend fun getFolderObjBasedOnCatAndFolderID(catId: String,folderId:String)=appDao.getFolderObjBasedOnCatAndFolderID(catId,folderId)
+    fun getFolderObjBasedOnCatAndFolderID(catId: String,folderId:String)=appDao.getFolderObjBasedOnCatAndFolderID(catId,folderId)
 
     fun getFolderAndItemWithFolderId(folderID: String):LiveData<FolderAndItem>{
         val res: LiveData<FolderAndItem> =appDao.getFolderAndItemWithFolderId(folderID)

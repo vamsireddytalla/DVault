@@ -61,8 +61,9 @@ You can restore them when you reinstall.</string>
     <string name="are_you_sure_you_wan_t_to_delete">Are you sure you wan\'t to delete</string>
     <string name="app_info">A secure place to store all your files with local and cloud storage support which can be Connected to your Google Drive. Keeping your data secure is our priority. Your data stays safe and available to you whenever you need it. Access your data online anytime using your mobile Application.</string>
     <string name="unlock_file_view">Unlock File and View in Downloads Folder</string>
-    <string name="restore_from_settings">Restore Files from Settings</string>
+    <string name="restore_from_settings">Restore file from Settings</string>
     <string name="so_far">Rate your experience using DVault so far</string>
+    <string name="last_login">Last login</string>
 
 
     <string-array name="security_questions">

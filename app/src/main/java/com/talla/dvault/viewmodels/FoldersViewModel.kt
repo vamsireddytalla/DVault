@@ -66,8 +66,8 @@ class FoldersViewModel @Inject constructor(private val repository: VaultReposito
     {
         viewModelScope.launch(Dispatchers.IO){
             try {
-                repository.deleteFolder(folderId)
                 repository.deleteItemBasedOnFolderId(folderId)
+                repository.deleteFolder(folderId)
             }catch (e:Exception){
                 e.printStackTrace()
             }

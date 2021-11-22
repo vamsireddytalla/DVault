@@ -38,6 +38,7 @@ import com.talla.dvault.preferences.UserPreferences
 import com.talla.dvault.preferences.UserPreferences.Companion.dataStore
 import com.talla.dvault.utills.DateUtills
 import com.talla.dvault.utills.FileSize
+import com.talla.dvault.utills.InternetUtil
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import java.lang.Exception
@@ -199,7 +200,7 @@ class SettingsActivity : AppCompatActivity() {
                            storageBinding.storageProgress.max=totalSpaceInDrive
                            storageBinding.storageProgress.progress=usedSpaceInDrive
                            storageBinding.totalSpace.text=totalStorage
-                           storageBinding.usedSpace.text=usedStorage
+                           storageBinding.usedSpace.text= "$usedStorage Used"
                        }
                    }catch (e:Exception){
                        e.printStackTrace()
@@ -310,7 +311,11 @@ class SettingsActivity : AppCompatActivity() {
                       userPreferences.storeStringData(UserPreferences.LAST_BACKUP_TIME,
                           DateUtills.getLastBackUpTime(this@SettingsActivity)!!)
                   }
-                    binder?.startBackUpService(title)
+                   if (InternetUtil.isInternetAvail(this@SettingsActivity)){
+                       binder?.startBackUpService(title)
+                   }else{
+                       FileSize.showSnackBar("Check Internet!",binding.root)
+                   }
                 } else {
                     if (FileSize.UNLOCK_FILE_COPYING) {
                         showSnackBar("File Unlocking is In Progress Please wait...")

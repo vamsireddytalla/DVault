@@ -9,15 +9,23 @@
     tools:context=".activities.ExtraActivity">
 
     <ImageView
+        android:id="@+id/imageVieew"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="gone"
-        android:id="@+id/imageVieew"/>
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <VideoView
-        android:layout_height="match_parent"
+        android:id="@+id/videoView"
         android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:visibility="gone"
-        android:id="@+id/videoView" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

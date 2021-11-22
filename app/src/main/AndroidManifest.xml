@@ -81,8 +81,8 @@
 
         <service android:name=".services.FileCopyService" />
         <service android:name=".services.DriveService" />
-        <service android:name=".services.DashBoardService" />
         <receiver android:name=".BroadcastReceiver.FIleProcessingReceiver" />
+        <receiver android:name=".BroadcastReceiver.ConnectivityReceiver" />
     </application>
 
 </manifest>

@@ -62,6 +62,7 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
     private lateinit var dialog: Dialog
     private var pos: Int? = null
     private lateinit var progressDialog: Dialog
+    private lateinit var cloudDialogBinding:CloudLoadingBinding
     private var binder: FileCopyService.LocalBinder? = null
     private var serviceBinder: FileCopyService? = null
     private lateinit var deleteDialogBinding: DeleteDialogBinding
@@ -95,7 +96,8 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
         setContentView(binding.root)
         val bundle: Bundle? = intent.extras
         if (bundle != null) {
-            folderTable = intent.getSerializableExtra(this.resources.getString(R.string.key)) as FolderTable
+            folderTable =
+                intent.getSerializableExtra(this.resources.getString(R.string.key)) as FolderTable
             binding.titleScrnTitle.text = folderTable.folderName
             Log.d("FolderName", "onCreate: $folderTable.folderName")
             changeFolderColor(folderTable.folderCatType)
@@ -466,27 +468,24 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
         deleteDialogBinding.fileName.text = itemModel.itemName
         //online Delete and local delete
         deleteDialogBinding.yes.setOnClickListener {
-         if (InternetUtil.isInternetAvail(this)){
-             val fileProcess = FileSize.checkIsAnyProcessGoing()
-             if (fileProcess.isEmpty()) {
-                 runBlocking {
-                     dialog.dismiss()
-                     progressDialog.show()
-                     if (deleteDialogBinding.isServDel.isChecked) {
-                         Log.d(TAG, "showDeleteDialog: Server Delete")
-                         checkedServDelete(itemModel)
-                     } else {
-                         Log.d(TAG, "showDeleteDialog: Local Delete")
-                         localFileDelete(itemModel,false)
-                     }
-                 }
-             } else {
-                 dialog.dismiss()
-                 showSnackBar(fileProcess)
-             }
-         }else{
-             FileSize.showSnackBar("Check Internet",binding.root)
-         }
+
+                val fileProcess = FileSize.checkIsAnyProcessGoing()
+                if (fileProcess.isEmpty()) {
+                    runBlocking {
+                        dialog.dismiss()
+                        showProgressDialog()
+                        if (deleteDialogBinding.isServDel.isChecked) {
+                            Log.d(TAG, "showDeleteDialog: Server Delete")
+                            checkedServDelete(itemModel)
+                        } else {
+                            Log.d(TAG, "showDeleteDialog: Local Delete")
+                            localFileDelete(itemModel, false)
+                        }
+                    }
+                } else {
+                    dialog.dismiss()
+                    showSnackBar(fileProcess)
+                }
         }
         deleteDialogBinding.no.setOnClickListener {
             dialog.dismiss()
@@ -499,9 +498,9 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
             lifecycleScope.launch(Dispatchers.IO) {
                 if (itemModel.serverId.isNotEmpty()) {
                     onlineFileDelete(itemModel.serverId)
-                    localFileDelete(itemModel,true)
-                }else{
-                    localFileDelete(itemModel,false)
+                    localFileDelete(itemModel, true)
+                } else {
+                    localFileDelete(itemModel, false)
                 }
             }
         } else {
@@ -509,7 +508,7 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
         }
     }
 
-    suspend fun localFileDelete(itemModel: ItemModel,isServerDelete:Boolean) {
+    suspend fun localFileDelete(itemModel: ItemModel, isServerDelete: Boolean) {
         lifecycleScope.launch(Dispatchers.IO) {
             val orgDir = this@ItemsActivity.resources.getString(R.string.db_folder_path)
             val sourceFile =
@@ -527,7 +526,7 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
                     Log.d(TAG, "localFileDelete: Else Called")
                     itemsAdapter.notifyItemChanged(pos!!)
                 }
-                progressDialog.dismiss()
+                stopProgressDialog()
             }
         }
 
@@ -541,25 +540,20 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
 
     fun dialogInit() {
         progressDialog = Dialog(this)
-        val cloudDialogBinding= CloudLoadingBinding.inflate(this.layoutInflater)
-        val customProgressDialogBinding = CustonProgressDialogBinding.inflate(this.layoutInflater)
+        cloudDialogBinding = CloudLoadingBinding.inflate(this.layoutInflater)
         progressDialog.setContentView(cloudDialogBinding.root)
-        val rotationAnimation= AnimationUtils.loadAnimation(this,R.anim.loading_anim)
-        cloudDialogBinding.prog.startAnimation(rotationAnimation)
         progressDialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         progressDialog.setCancelable(false)
     }
 
     suspend fun showProgressDialog() {
-        withContext(Dispatchers.Main) {
-            progressDialog.show()
-        }
+        val rotationAnimation = AnimationUtils.loadAnimation(this, R.anim.loading_anim)
+        cloudDialogBinding.prog.startAnimation(rotationAnimation)
+        progressDialog.show()
     }
 
     suspend fun stopProgressDialog() {
-        withContext(Dispatchers.Main) {
-            progressDialog.dismiss()
-        }
+        progressDialog.dismiss()
     }
 
 }

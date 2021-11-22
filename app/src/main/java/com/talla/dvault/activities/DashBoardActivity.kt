@@ -45,15 +45,6 @@ import kotlinx.coroutines.flow.collect
 import javax.inject.Inject
 import android.app.ActivityManager
 import android.content.*
-import android.os.IBinder
-import com.google.api.client.extensions.android.http.AndroidHttp
-import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
-import com.google.api.client.json.jackson2.JacksonFactory
-import com.google.api.services.drive.Drive
-import com.google.api.services.drive.DriveScopes
-import com.talla.dvault.database.VaultDatabase
-import com.talla.dvault.databinding.CustonProgressDialogBinding
-import com.talla.dvault.services.DashBoardService
 import com.talla.dvault.utills.DateUtills
 import com.talla.dvault.utills.FileSize
 import com.talla.dvault.utills.InternetUtil
@@ -95,18 +86,6 @@ class DashBoardActivity : AppCompatActivity() {
         } else {
             checkInternetDialog()
         }
-
-        viewModel.getDashBoardCount().observe(this, Observer {
-            it?.let {
-                it.forEach { dashModel ->
-                    if (dashModel.itemCatType == "Img") binding.totalImages.text = dashModel.count.toString()
-                    if (dashModel.itemCatType == "Vdo") binding.totalVIdeos.text = dashModel.count.toString()
-                    if (dashModel.itemCatType == "Doc") binding.totalDocs.text = dashModel.count.toString()
-                    if (dashModel.itemCatType == "Aud") binding.totalAudios.text = dashModel.count.toString()
-                }
-            }
-        })
-
 
         lifecycleScope.launch(Dispatchers.IO) {
 
@@ -187,8 +166,21 @@ class DashBoardActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
+        viewModel.getDashBoardCount().observe(this, Observer {
+            Log.d(TAG, "onCreate: DashBoard Count ${it.toString()}")
+            it?.let {
+                it.forEach { dashModel ->
+                    if (dashModel.itemCatType == "Img") binding.totalImages.text = dashModel.count.toString()
+                    if (dashModel.itemCatType == "Vdo") binding.totalVIdeos.text = dashModel.count.toString()
+                    if (dashModel.itemCatType == "Doc") binding.totalDocs.text = dashModel.count.toString()
+                    if (dashModel.itemCatType == "Aud") binding.totalAudios.text = dashModel.count.toString()
+                }
+            }
+        })
+
 
     }
+
     fun appVersion(){
         try {
             val pInfo: PackageInfo = this.getPackageManager().getPackageInfo(this.getPackageName(), 0)
@@ -258,7 +250,7 @@ class DashBoardActivity : AppCompatActivity() {
         }
         customDialogProfileBinding.userName.text = user.userName
         customDialogProfileBinding.userEmail.text = user.userEmail
-        customDialogProfileBinding.lastLoggedin.text = DateUtills.convertMilToDate(this,user.userloginTime.toLong())
+        customDialogProfileBinding.lastLoggedin.text = this.resources.getString(R.string.last_login)+" "+DateUtills.convertMilToDate(this,user.userloginTime.toLong())
         glide.load(user.userImage).into(customDialogProfileBinding.userProfilePic)
         customDialogProfileBinding.login.setOnClickListener(View.OnClickListener {
             val mGoogleSignInClient = GoogleSignIn.getClient(this, gso)

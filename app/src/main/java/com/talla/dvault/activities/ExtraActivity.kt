@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.view.WindowManager
 import android.widget.MediaController
 import androidx.annotation.RequiresApi
 import com.bumptech.glide.RequestManager
@@ -13,6 +14,9 @@ import com.talla.dvault.R
 import com.talla.dvault.databinding.ActivityExtraBinding
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import android.app.Activity
+import android.view.KeyEvent
+
 
 private const val TAG = "ExtraActivity"
 
@@ -29,6 +33,7 @@ class ExtraActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityExtraBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         val bundle: Bundle? = intent.extras
         if (bundle != null) {
             path = intent.getStringExtra(this.resources.getString(R.string.key)).toString()
@@ -55,6 +60,12 @@ class ExtraActivity : AppCompatActivity() {
         mediaController.setAnchorView(binding.videoView)
         binding.videoView.setVideoPath(path)
         binding.videoView.setMediaController(mediaController)
+        binding.videoView.setMediaController(object : MediaController(this) {
+            override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+                if (event.keyCode === KeyEvent.KEYCODE_BACK) (context as Activity).finish()
+                return super.dispatchKeyEvent(event)
+            }
+        })
         binding.videoView.requestFocus()
         binding.videoView.start()
     }

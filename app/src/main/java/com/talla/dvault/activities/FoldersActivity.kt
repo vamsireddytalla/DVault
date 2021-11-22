@@ -58,6 +58,7 @@ class FoldersActivity : AppCompatActivity(), FolderItemClick {
     private var catType: String? = null
     private var folderId: Int = 0
     private lateinit var progressDialog: Dialog
+    private lateinit var cloudDialogBinding:CloudLoadingBinding
     private lateinit var dialog: Dialog
     private lateinit var deleteDialogBinding: DeleteDialogBinding
     private val viewModel: FoldersViewModel by viewModels()
@@ -154,7 +155,8 @@ class FoldersActivity : AppCompatActivity(), FolderItemClick {
                 if (folderName.isNotEmpty()) {
                     runBlocking {
                         val btnType = b1.text.toString()
-                        val folderModel = FolderTable(0, folderName, createdTime, catType.toString(), "", false)
+                        val folderModel =
+                            FolderTable(0, folderName, createdTime, catType.toString(), "", false)
                         if (btnType == this@FoldersActivity.resources.getString(R.string.create)) {
                             val res = viewModel.createNewFolder(folderModel)
 //                        var res: Long =viewModel.checkDataANdCreateFolder(folderName,createdTime.toString(),catType.toString())
@@ -173,24 +175,35 @@ class FoldersActivity : AppCompatActivity(), FolderItemClick {
                             }
                             Log.d(TAG, "showBottomSheetDialog: ${res}")
                         } else {
-                            if (InternetUtil.isInternetAvail(this@FoldersActivity)){
-                                progressDialog.show()
+                            if (InternetUtil.isInternetAvail(this@FoldersActivity)) {
+                               showProgressDialog()
                                 val res: Int = viewModel.renameFolder(folderName, folderId)
                                 if (res == 2067) {
-                                    Toast.makeText(this@FoldersActivity, getString(R.string.already_existed), Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(
+                                        this@FoldersActivity,
+                                        getString(R.string.already_existed),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                     et1.error = getString(R.string.already_existed)
                                     et1.requestFocus()
-                                    progressDialog.dismiss()
+                                    stopProgressDialog()
                                 } else {
                                     updateFolder(value, folderName)
                                     bsd.dismiss()
-                                    val folderObj=viewModel.getFolderObjWithFolderID(folderId.toString())
-                                    if (folderObj.folderServerId.isNotEmpty()) updateFolderName(folderObj)
+                                    val folderObj =
+                                        viewModel.getFolderObjWithFolderID(folderId.toString())
+                                    if (folderObj.folderServerId.isNotEmpty()) updateFolderName(
+                                        folderObj
+                                    )
                                     showSnackBar("Updated Successfully!")
-                                    progressDialog.dismiss()
+                                   stopProgressDialog()
                                 }
-                            }else{
-                                Toast.makeText(this@FoldersActivity, "Check Internet!", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(
+                                    this@FoldersActivity,
+                                    "Check Internet!",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             }
                         }
 
@@ -262,7 +275,7 @@ class FoldersActivity : AppCompatActivity(), FolderItemClick {
             if (fileProcess.isEmpty()) {
                 runBlocking {
                     dialog.dismiss()
-                    progressDialog.show()
+                   showProgressDialog()
                     val folderObj = viewModel.getFolderObjWithFolderID(folderId)
                     if (deleteDialogBinding.isServDel.isChecked) {
                         Log.d(TAG, "showDeleteDialog: Server Delete")
@@ -279,8 +292,8 @@ class FoldersActivity : AppCompatActivity(), FolderItemClick {
 
         }
         deleteDialogBinding.no.setOnClickListener {
-                dialog.dismiss()
-            }
+            dialog.dismiss()
+        }
         dialog.show()
     }
 
@@ -319,7 +332,7 @@ class FoldersActivity : AppCompatActivity(), FolderItemClick {
                 }
             }
         }
-        progressDialog.dismiss()
+       stopProgressDialog()
     }
 
     suspend fun onlineFileDelete(folderObj: FolderTable) {
@@ -344,25 +357,20 @@ class FoldersActivity : AppCompatActivity(), FolderItemClick {
 
     fun dialogInit() {
         progressDialog = Dialog(this)
-        val cloudDialogBinding = CloudLoadingBinding.inflate(this.layoutInflater)
-        val customProgressDialogBinding = CustonProgressDialogBinding.inflate(this.layoutInflater)
+        cloudDialogBinding = CloudLoadingBinding.inflate(this.layoutInflater)
         progressDialog.setContentView(cloudDialogBinding.root)
-        val rotationAnimation = AnimationUtils.loadAnimation(this, R.anim.loading_anim)
-        cloudDialogBinding.prog.startAnimation(rotationAnimation)
         progressDialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         progressDialog.setCancelable(false)
     }
 
     suspend fun showProgressDialog() {
-        withContext(Dispatchers.Main) {
-            progressDialog.show()
-        }
+        val rotationAnimation = AnimationUtils.loadAnimation(this, R.anim.loading_anim)
+        cloudDialogBinding.prog.startAnimation(rotationAnimation)
+        progressDialog.show()
     }
 
     suspend fun stopProgressDialog() {
-        withContext(Dispatchers.Main) {
-            progressDialog.dismiss()
-        }
+        progressDialog.dismiss()
     }
 
     fun createFolder(catName: String, folderName: String) {
@@ -412,10 +420,14 @@ class FoldersActivity : AppCompatActivity(), FolderItemClick {
                 newMetadata.name = folderObj.folderName
 
                 // Send the request to the API.
-                val fileRes = getDriveService()!!.files().update(folderObj.folderServerId, newMetadata)
-                    .setFields("id, name, appProperties,quotaBytesUsed").execute()
+                val fileRes =
+                    getDriveService()!!.files().update(folderObj.folderServerId, newMetadata)
+                        .setFields("id, name, appProperties,quotaBytesUsed").execute()
                 fileRes?.let {
-                    Log.d(TAG, "updateFolderName: Successfully ${fileRes.name} ${fileRes.id} ${fileRes.quotaBytesUsed}")
+                    Log.d(
+                        TAG,
+                        "updateFolderName: Successfully ${fileRes.name} ${fileRes.id} ${fileRes.quotaBytesUsed}"
+                    )
                 }
             } catch (e: IOException) {
                 println("An error occurred: $e")

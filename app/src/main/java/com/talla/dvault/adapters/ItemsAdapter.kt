@@ -103,8 +103,10 @@ class ItemsAdapter(
                     }
 
                 }else{
-                    val path=itemModelList.get(adapterPosition).itemCurrentPath
-                    if (File(path).exists()){
+                    val itemObj=itemModelList.get(adapterPosition)
+                    val path=itemObj.itemCurrentPath
+                    val filePath=File(path)
+                    if (filePath.exists() && (filePath.length().toDouble()==itemObj.itemSize.toDouble())){
                         if (folderObj.folderCatType=="Img" || folderObj.folderCatType=="Vdo"){
                             val io= Intent(mContext, ExtraActivity::class.java)
                             io.putExtra(mContext.getString(R.string.key),path)
@@ -209,7 +211,7 @@ class ItemsAdapter(
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
                     item.setBackgroundDrawable(border)
                 } else {
-                    item.setBackground(border)
+                    item.background = border
                 }
                 checkBoxe.isChecked = true
                 item.alpha = 0.8F

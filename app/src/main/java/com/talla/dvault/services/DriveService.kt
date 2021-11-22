@@ -45,6 +45,7 @@ import java.io.*
 import kotlin.collections.ArrayList
 import com.google.api.client.http.ByteArrayContent
 import com.google.api.services.drive.model.FileList
+import com.talla.dvault.activities.SettingsActivity
 import com.talla.dvault.database.entities.CategoriesModel
 import com.talla.dvault.database.entities.FolderTable
 import com.talla.dvault.database.relations.FolderAndItem
@@ -154,19 +155,7 @@ class DriveService : Service() {
                                                 try {
                                                     Log.d(TAG, "onStartCommand: Restore Process")
                                                     Log.d(TAG, "onStartCommand: ${folderObj.toString()}")
-                                                    val orgDir = this@DriveService.resources.getString(R.string.db_folder_path)
-                                                    searchFile = File(orgDir.toString() + "/" + "app_" + folderObj.folderCatType + "/" + folderObj.folderName)
-                                                    Log.d(TAG, "onStartCommand: Secret File Path $searchFile")
-                                                    if (!searchFile.exists()) {
-                                                        searchFile.mkdirs()
-                                                    }
-                                                        val finalFile = File(searchFile.toString() + "/" + source.itemName)
-                                                        Log.d(TAG, "onStartCommand Final File: $finalFile")
-                                                        if (finalFile.exists()) {
-                                                            Log.d(TAG, "onStartCommand: File Already Exists")
-                                                            continue
-                                                        }
-                                                        downloadDBFiles(source, index + 1, finalFile.toString())
+                                                    downloadDBFiles(source, index + 1)
 
                                                 } catch (e: Exception) {
                                                     e.printStackTrace()
@@ -190,6 +179,9 @@ class DriveService : Service() {
                     }
                     FileSize.ACTION_SETTINGS_STOP_FOREGROUND_SERVICE -> {
                         Log.d(TAG, "onStartCommand: Stopped Foreground Service")
+                        if (isInterrupted==true){
+
+                        }
                         cancelProcessJob?.let {
                             isInterrupted = true
                             mediaContent?.closeInputStream
@@ -225,7 +217,7 @@ class DriveService : Service() {
 
         fun startBackUpService(btnType: String) {
             Log.d(TAG, "startBackUpService: $btnType")
-            var clickIntent = Intent(this@DriveService, DriveService::class.java)
+            val clickIntent = Intent(this@DriveService, DriveService::class.java)
             clickIntent.action = FileSize.ACTION_SETTINGS_START_FOREGROUND_SERVICE
             clickIntent.putExtra(this@DriveService.resources.getString(R.string.key), btnType)
             startService(clickIntent)
@@ -364,9 +356,9 @@ class DriveService : Service() {
         }
     }
 
-    fun downloadDBFiles(itemModel: ItemModel, itemNo: Int, oriPath: String) {
+    fun downloadDBFiles(itemModel: ItemModel, itemNo: Int) {
 
-        val out: OutputStream = FileOutputStream(oriPath)
+        val out: OutputStream = FileOutputStream(itemModel.itemOriPath)
         val request: Drive.Files.Get? = getDriveService()?.files()?.get(itemModel.serverId)
         request?.let {
             val uploader: MediaHttpDownloader = it.mediaHttpDownloader
@@ -376,7 +368,7 @@ class DriveService : Service() {
                 itemModel,
                 itemNo,
                 FileSize.bytesToHuman(itemModel.itemSize.toLong()).toString(),
-                oriPath.toString()
+                itemModel.itemOriPath.toString()
             )
             it.mediaHttpDownloader?.progressListener = downloadListner
             it.executeMediaAndDownloadTo(out)
@@ -453,7 +445,7 @@ class DriveService : Service() {
                         )
                         FileSize.backUpRestoreEnabled = true
                     } else {
-                        var deleteFile = File(downloadPath)
+                        val deleteFile = File(downloadPath)
                         if (deleteFile.exists()) deleteFile.delete()
                         throw GoogleDriveException("Download canceled")
                     }
@@ -532,7 +524,6 @@ class DriveService : Service() {
             val totalStorage = FileSize.bytesToHuman(about.storageQuota.limit)
             settingsCallbackListner?.storageQuote(usedStorage.toString(), totalStorage.toString())
             Log.d("MainActivity", "getTotalDriveStorages: ${usedStorage.toString()}, ${totalStorage.toString()}")
-//            getDriveFiles()
         }
     }
 
@@ -563,15 +554,15 @@ class DriveService : Service() {
 
 
         // Get the layouts to use in the custom notification
-        notificationLayout = RemoteViews(packageName, R.layout.collapsed_item_progress)
+        notificationLayout = RemoteViews(packageName, R.layout.collapsed_settings_notification)
         notificationLayout.setProgressBar(R.id.progressFile, 0, 0, true)
 //        val notificationLayoutExpanded = RemoteViews(packageName, R.layout.notification_large)
 
-        var clickIntent = Intent(this, DriveService::class.java)
-        clickIntent.action = cancelAction
-        var filePendingIntent =
-            PendingIntent.getService(this, 0, clickIntent, PendingIntent.FLAG_UPDATE_CURRENT)
-        notificationLayout.setOnClickPendingIntent(R.id.cancelFileProcess, filePendingIntent)
+        val clickIntent = Intent(this, SettingsActivity::class.java)
+//        clickIntent.action = cancelAction
+        clickIntent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+        val filePendingIntent = PendingIntent.getActivity(this, 0, clickIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+        notificationLayout.setOnClickPendingIntent(R.id.openSetNot, filePendingIntent)
 
         // Create notification builder.
         builder = NotificationCompat.Builder(this, channelId)
