@@ -156,7 +156,6 @@ class DriveService : Service() {
                                                     Log.d(TAG, "onStartCommand: Restore Process")
                                                     Log.d(TAG, "onStartCommand: ${folderObj.toString()}")
                                                     downloadDBFiles(source, index + 1)
-
                                                 } catch (e: Exception) {
                                                     e.printStackTrace()
                                                     if (e.message.toString().contains("No such file or directory")) {

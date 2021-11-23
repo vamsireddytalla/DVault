@@ -64,6 +64,11 @@ import javax.inject.Singleton
 import kotlin.collections.ArrayList
 import kotlin.math.log
 import kotlin.system.exitProcess
+import android.text.Html
+
+import android.os.Build
+import android.text.method.LinkMovementMethod
+
 
 private const val TAG = "MainActivity"
 
@@ -74,6 +79,7 @@ class MainActivity : AppCompatActivity() {
     private val viewModel: MainViewModel by viewModels()
     private lateinit var progressDialog: Dialog
     private lateinit var gDriveService: Drive
+    private lateinit var cloudDialogBinding:CloudLoadingBinding
 
     @Inject
     lateinit var databaseInstance: VaultDatabase
@@ -99,7 +105,8 @@ class MainActivity : AppCompatActivity() {
         dialogInit()
 
 
-        launchIntent = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        launchIntent =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
                 if (result.resultCode == Activity.RESULT_OK) {
                     handleSignData(result.data)
                 } else {
@@ -108,6 +115,12 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
+        binding.privacyPolicy.setMovementMethod(LinkMovementMethod.getInstance());
+        binding.privacyPolicy.setLinkTextColor(Color.BLUE)
+        binding.privacyPolicy.setOnClickListener{
+            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(this.resources.getString(R.string.privacy_policy)))
+            startActivity(browserIntent)
+        }
     }
 
     private fun openIntent() {
@@ -152,7 +165,10 @@ class MainActivity : AppCompatActivity() {
             .addOnCompleteListener {
                 if (it.isSuccessful) {
                     // user successfully logged-in
-                    Log.d(TAG, "handleSignData: ${it.result?.account}  ${it.result?.displayName} ${it.result?.email}")
+                    Log.d(
+                        TAG,
+                        "handleSignData: ${it.result?.account}  ${it.result?.displayName} ${it.result?.email}"
+                    )
                     Log.d(TAG, "handleSignData: ${it.result?.grantedScopes}")
                     Log.d(TAG, "handleSignData: ${it.result?.requestedScopes}")
                     if (it.result?.grantedScopes!!.contains(Scope(DriveScopes.DRIVE_APPDATA))) {
@@ -162,7 +178,13 @@ class MainActivity : AppCompatActivity() {
                             val userEmail = it.result?.email
                             val userProfilePic: Uri? = it.result?.photoUrl
                             val currentDT: String? = System.currentTimeMillis().toString()
-                            val user = User(userName.toString(), userEmail.toString(), userProfilePic.toString(), currentDT.toString(), "DVault")
+                            val user = User(
+                                userName.toString(),
+                                userEmail.toString(),
+                                userProfilePic.toString(),
+                                currentDT.toString(),
+                                "DVault"
+                            )
                             try {
                                 showProgressDialog()
                                 lifecycleScope.launch(Dispatchers.Default) {
@@ -199,10 +221,10 @@ class MainActivity : AppCompatActivity() {
 
     fun dialogInit() {
         progressDialog = Dialog(this)
-        val cloudDialogBinding=CloudLoadingBinding.inflate(this.layoutInflater)
+        val cloudDialogBinding = CloudLoadingBinding.inflate(this.layoutInflater)
         val customProgressDialogBinding = CustonProgressDialogBinding.inflate(this.layoutInflater)
         progressDialog.setContentView(cloudDialogBinding.root)
-        val rotationAnimation= AnimationUtils.loadAnimation(this,R.anim.loading_anim)
+        val rotationAnimation = AnimationUtils.loadAnimation(this, R.anim.loading_anim)
         cloudDialogBinding.prog.startAnimation(rotationAnimation)
         progressDialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         progressDialog.setCancelable(false)
@@ -249,40 +271,38 @@ class MainActivity : AppCompatActivity() {
     }
 
     suspend fun showProgressDialog() {
-        withContext(Dispatchers.Main) {
-            progressDialog.show()
-        }
+        val rotationAnimation = AnimationUtils.loadAnimation(this, R.anim.loading_anim)
+        cloudDialogBinding.prog.startAnimation(rotationAnimation)
+        progressDialog.show()
     }
 
     suspend fun stopProgressDialog() {
-        withContext(Dispatchers.Main) {
             progressDialog.dismiss()
-        }
     }
 
-    fun getCategoriesData(user:User)
-    {
-        lifecycleScope.launch(Dispatchers.IO){
+    fun getCategoriesData(user: User) {
+        lifecycleScope.launch(Dispatchers.IO) {
             try {
                 getDriveService()?.let { gdFiles ->
-                    gDriveService=gdFiles
-                    val rootFolderId: String = gdFiles.files().get("appDataFolder").setFields("id").execute().getId()
+                    gDriveService = gdFiles
+                    val rootFolderId: String =
+                        gdFiles.files().get("appDataFolder").setFields("id").execute().getId()
                     Log.d(TAG, "getCategoriesData: $rootFolderId")
-                    val mimetype=this@MainActivity.resources.getString(R.string.folder_mime_type)
-                    val result=getDataBasedOnParentId(rootFolderId,mimetype)
+                    val mimetype = this@MainActivity.resources.getString(R.string.folder_mime_type)
+                    val result = getDataBasedOnParentId(rootFolderId, mimetype)
                     result?.let { res ->
                         Log.d(TAG, "getDriveFiles Count From Server : ${res.files}")
                         Log.d(TAG, "getDriveFiles: Server Files Count  ${res.files.size}")
                         withContext(Dispatchers.Main) {
                             viewModel.insertData(user)
                         }
-                        if (res.files.size<4){
+                        if (res.files.size < 4) {
                             Log.d(TAG, "getCategoriesData: Sign Up Bad")
                             Log.d(TAG, "getCategoriesData: New User")
                             FileSize.showSnackBar("Welcome !", binding.root)
                             //insert into categories table and get remaining folders to be created on server
                             cacheCatListAndInsertInLocalDB(res)
-                        }else{
+                        } else {
                             Log.d(TAG, "getCategoriesData: Sign Up Good")
                             Log.d(TAG, "getCategoriesData: Old User")
                             FileSize.showSnackBar("Welcome Back !", binding.root)
@@ -291,7 +311,7 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 }
-            }catch (e:Exception){
+            } catch (e: Exception) {
                 e.printStackTrace()
                 FileSize.showSnackBar(e.message.toString(), binding.root)
                 Log.d(TAG, "getCategoriesData: Exception Occured -> ${e.message}")
@@ -301,17 +321,31 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    suspend fun cacheCatListAndInsertInLocalDB(res:FileList){
+    suspend fun cacheCatListAndInsertInLocalDB(res: FileList) {
         Log.d(TAG, "cacheCatListAndInsertInLocalDB: Called")
         try {
-            lifecycleScope.launch(Dispatchers.IO){
+            lifecycleScope.launch(Dispatchers.IO) {
                 val catList = ArrayList<CategoriesModel>()
-                if (res.files.isNotEmpty()){
+                if (res.files.isNotEmpty()) {
                     res.files.forEach { fileee ->
-                        val driveTimeStamp=DateUtills.driveDateToTimeStamp(fileee.createdTime.toString())
+                        val driveTimeStamp =
+                            DateUtills.driveDateToTimeStamp(fileee.createdTime.toString())
                         Log.d(TAG, "cacheCatListAndInsertInLocalDB: $driveTimeStamp")
-                        Log.d(TAG, "cacheCatListAndInsertInLocalDB: ${DateUtills.converTimeStampToDate(this@MainActivity,driveTimeStamp)}")
-                        Log.d(TAG, "cacheCatListAndInsertInLocalDB: Server File Sizes ${FileSize.bytesToHuman(fileee.quotaBytesUsed)} ${fileee.name}")
+                        Log.d(
+                            TAG,
+                            "cacheCatListAndInsertInLocalDB: ${
+                                DateUtills.converTimeStampToDate(
+                                    this@MainActivity,
+                                    driveTimeStamp
+                                )
+                            }"
+                        )
+                        Log.d(
+                            TAG,
+                            "cacheCatListAndInsertInLocalDB: Server File Sizes ${
+                                FileSize.bytesToHuman(fileee.quotaBytesUsed)
+                            } ${fileee.name}"
+                        )
                         var name = ""
                         when (fileee.name) {
                             "Img" -> name = "Images"
@@ -319,23 +353,33 @@ class MainActivity : AppCompatActivity() {
                             "Vdo" -> name = "Videos"
                             "Doc" -> name = "Docs"
                         }
-                        val catModel = CategoriesModel(fileee.name, name,fileee.mimeType,fileee.id,fileee.parents.get(0))
+                        val catModel = CategoriesModel(
+                            fileee.name,
+                            name,
+                            fileee.mimeType,
+                            fileee.id,
+                            fileee.parents.get(0)
+                        )
                         catList.add(catModel)
                     }
                 }
-                withContext(Dispatchers.Main){
-                    val insertCatResponse=lifecycleScope.launch{
-                        Log.d(TAG, "cacheCatListAndInsertInLocalDB: Before Inserting In Local Db --> ${catList.toString()}")
+                withContext(Dispatchers.Main) {
+                    val insertCatResponse = lifecycleScope.launch {
+                        Log.d(
+                            TAG,
+                            "cacheCatListAndInsertInLocalDB: Before Inserting In Local Db --> ${catList.toString()}"
+                        )
                         if (catList.isNotEmpty()) {
                             viewModel.insertCatItem(catList)
                         }
                     }
                     insertCatResponse.join()
-                    val requiredCatFolders: ArrayList<CategoriesModel> = viewModel.getCategoriesDataIfServIdNull() as ArrayList<CategoriesModel>
+                    val requiredCatFolders: ArrayList<CategoriesModel> =
+                        viewModel.getCategoriesDataIfServIdNull() as ArrayList<CategoriesModel>
                     createFoldersOnServer(requiredCatFolders)
                 }
             }
-        }catch (e:Exception){
+        } catch (e: Exception) {
             e.printStackTrace()
             Log.d(TAG, "cacheCatListAndInsertInLocalDB: ${e.message}")
             logout("cacheCatListAndInsertInLocalDB")
@@ -344,10 +388,13 @@ class MainActivity : AppCompatActivity() {
 
     suspend fun createFoldersOnServer(requiredCatFolders: ArrayList<CategoriesModel>) {
         Log.d(TAG, "createFoldersOnServer: Called")
-        lifecycleScope.launch(Dispatchers.IO){
+        lifecycleScope.launch(Dispatchers.IO) {
             try {
-                if (requiredCatFolders.isNotEmpty()){
-                    Log.d(TAG, "createFoldersOnServer: Require Folders to be create in Server ${requiredCatFolders.toString()}")
+                if (requiredCatFolders.isNotEmpty()) {
+                    Log.d(
+                        TAG,
+                        "createFoldersOnServer: Require Folders to be create in Server ${requiredCatFolders.toString()}"
+                    )
                     requiredCatFolders.forEach { catModel ->
                         val folderMime = "application/vnd.google-apps.folder"
                         if (catModel.catType == folderMime) {
@@ -363,8 +410,12 @@ class MainActivity : AppCompatActivity() {
                             }
                             Log.d(TAG, "Created New Folder : ${file?.id} ${file?.name}")
                             file?.let {
-                                val res = viewModel.updateCatServId(it.name, it.id,it.parents.get(0))
-                                Log.d(TAG, "createFoldersOnServer: UpdateCatServId in Local DB ---> $res")
+                                val res =
+                                    viewModel.updateCatServId(it.name, it.id, it.parents.get(0))
+                                Log.d(
+                                    TAG,
+                                    "createFoldersOnServer: UpdateCatServId in Local DB ---> $res"
+                                )
                             }
                         }
                     }
@@ -381,103 +432,132 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    suspend fun getSubFoldersDataCache(){
+    suspend fun getSubFoldersDataCache() {
         Log.d(TAG, "getSubFoldersDataCache: Called")
-      try {
-          lifecycleScope.launch(Dispatchers.IO){
-              val catListData=viewModel.getCategoriesData()
-              val foldersList = ArrayList<FolderTable>()
-              val mimetype=this@MainActivity.resources.getString(R.string.folder_mime_type)
-              if (catListData.isNotEmpty()){
-                  catListData.forEach { catModel->
-                      Log.d(TAG, "getSubFoldersDataCache: SubFolder to be Cache in Local ${catListData.toString()}")
-                      val result=getDataBasedOnParentId(catModel.serverId,mimetype)
-                      result?.let { filesList->
-                          if (filesList.files.isNotEmpty()){
-                              filesList.files.forEach { file->
-                                  val driveTimeStamp=DateUtills.driveDateToTimeStamp(file.createdTime.toString())
-                                  val folderTable=FolderTable(0,file.name,driveTimeStamp.toString(),catModel.catId,file.id,false)
-                                  foldersList.add(folderTable)
-                              }
-                              if (foldersList.isNotEmpty()) viewModel.insertFoldertList(foldersList)
-                          }
-                      }
-                  }
-                  getItemDataCache()
-              }
+        try {
+            lifecycleScope.launch(Dispatchers.IO) {
+                val catListData = viewModel.getCategoriesData()
+                val foldersList = ArrayList<FolderTable>()
+                val mimetype = this@MainActivity.resources.getString(R.string.folder_mime_type)
+                if (catListData.isNotEmpty()) {
+                    catListData.forEach { catModel ->
+                        Log.d(
+                            TAG,
+                            "getSubFoldersDataCache: SubFolder to be Cache in Local ${catListData.toString()}"
+                        )
+                        val result = getDataBasedOnParentId(catModel.serverId, mimetype)
+                        result?.let { filesList ->
+                            if (filesList.files.isNotEmpty()) {
+                                filesList.files.forEach { file ->
+                                    val driveTimeStamp =
+                                        DateUtills.driveDateToTimeStamp(file.createdTime.toString())
+                                    val folderTable = FolderTable(
+                                        0,
+                                        file.name,
+                                        driveTimeStamp.toString(),
+                                        catModel.catId,
+                                        file.id,
+                                        false
+                                    )
+                                    foldersList.add(folderTable)
+                                }
+                                if (foldersList.isNotEmpty()) viewModel.insertFoldertList(
+                                    foldersList
+                                )
+                            }
+                        }
+                    }
+                    getItemDataCache()
+                }
 
-          }
-      }catch (e:Exception){
-          e.printStackTrace()
-          Log.d(TAG, "getSubFoldersDataCache: ${e.message}")
-          logout("getSubFoldersDataCache()")
-      }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Log.d(TAG, "getSubFoldersDataCache: ${e.message}")
+            logout("getSubFoldersDataCache()")
+        }
     }
 
-    suspend fun getItemDataCache(){
+    suspend fun getItemDataCache() {
         Log.d(TAG, "getItemDataCache: Called")
-       try {
-           val foldDataList=viewModel.getFoldersDataList()
-           val itemModelList = ArrayList<ItemModel>()
-           val mimetype="*/*"
-           val res=lifecycleScope.launch(Dispatchers.IO){
-               if (foldDataList.isNotEmpty()){
-                   foldDataList.forEach { folTable->
-                       Log.d(TAG, "getItemDataCache: Item Data Cache in Local Db ${foldDataList.toString()}")
-                       val result: FileList? = gDriveService.let {
-                           it.files().list()
-                               .setSpaces("appDataFolder")
-                               .setQ("'${folTable.folderServerId}' in parents")
-                               .setFields("nextPageToken, files(permissions,id,name,size,parents,mimeType,quotaBytesUsed,modifiedTime,createdTime)")
-                               .execute()
-                       }
-                       result?.let {
-                           Log.d(TAG, "getItemDataCache Size: ${it.files.size}")
-                           if (it.files.isNotEmpty()){
-                               it.files.forEach { file->
-                                   val driveTimeStamp=DateUtills.driveDateToTimeStamp(file.createdTime.toString())
-                                   val defLocation=this@MainActivity.resources.getString(R.string.db_folder_path)
-                                   val catNameCreation="app_"+folTable.folderCatType
-                                   val path=defLocation+catNameCreation
-                                   val itemModel=ItemModel(0,file.name,file.quotaBytesUsed.toString(),driveTimeStamp.toString(),file.mimeType,path,file.id,folTable.folderId.toString(),folTable.folderCatType,false)
-                                   itemModelList.add(itemModel)
-                                   Log.d(TAG, "getItemDataCache: ${itemModel.toString()}")
-                               }
-                           }
-                       }
-                   }
-                   Log.d(TAG, "getItemDataCache: ${itemModelList.toString()}")
-                   if (itemModelList.isNotEmpty()) {
-                       Log.d(TAG, "getItemDataCache: ${itemModelList.toString()}")
-                       viewModel.insertItemsList(itemModelList)
-                   }
-               }
-           }
-           res.join()
-           openIntent()
-       }catch (e:Exception){
-           e.printStackTrace()
-           Log.d(TAG, "getItemDataCache: ${e.message}")
-           logout("getItemDataCache()")
-       }
+        try {
+            val foldDataList = viewModel.getFoldersDataList()
+            val itemModelList = ArrayList<ItemModel>()
+            val mimetype = "*/*"
+            val res = lifecycleScope.launch(Dispatchers.IO) {
+                if (foldDataList.isNotEmpty()) {
+                    foldDataList.forEach { folTable ->
+                        Log.d(
+                            TAG,
+                            "getItemDataCache: Item Data Cache in Local Db ${foldDataList.toString()}"
+                        )
+                        val result: FileList? = gDriveService.let {
+                            it.files().list()
+                                .setSpaces("appDataFolder")
+                                .setQ("'${folTable.folderServerId}' in parents")
+                                .setFields("nextPageToken, files(permissions,id,name,size,parents,mimeType,quotaBytesUsed,modifiedTime,createdTime)")
+                                .execute()
+                        }
+                        result?.let {
+                            Log.d(TAG, "getItemDataCache Size: ${it.files.size}")
+                            if (it.files.isNotEmpty()) {
+                                it.files.forEach { file ->
+                                    val driveTimeStamp =
+                                        DateUtills.driveDateToTimeStamp(file.createdTime.toString())
+                                    val defLocation =
+                                        this@MainActivity.resources.getString(R.string.db_folder_path)
+                                    val catNameCreation = "app_" + folTable.folderCatType
+                                    val path = defLocation + catNameCreation
+                                    val itemModel = ItemModel(
+                                        0,
+                                        file.name,
+                                        file.quotaBytesUsed.toString(),
+                                        driveTimeStamp.toString(),
+                                        file.mimeType,
+                                        path,
+                                        file.id,
+                                        folTable.folderId.toString(),
+                                        folTable.folderCatType,
+                                        false
+                                    )
+                                    itemModelList.add(itemModel)
+                                    Log.d(TAG, "getItemDataCache: ${itemModel.toString()}")
+                                }
+                            }
+                        }
+                    }
+                    Log.d(TAG, "getItemDataCache: ${itemModelList.toString()}")
+                    if (itemModelList.isNotEmpty()) {
+                        Log.d(TAG, "getItemDataCache: ${itemModelList.toString()}")
+                        viewModel.insertItemsList(itemModelList)
+                    }
+                }
+            }
+            res.join()
+            openIntent()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Log.d(TAG, "getItemDataCache: ${e.message}")
+            logout("getItemDataCache()")
+        }
     }
 
-    suspend fun getDataBasedOnParentId(parentFolderId:String,mimeType:String): FileList?
-    {
+    suspend fun getDataBasedOnParentId(parentFolderId: String, mimeType: String): FileList? {
         Log.d(TAG, "getDataBasedOnParentId: Called")
         val pagetoken: String? = null
-        var result: FileList?=null
+        var result: FileList? = null
         try {
             do {
                 result = gDriveService.files().list().apply {
                     spaces = "appDataFolder"
                     q = "'${parentFolderId}' in parents and mimeType='${mimeType}'"
-                    fields = "nextPageToken, files(id,name,size,parents,mimeType,quotaBytesUsed,modifiedTime,createdTime)"
+                    fields =
+                        "nextPageToken, files(id,name,size,parents,mimeType,quotaBytesUsed,modifiedTime,createdTime)"
                     pageToken = this.pageToken
                 }.execute()
 
             } while (pagetoken != null)
-        }catch (e:Exception){
+        } catch (e: Exception) {
             e.printStackTrace()
             Log.d(TAG, "getDataBasedOnParentId: ${e.message}")
             logout("getDataBasedOnParentId")

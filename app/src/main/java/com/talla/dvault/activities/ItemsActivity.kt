@@ -101,6 +101,8 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
             binding.titleScrnTitle.text = folderTable.folderName
             Log.d("FolderName", "onCreate: $folderTable.folderName")
             changeFolderColor(folderTable.folderCatType)
+            FileSize.OnLongItemClick=false
+            FileSize.SelectAll=false
         }
         dialogInit()
 

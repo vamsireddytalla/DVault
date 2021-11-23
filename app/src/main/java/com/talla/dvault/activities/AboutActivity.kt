@@ -9,17 +9,18 @@ import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.util.Log
+import android.view.animation.AnimationUtils
 import com.talla.dvault.R
 import android.widget.Toast
 
 private const val TAG = "AboutActivity"
-class AboutActivity : AppCompatActivity()
-{
-    private lateinit var binding:ActivityAboutBinding
+
+class AboutActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityAboutBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding= ActivityAboutBinding.inflate(layoutInflater)
+        binding = ActivityAboutBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
 
@@ -28,7 +29,10 @@ class AboutActivity : AppCompatActivity()
         }
 
         binding.contactUs.setOnClickListener {
-            val emailIntent = Intent(Intent.ACTION_SENDTO, Uri.fromParts("mailto", this.resources.getString(R.string.customer_Care), null))
+            val emailIntent = Intent(
+                Intent.ACTION_SENDTO,
+                Uri.fromParts("mailto", this.resources.getString(R.string.customer_Care), null)
+            )
             emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Help")
             startActivity(Intent.createChooser(emailIntent, null))
         }
@@ -51,15 +55,22 @@ class AboutActivity : AppCompatActivity()
         }
 
         appVersion()
-
+        logoAnim()
     }
 
-    fun appVersion(){
+    fun logoAnim() {
+        val rotationAnimation = AnimationUtils.loadAnimation(this, R.anim.loading_anim)
+        rotationAnimation.duration = 6000
+        binding.setLogo.startAnimation(rotationAnimation)
+    }
+
+    fun appVersion() {
         try {
-            val pInfo: PackageInfo = this.getPackageManager().getPackageInfo(this.getPackageName(), 0)
+            val pInfo: PackageInfo =
+                this.getPackageManager().getPackageInfo(this.getPackageName(), 0)
             val version = pInfo.versionName
             Log.d(TAG, "appVersion: $version")
-            binding.appVersion.text= "App Version $version"
+            binding.appVersion.text = "App Version $version"
         } catch (e: PackageManager.NameNotFoundException) {
             e.printStackTrace()
         }

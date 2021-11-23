@@ -56,7 +56,7 @@ You can restore them when you reinstall.</string>
     <string name="restore_alert">Your Backup data available on the Server click OK to restore.</string>
     <string name="internet_alert">Make sure to turn on your Internet to proceed with this app.</string>
     <string name="google_drive_storage">Google Drive Storage</string>
-    <string name="privacy_policy">https://4b89krifqzjejpo92l8rqw-on.drv.tw/www.drivevaultonline.com/dvault.html</string>
+    <string name="privacy_policy">https://4b89krifqzjejpo92l8rqw-on.drv.tw/www.DVaultOnline.com/dvault.html</string>
     <string name="designed_by_sathvik_developed_by_vamsi">Designed by Sathvik • Developed by Vamsi.</string>
     <string name="are_you_sure_you_wan_t_to_delete">Are you sure you wan\'t to delete</string>
     <string name="app_info">A secure place to store all your files with local and cloud storage support which can be Connected to your Google Drive. Keeping your data secure is our priority. Your data stays safe and available to you whenever you need it. Access your data online anytime using your mobile Application.</string>
@@ -64,6 +64,7 @@ You can restore them when you reinstall.</string>
     <string name="restore_from_settings">Restore file from Settings</string>
     <string name="so_far">Rate your experience using DVault so far</string>
     <string name="last_login">Last login</string>
+    <string name="hyperlink"><a href="Privacy Policy">Privacy Policy</a></string>
 
 
     <string-array name="security_questions">

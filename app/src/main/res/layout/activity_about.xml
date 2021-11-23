@@ -75,17 +75,26 @@
     </RelativeLayout>
 
 
-    <ImageView
-        android:id="@+id/imageView5"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:layout_marginTop="24dp"
-        android:src="@drawable/ic_logo_about"
-        app:layout_constraintBottom_toTopOf="@+id/app_head"
-        app:layout_constraintEnd_toStartOf="@+id/guideline2"
-        app:layout_constraintStart_toStartOf="@+id/guideline1"
-        app:layout_constraintTop_toBottomOf="@+id/relativeLayout3"
-        tools:ignore="VectorDrawableCompat" />
+  <RelativeLayout
+      android:id="@+id/imageView5"
+      android:layout_width="80dp"
+      android:layout_height="80dp"
+      android:layout_marginTop="24dp"
+      android:background="@drawable/ic_logobg"
+      app:layout_constraintBottom_toTopOf="@+id/app_head"
+      app:layout_constraintEnd_toStartOf="@+id/guideline2"
+      app:layout_constraintStart_toStartOf="@+id/guideline1"
+      app:layout_constraintTop_toBottomOf="@+id/relativeLayout3"
+      tools:ignore="VectorDrawableCompat">
+
+      <ImageView
+          android:layout_width="60dp"
+          android:layout_height="60dp"
+          android:id="@+id/setLogo"
+          android:layout_centerInParent="true"
+          android:src="@drawable/ic_logo"/>
+
+  </RelativeLayout>
 
     <TextView
         android:id="@+id/app_head"

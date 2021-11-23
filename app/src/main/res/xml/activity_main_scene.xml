@@ -37,7 +37,7 @@
                 android:scaleY="0.8" />
             <KeyPosition
                 motion:motionTarget="@+id/googleSignIn"
-                motion:framePosition="40"
+                motion:framePosition="30"
                 motion:keyPositionType="deltaRelative"
                 motion:percentX="0"
                 motion:percentY="0" />
@@ -89,6 +89,12 @@
             android:layout_marginTop="20dp"
             motion:layout_constraintBottom_toTopOf="@+id/googleSignIn"
             motion:layout_constraintVertical_bias="0.0" />
+        <Constraint
+            android:layout_height="wrap_content"
+            motion:layout_editor_absoluteX="163dp"
+            android:layout_width="wrap_content"
+            motion:layout_constraintTop_toBottomOf="@+id/googleSignIn"
+            android:id="@+id/privacyPolicy" />
     </ConstraintSet>
 
     <ConstraintSet android:id="@+id/end">
@@ -129,5 +135,28 @@
             motion:layout_constraintBottom_toTopOf="@+id/googleSignIn"
             motion:layout_constraintTop_toTopOf="@+id/imageView"
             motion:layout_constraintVertical_bias="0.471" />
+        <Constraint
+            motion:layout_constraintEnd_toEndOf="parent"
+            android:id="@+id/textView11" />
+        <Constraint
+            motion:layout_constraintBottom_toTopOf="@+id/googleSignIn"
+            android:id="@+id/textView18" />
+        <Constraint
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:id="@+id/textView19"
+            motion:layout_constraintStart_toStartOf="@+id/googleSignIn"
+            motion:layout_constraintEnd_toEndOf="@+id/googleSignIn"
+            motion:layout_constraintTop_toBottomOf="@+id/googleSignIn"
+            motion:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginBottom="16dp" />
+        <Constraint
+            motion:layout_editor_absoluteY="693dp"
+            android:layout_height="wrap_content"
+            motion:layout_constraintEnd_toEndOf="@+id/googleSignIn"
+            android:layout_width="wrap_content"
+            android:id="@+id/privacyPolicy"
+            motion:layout_constraintStart_toStartOf="@+id/googleSignIn"
+            motion:layout_constraintTop_toBottomOf="@+id/googleSignIn" />
     </ConstraintSet>
 </MotionScene>

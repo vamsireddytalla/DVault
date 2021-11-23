@@ -14,6 +14,8 @@ import kotlinx.coroutines.runBlocking
 import java.util.concurrent.Executors
 import androidx.room.migration.Migration
 import com.talla.dvault.database.entities.*
+import net.sqlcipher.database.SQLiteDatabase
+import net.sqlcipher.database.SupportFactory
 
 @Database(entities = [User::class,AppLockModel::class,CategoriesModel::class, FolderTable::class,ItemModel::class],version = 1,exportSchema = false)
 abstract class VaultDatabase: RoomDatabase()
@@ -32,8 +34,8 @@ abstract class VaultDatabase: RoomDatabase()
         private fun createDatabase(context: Context) : VaultDatabase {
             var builder: Builder<VaultDatabase> = Room.databaseBuilder(context.applicationContext,VaultDatabase::class.java,"DVault.db")
                 .addCallback(rdc).addMigrations(MIGRATION_1_2).fallbackToDestructiveMigration()
-//            val factory = SupportFactory(SQLiteDatabase.getBytes("PassPhrase".toCharArray()))
-//            builder.openHelperFactory(factory)
+            val factory = SupportFactory(SQLiteDatabase.getBytes("DVault".toCharArray()))
+            builder.openHelperFactory(factory)
             return builder.build()
         }
 

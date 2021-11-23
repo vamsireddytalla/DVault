@@ -79,12 +79,14 @@ class VaultRepository @Inject constructor(private val appDao:DVaultDao)
         val itemsList=appDao.getRBItems(catType)
         val def_path="/data/data/com.talla.dvault/"
         var folderObj:FolderTable
-        var newItemsList=ArrayList<ItemModel>()
+        val newItemsList=ArrayList<ItemModel>()
         itemsList.forEach {
             folderObj=getFolderObjBasedOnCatAndFolderID(catType,it.folderId)
-            val searchFile = File(def_path + "/" + "app_" + folderObj.folderCatType + "/" + folderObj.folderName+"/"+it.itemName)
-            if (!searchFile.exists() && (searchFile.length().toDouble()!=it.itemSize.toDouble())){
-                it.itemOriPath=searchFile.toString()
+            val uptoFolderPath = File(def_path + "/" + "app_" + folderObj.folderCatType + "/" + folderObj.folderName)
+            if (!uptoFolderPath.exists()) uptoFolderPath.mkdirs()
+            val filePath=File(uptoFolderPath.toString()+"/"+it.itemName)
+            if (!filePath.exists() && (filePath.length().toDouble()!=it.itemSize.toDouble())){
+                it.itemOriPath=filePath.toString()
                 newItemsList.add(it)
             }
         }
