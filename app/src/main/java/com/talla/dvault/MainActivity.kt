@@ -221,8 +221,7 @@ class MainActivity : AppCompatActivity() {
 
     fun dialogInit() {
         progressDialog = Dialog(this)
-        val cloudDialogBinding = CloudLoadingBinding.inflate(this.layoutInflater)
-        val customProgressDialogBinding = CustonProgressDialogBinding.inflate(this.layoutInflater)
+        cloudDialogBinding = CloudLoadingBinding.inflate(this.layoutInflater)
         progressDialog.setContentView(cloudDialogBinding.root)
         val rotationAnimation = AnimationUtils.loadAnimation(this, R.anim.loading_anim)
         cloudDialogBinding.prog.startAnimation(rotationAnimation)
