@@ -6,11 +6,14 @@ import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Environment
 import android.provider.Settings
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -20,6 +23,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.auth.api.signin.internal.Storage
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.talla.dvault.activities.DashBoardActivity
@@ -30,6 +34,7 @@ import com.talla.dvault.viewmodels.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
+import java.lang.Exception
 import javax.inject.Inject
 import kotlin.math.log
 
@@ -38,7 +43,10 @@ private const val TAG = "SplashActivity"
 @AndroidEntryPoint
 class SplashActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySplashBinding
-    lateinit var launchIntent: ActivityResultLauncher<Intent>
+    lateinit var resLauncher: ActivityResultLauncher<Intent>
+    private var readPermission: Boolean = false
+    private var writePermission: Boolean = false
+    private lateinit var permissionLauncher: ActivityResultLauncher<Array<String>>
     private val viewModel: MainViewModel by viewModels()
 
     @Inject
@@ -51,9 +59,23 @@ class SplashActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivitySplashBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        resLauncher=registerForActivityResult(ActivityResultContracts.StartActivityForResult()){ result->
+           if (result.resultCode==Activity.RESULT_OK){
+               if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.R){
+                      if (Environment.isExternalStorageManager()){
+                          Toast.makeText(this, "Permission granted", Toast.LENGTH_SHORT).show()
+                      }else{
+                          Toast.makeText(this, "Permission Rejected", Toast.LENGTH_SHORT).show()
+                      }
+               }else{
+                   Log.d(TAG, "onCreate: Line No 65")
+               }
+           }
+        }
+
         requestPermissions()
     }
-
 
     fun isUserSignedIn(): Boolean {
         val googleSigninAccount = GoogleSignIn.getLastSignedInAccount(this)
@@ -100,10 +122,22 @@ class SplashActivity : AppCompatActivity() {
 
 
     private fun hasExternalStoragePermission(): Boolean {
-        return ActivityCompat.checkSelfPermission(
-            this,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
-        ) == PackageManager.PERMISSION_GRANTED
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R){
+            return Environment.isExternalStorageManager()
+        }else{
+            val hasWritePermissions = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+            val hasReadPermissions = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+            readPermission=hasReadPermissions
+            writePermission=hasWritePermissions
+            return readPermission && writePermission
+        }
+
+//        readPermission = hasReadPermissions
+//        writePermission = hasWritePermissions || minSdk29
+//
+
+//        return readPermission && (writePermission || minSdk29)
     }
 
     private fun requestPermissions() {
@@ -120,13 +154,39 @@ class SplashActivity : AppCompatActivity() {
                     openLoginScreen()
                 }
             }
-        } else if(!hasExternalStoragePermission()) {
-            val permissionsList = mutableListOf<String>()
-            permissionsList.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        } else if (!hasExternalStoragePermission()) {
 
-            if (permissionsList.isNotEmpty()) {
-                ActivityCompat.requestPermissions(this, permissionsList.toTypedArray(), 0)
+
+            if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.R)
+            {
+                try {
+                    val intent=Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+                    intent.addCategory("android.intent.category.DEFAULT")
+                    val uri=Uri.fromParts("package:",packageName,null)
+                    intent.data = uri
+                    resLauncher.launch(intent)
+                }catch (e:Exception){
+                    e.printStackTrace()
+                    val intent=Intent()
+                    intent.action = Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION
+                    resLauncher.launch(intent)
+                }
+            }else{
+                if (writePermission && readPermission) {
+                    val permissionToRequest = mutableListOf<String>()
+                    if (!readPermission) {
+                        permissionToRequest.add(Manifest.permission.READ_EXTERNAL_STORAGE)
+                    }
+                    if (!writePermission) {
+                        permissionToRequest.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    }
+//                    if (permissionToRequest.isNotEmpty()) {
+//                        permissionLauncher.launch(permissionToRequest.toTypedArray())
+//                    }
+                    ActivityCompat.requestPermissions(this, permissionToRequest.toTypedArray(), 0)
+                }
             }
+
         }
 
     }
