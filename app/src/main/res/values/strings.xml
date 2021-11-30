@@ -45,6 +45,7 @@ You can restore them when you reinstall.</string>
     <string name="document_mime_type">application/vnd.google-apps.document</string>
     <string name="video_mime_type">application/vnd.google-apps.video</string>
     <string name="file_sys_dst">/storage/emulated/0/Download/DVault</string>
+    <string name="web_key">441047295105-ke75dn4gsdr6p73lv1sovkk3g8vaormg.apps.googleusercontent.com</string>
     <string name="key">key</string>
     <string name="key2">key2</string>
     <string name="initializing">Initializing...</string>

@@ -68,6 +68,19 @@ import android.text.Html
 
 import android.os.Build
 import android.text.method.LinkMovementMethod
+import androidx.activity.result.ActivityResultCallback
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.common.api.ApiException
+import com.google.firebase.auth.FirebaseUser
+
+import androidx.annotation.NonNull
+
+import com.google.firebase.auth.GoogleAuthProvider
+
+import com.google.firebase.auth.AuthCredential
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 
 
 private const val TAG = "MainActivity"
@@ -79,7 +92,8 @@ class MainActivity : AppCompatActivity() {
     private val viewModel: MainViewModel by viewModels()
     private lateinit var progressDialog: Dialog
     private lateinit var gDriveService: Drive
-    private lateinit var cloudDialogBinding:CloudLoadingBinding
+    private lateinit var auth:FirebaseAuth
+    private lateinit var cloudDialogBinding: CloudLoadingBinding
 
     @Inject
     lateinit var databaseInstance: VaultDatabase
@@ -90,8 +104,8 @@ class MainActivity : AppCompatActivity() {
     @Inject
     lateinit var repository: VaultRepository
 
-    @Inject
-    lateinit var gso: GoogleSignInOptions
+//    @Inject
+//    lateinit var gso: GoogleSignInOptions
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -103,24 +117,54 @@ class MainActivity : AppCompatActivity() {
             }, 1000)
         }
         dialogInit()
+        auth= FirebaseAuth.getInstance()
 
+        launchIntent = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
 
-        launchIntent =
-            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-                if (result.resultCode == Activity.RESULT_OK) {
-                    handleSignData(result.data)
-                } else {
-                    Log.d(TAG, "googleSignIn error: ${result.data.toString()}")
-                    showSnackBar("Cancelled")
+                try {
+                    val task: Task<GoogleSignInAccount> = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+                    val account: GoogleSignInAccount? = task.getResult(ApiException::class.java)
+                    Log.d(TAG, "onCreate: ${account.toString()}")
+                    Log.d(TAG, "onCreate: ${account?.id}")
+                    Log.d(TAG, "onCreate: ${account?.idToken}")
+//                    firebaseAuthWithGoogle(account?.idToken!!)
+                    if (result.resultCode == Activity.RESULT_OK) {
+                        handleSignData(result.data)
+                    } else {
+                        Log.d(TAG, "googleSignIn error: ${result.data.toString()}")
+                        showSnackBar(" Error Cancelled")
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    Log.d(TAG, "Error One: ${e.printStackTrace()}")
+                    Log.d(TAG, "Error One: ${e.localizedMessage.toString()}")
+                    Log.d(TAG, "Error One: ${e.printStackTrace()}")
+                    Log.d(TAG, "Error One: ${e.message}")
+                    showSnackBar(e.message.toString())
                 }
+
             }
 
-        binding.privacyPolicy.setMovementMethod(LinkMovementMethod.getInstance());
+        binding.privacyPolicy.movementMethod = LinkMovementMethod.getInstance();
         binding.privacyPolicy.setLinkTextColor(Color.BLUE)
-        binding.privacyPolicy.setOnClickListener{
-            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(this.resources.getString(R.string.privacy_policy)))
+        binding.privacyPolicy.setOnClickListener {
+            val browserIntent = Intent(
+                Intent.ACTION_VIEW,
+                Uri.parse(this.resources.getString(R.string.privacy_policy))
+            )
             startActivity(browserIntent)
         }
+    }
+
+    fun buildGSOobject(): GoogleSignInOptions {
+        val gso: GoogleSignInOptions = GoogleSignInOptions
+            .Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken("441047295105-ke75dn4gsdr6p73lv1sovkk3g8vaormg.apps.googleusercontent.com")
+            .requestEmail()
+            .requestProfile()
+            .requestScopes(Scope(DriveScopes.DRIVE_APPDATA))
+            .build()
+        return gso
     }
 
     private fun openIntent() {
@@ -141,7 +185,7 @@ class MainActivity : AppCompatActivity() {
 
     fun googleSIgnIn(view: android.view.View) {
         if (InternetUtil.isInternetAvail(this)) {
-            val mGoogleSignInClient = GoogleSignIn.getClient(this, gso)
+            val mGoogleSignInClient = GoogleSignIn.getClient(this, buildGSOobject())
             val signInIntent: Intent = mGoogleSignInClient.signInIntent
             launchIntent.launch(signInIntent)
         } else {
@@ -158,6 +202,32 @@ class MainActivity : AppCompatActivity() {
         return googleSigninAccount != null
     }
 
+//    private fun firebaseAuthWithGoogle(idToken: String) {
+//        val credential = GoogleAuthProvider.getCredential(idToken, null)
+//        auth.signInWithCredential(credential)
+//            .addOnCompleteListener(this) { task ->
+//                if (task.isSuccessful) {
+//                    Log.d(TAG, "signInWithCredential:success")
+//                    Toast.makeText(this, "Sucess", Toast.LENGTH_SHORT).show()
+//                    val isNew = task.result.additionalUserInfo!!.isNewUser
+//                    auth.currentUser?.let {
+//                        val userName=it.displayName
+//                        val userEmail=it.email
+//                    }
+//                    if (isNew){
+//                        Toast.makeText(this, "new User", Toast.LENGTH_SHORT).show()
+//                    }else{
+//                        Toast.makeText(this, "Old User", Toast.LENGTH_SHORT).show()
+//                    }
+//                } else {
+//                    Log.w(TAG, "signInWithCredential:failure", task.exception)
+//                    Toast.makeText(this, "Failure", Toast.LENGTH_SHORT).show()
+//                    showSnackBar(task.exception.toString())
+//                }
+//            }
+//    }
+
+
     private fun handleSignData(data: Intent?) {
         // The Task returned from this call is always completed, no need to attach
         // a listener.
@@ -165,10 +235,7 @@ class MainActivity : AppCompatActivity() {
             .addOnCompleteListener {
                 if (it.isSuccessful) {
                     // user successfully logged-in
-                    Log.d(
-                        TAG,
-                        "handleSignData: ${it.result?.account}  ${it.result?.displayName} ${it.result?.email}"
-                    )
+                    Log.d(TAG, "handleSignData: ${it.result?.account}  ${it.result?.displayName} ${it.result?.email}")
                     Log.d(TAG, "handleSignData: ${it.result?.grantedScopes}")
                     Log.d(TAG, "handleSignData: ${it.result?.requestedScopes}")
                     if (it.result?.grantedScopes!!.contains(Scope(DriveScopes.DRIVE_APPDATA))) {
@@ -193,7 +260,7 @@ class MainActivity : AppCompatActivity() {
                             } catch (e: Exception) {
                                 e.printStackTrace()
                                 stopProgressDialog()
-                                FileSize.showSnackBar(e.message.toString(), binding.root)
+                                FileSize.showSnackBar("Error " + e.message.toString(), binding.root)
                                 logout("handleSignDat())")
                             }
 
@@ -248,7 +315,7 @@ class MainActivity : AppCompatActivity() {
     suspend fun logout(message: String) {
         stopProgressDialog()
         Log.d(TAG, "logout Called From $message")
-        val mGoogleSignInClient = GoogleSignIn.getClient(this, gso)
+        val mGoogleSignInClient = GoogleSignIn.getClient(this, buildGSOobject())
         mGoogleSignInClient?.signOut()
             ?.addOnCompleteListener(
                 this
@@ -276,7 +343,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     suspend fun stopProgressDialog() {
-            progressDialog.dismiss()
+        progressDialog.dismiss()
     }
 
     fun getCategoriesData(user: User) {

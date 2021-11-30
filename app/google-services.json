@@ -1,33 +1,49 @@
 {
   "project_info": {
-    "project_number": "912043129941",
-    "project_id": "dvault-1633423802518",
-    "storage_bucket": "dvault-1633423802518.appspot.com"
+    "project_number": "441047295105",
+    "project_id": "drivevaultonline",
+    "storage_bucket": "drivevaultonline.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:912043129941:android:bc2c1ca86a6b526239a8dc",
+        "mobilesdk_app_id": "1:441047295105:android:a378d1722f3efc46edd980",
         "android_client_info": {
           "package_name": "com.talla.dvault"
         }
       },
       "oauth_client": [
         {
-          "client_id": "912043129941-ecsh6o84ub66p75ql1qoktqdbme2tr51.apps.googleusercontent.com",
+          "client_id": "441047295105-7k885it8ij1v23pus0313vkhe22u3g59.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.talla.dvault",
+            "certificate_hash": "d0819be9c526a44f9b469d3bea76745f05226fc4"
+          }
+        },
+        {
+          "client_id": "441047295105-f746e92l6afnsorqnfoktke97au44708.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.talla.dvault",
+            "certificate_hash": "397703410f2fb483f10d31b0b1c89948e97c1c90"
+          }
+        },
+        {
+          "client_id": "441047295105-ke75dn4gsdr6p73lv1sovkk3g8vaormg.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyAvJmOqEyIE-Ay7D1tjBjifk51HQeyeJJ0"
+          "current_key": "AIzaSyBsTXloi7R2J-kgcKOjQvmK9cx7OZXwNkA"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "912043129941-ecsh6o84ub66p75ql1qoktqdbme2tr51.apps.googleusercontent.com",
+              "client_id": "441047295105-ke75dn4gsdr6p73lv1sovkk3g8vaormg.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

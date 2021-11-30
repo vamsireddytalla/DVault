@@ -123,15 +123,21 @@ class SplashActivity : AppCompatActivity() {
 
     private fun hasExternalStoragePermission(): Boolean {
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R){
-            return Environment.isExternalStorageManager()
-        }else{
-            val hasWritePermissions = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-            val hasReadPermissions = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-            readPermission=hasReadPermissions
-            writePermission=hasWritePermissions
-            return readPermission && writePermission
-        }
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R){
+//            return Environment.isExternalStorageManager()
+//        }else{
+//            val hasWritePermissions = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+//            val hasReadPermissions = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+//            readPermission=hasReadPermissions
+//            writePermission=hasWritePermissions
+//            return readPermission && writePermission
+//        }
+
+        val hasWritePermissions = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+        val hasReadPermissions = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+        readPermission=hasReadPermissions
+        writePermission=hasWritePermissions
+        return readPermission && writePermission
 
 //        readPermission = hasReadPermissions
 //        writePermission = hasWritePermissions || minSdk29
@@ -156,36 +162,47 @@ class SplashActivity : AppCompatActivity() {
             }
         } else if (!hasExternalStoragePermission()) {
 
-
-            if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.R)
-            {
-                try {
-                    val intent=Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
-                    intent.addCategory("android.intent.category.DEFAULT")
-                    val uri=Uri.fromParts("package:",packageName,null)
-                    intent.data = uri
-                    resLauncher.launch(intent)
-                }catch (e:Exception){
-                    e.printStackTrace()
-                    val intent=Intent()
-                    intent.action = Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION
-                    resLauncher.launch(intent)
+                val permissionToRequest = mutableListOf<String>()
+                if (!readPermission) {
+                    permissionToRequest.add(Manifest.permission.READ_EXTERNAL_STORAGE)
                 }
-            }else{
-                if (writePermission && readPermission) {
-                    val permissionToRequest = mutableListOf<String>()
-                    if (!readPermission) {
-                        permissionToRequest.add(Manifest.permission.READ_EXTERNAL_STORAGE)
-                    }
-                    if (!writePermission) {
-                        permissionToRequest.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                    }
+                if (!writePermission) {
+                    permissionToRequest.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                }
 //                    if (permissionToRequest.isNotEmpty()) {
 //                        permissionLauncher.launch(permissionToRequest.toTypedArray())
 //                    }
-                    ActivityCompat.requestPermissions(this, permissionToRequest.toTypedArray(), 0)
-                }
-            }
+                ActivityCompat.requestPermissions(this, permissionToRequest.toTypedArray(), 0)
+
+//            if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.R)
+//            {
+//                try {
+//                    val intent=Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+//                    intent.addCategory("android.intent.category.DEFAULT")
+//                    val uri=Uri.fromParts("package:",packageName,null)
+//                    intent.data = uri
+//                    resLauncher.launch(intent)
+//                }catch (e:Exception){
+//                    e.printStackTrace()
+//                    val intent=Intent()
+//                    intent.action = Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION
+//                    resLauncher.launch(intent)
+//                }
+//            }else{
+//                if (writePermission && readPermission) {
+//                    val permissionToRequest = mutableListOf<String>()
+//                    if (!readPermission) {
+//                        permissionToRequest.add(Manifest.permission.READ_EXTERNAL_STORAGE)
+//                    }
+//                    if (!writePermission) {
+//                        permissionToRequest.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+//                    }
+////                    if (permissionToRequest.isNotEmpty()) {
+////                        permissionLauncher.launch(permissionToRequest.toTypedArray())
+////                    }
+//                    ActivityCompat.requestPermissions(this, permissionToRequest.toTypedArray(), 0)
+//                }
+//            }
 
         }
 
