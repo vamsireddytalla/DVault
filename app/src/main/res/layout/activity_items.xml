@@ -67,7 +67,7 @@
             android:includeFontPadding="false"
             android:paddingLeft="20dp"
             android:text="Images"
-            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
             android:textColor="@color/hello_color" />
 
         <LinearLayout

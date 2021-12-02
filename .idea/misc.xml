@@ -1,5 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="..\:/Android Kotlin Projects/DVault/app/src/main/res/drawable/ic_blue_bg.xml" value="0.25052083333333336" />
+        <entry key="..\:/Android Kotlin Projects/DVault/app/src/main/res/drawable/ic_drive_bg.xml" value="0.26614583333333336" />
+        <entry key="..\:/Android Kotlin Projects/DVault/app/src/main/res/layout-407x320/activity_about.xml" value="0.234375" />
+        <entry key="..\:/Android Kotlin Projects/DVault/app/src/main/res/layout-h5dp/activity_settings.xml" value="0.234375" />
+        <entry key="..\:/Android Kotlin Projects/DVault/app/src/main/res/layout-ldpi-400x240/activity_about.xml" value="1.125" />
+        <entry key="..\:/Android Kotlin Projects/DVault/app/src/main/res/layout-ldpi-400x320/activity_about.xml" value="0.234375" />
+        <entry key="..\:/Android Kotlin Projects/DVault/app/src/main/res/layout-ldpi/activity_settings.xml" value="0.234375" />
+        <entry key="..\:/Android Kotlin Projects/DVault/app/src/main/res/layout-mdpi/activity_settings.xml" value="0.2" />
+        <entry key="..\:/Android Kotlin Projects/DVault/app/src/main/res/layout-normal/activity_settings.xml" value="0.234375" />
+        <entry key="..\:/Android Kotlin Projects/DVault/app/src/main/res/layout-small/activity_about.xml" value="0.234375" />
+        <entry key="..\:/Android Kotlin Projects/DVault/app/src/main/res/layout-sw320dp-h5dp-ldpi-400x250/activity_settings.xml" value="0.234375" />
+        <entry key="..\:/Android Kotlin Projects/DVault/app/src/main/res/layout-sw320dp-h5dp/activity_settings.xml" value="0.25" />
+        <entry key="..\:/Android Kotlin Projects/DVault/app/src/main/res/layout-sw320dp/activity_about.xml" value="0.234375" />
+        <entry key="..\:/Android Kotlin Projects/DVault/app/src/main/res/layout-sw320dp/activity_settings.xml" value="0.2" />
+        <entry key="..\:/Android Kotlin Projects/DVault/app/src/main/res/layout-sw403dp/activity_settings.xml" value="0.234375" />
+        <entry key="..\:/Android Kotlin Projects/DVault/app/src/main/res/layout-sw408dp/activity_settings.xml" value="0.234375" />
+        <entry key="..\:/Android Kotlin Projects/DVault/app/src/main/res/layout-w400dp/activity_about.xml" value="0.234375" />
+        <entry key="..\:/Android Kotlin Projects/DVault/app/src/main/res/layout-w402dp-h6dp/activity_settings.xml" value="0.234375" />
+        <entry key="..\:/Android Kotlin Projects/DVault/app/src/main/res/layout/activity_about.xml" value="0.176" />
+        <entry key="..\:/Android Kotlin Projects/DVault/app/src/main/res/layout/activity_app_lock.xml" value="0.15789473684210525" />
+        <entry key="..\:/Android Kotlin Projects/DVault/app/src/main/res/layout/activity_dash_board.xml" value="0.4" />
+        <entry key="..\:/Android Kotlin Projects/DVault/app/src/main/res/layout/activity_folders.xml" value="0.15789473684210525" />
+        <entry key="..\:/Android Kotlin Projects/DVault/app/src/main/res/layout/activity_items.xml" value="0.15789473684210525" />
+        <entry key="..\:/Android Kotlin Projects/DVault/app/src/main/res/layout/activity_main.xml" value="0.24615384615384617" />
+        <entry key="..\:/Android Kotlin Projects/DVault/app/src/main/res/layout/activity_password.xml" value="0.15789473684210525" />
+        <entry key="..\:/Android Kotlin Projects/DVault/app/src/main/res/layout/activity_secure_que.xml" value="0.264" />
+        <entry key="..\:/Android Kotlin Projects/DVault/app/src/main/res/layout/activity_settings.xml" value="0.264" />
+        <entry key="..\:/Android Kotlin Projects/DVault/app/src/main/res/layout/activity_splash.xml" value="0.15789473684210525" />
+        <entry key="..\:/Android Kotlin Projects/DVault/app/src/main/res/layout/storage_layout.xml" value="0.264" />
+      </map>
+    </option>
+  </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="1.8" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/build/classes" />
   </component>

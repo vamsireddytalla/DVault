@@ -121,9 +121,9 @@ class SettingsActivity : AppCompatActivity() {
                 binding.restoreProgressRoot.visibility = View.GONE
                 binder?.stopSettingsService("Restore-Cancelled!")
             }
-            binding.googleCloudLayout.refreshStorage.setOnClickListener {
+            binding.refreshStorage.setOnClickListener {
                 val rotationAnimation=AnimationUtils.loadAnimation(this@SettingsActivity,R.anim.rotate_image)
-                binding.googleCloudLayout.refreshStorage.startAnimation(rotationAnimation)
+                binding.refreshStorage.startAnimation(rotationAnimation)
                 lifecycleScope.async(Dispatchers.IO){
                     binder?.getDriveStorage()
                 }
@@ -207,13 +207,13 @@ class SettingsActivity : AppCompatActivity() {
                            }
                            Log.d(TAG, "storageQuote: ${Math.round(usedStoreAfterCal).toInt()}")
                        }
-                       val storageBinding=StorageLayoutBinding.bind(binding.root)
+//                       val storageBinding=StorageLayoutBinding.bind(binding.root)
                        lifecycleScope.launch(Dispatchers.Main) {
                            Log.d(TAG, "storageQuote: Main")
-                           storageBinding.storageProgress.max=totalSpaceInDrive
-                           storageBinding.storageProgress.progress= Math.round(usedStoreAfterCal).toInt()
-                           storageBinding.totalSpace.text=totalStorage1
-                           storageBinding.usedSpace.text= "$usedStorage1 Used"
+                           binding.storageProgress.max=totalSpaceInDrive
+                           binding.storageProgress.progress= Math.round(usedStoreAfterCal).toInt()
+                           binding.totalSpace.text=totalStorage1
+                           binding.usedSpace.text= "$usedStorage1 Used"
                        }
                    }catch (e:Exception){
                        e.printStackTrace()

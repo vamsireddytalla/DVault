@@ -47,8 +47,8 @@
         app:layout_constraintTop_toTopOf="@+id/guideline4">
 
         <ImageView
-            android:layout_width="30dp"
-            android:layout_height="30dp"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
             android:id="@+id/backBtn"
             app:srcCompat="@drawable/ic_back_icon" />
 
@@ -61,7 +61,7 @@
             android:includeFontPadding="false"
             android:gravity="center"
             android:text="Security Question"
-            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
             android:textColor="@color/hello_color" />
 
 
@@ -162,22 +162,20 @@
 
     <Button
         android:id="@+id/button"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
-        android:background="@drawable/ic_next_btn_bg"
-        android:fontFamily="@font/poppins_medium"
-        android:includeFontPadding="false"
-        android:text="Next"
-        android:onClick="next"
+        android:background="@drawable/ic_button"
         android:clickable="true"
         android:focusable="true"
+        android:fontFamily="@font/poppins_medium"
         android:foreground="?attr/selectableItemBackground"
+        android:includeFontPadding="false"
+        android:onClick="next"
+        android:text="Next"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-        app:layout_constraintBottom_toTopOf="@+id/guideline3"
         app:layout_constraintEnd_toStartOf="@+id/guideline2"
         app:layout_constraintStart_toStartOf="@+id/guideline1"
-        app:layout_constraintTop_toBottomOf="@+id/textView13"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintTop_toBottomOf="@+id/textView13" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -98,7 +98,7 @@ class AppLockActivity : AppCompatActivity() {
         alertDialogBuilder.setCancelable(false)
         alertDialogBuilder.setPositiveButton(getString(R.string.ok)) { dialogInterface, i ->
             dialogInterface.dismiss()
-            var intent=Intent(this,DashBoardActivity::class.java)
+            val intent=Intent(this,DashBoardActivity::class.java)
             intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
             startActivity(intent)
         }

@@ -18,7 +18,7 @@ You can restore them when you reinstall.</string>
     <string name="answer">Answer</string>
     <string name="ok">Ok</string>
     <string name="password_set_sucess">Password set successfully</string>
-    <string name="go_to_dashboard">Click OK to Go to dashBoard.</string>
+    <string name="go_to_dashboard">Click OK to go to dashBoard.</string>
     <string name="fill_both_fields">Fill both fields.</string>
     <string name="both_pass_not_same">Both passwords are not same.</string>
     <string name="check_pass_length">Password length atleast 4 characters.</string>

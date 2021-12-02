@@ -49,7 +49,6 @@
         android:text="DVault"
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
         android:textColor="@color/white"
-        android:textSize="30dp"
         tools:layout_editor_absoluteX="175dp"
         tools:layout_editor_absoluteY="413dp" />
 
