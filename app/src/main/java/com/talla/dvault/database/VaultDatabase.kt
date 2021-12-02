@@ -34,8 +34,8 @@ abstract class VaultDatabase: RoomDatabase()
         private fun createDatabase(context: Context) : VaultDatabase {
             var builder: Builder<VaultDatabase> = Room.databaseBuilder(context.applicationContext,VaultDatabase::class.java,"DVault.db")
                 .addCallback(rdc).addMigrations(MIGRATION_1_2).fallbackToDestructiveMigration()
-//            val factory = SupportFactory(SQLiteDatabase.getBytes("DVault".toCharArray()))
-//            builder.openHelperFactory(factory)
+            val factory = SupportFactory(SQLiteDatabase.getBytes("DVault".toCharArray()))
+            builder.openHelperFactory(factory)
             return builder.build()
         }
 
