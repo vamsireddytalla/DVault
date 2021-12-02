@@ -120,14 +120,11 @@ class MainActivity : AppCompatActivity() {
         auth= FirebaseAuth.getInstance()
 
         launchIntent = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-
                 try {
                     val task: Task<GoogleSignInAccount> = GoogleSignIn.getSignedInAccountFromIntent(result.data)
                     val account: GoogleSignInAccount? = task.getResult(ApiException::class.java)
                     Log.d(TAG, "onCreate: ${account.toString()}")
                     Log.d(TAG, "onCreate: ${account?.id}")
-                    Log.d(TAG, "onCreate: ${account?.idToken}")
-//                    firebaseAuthWithGoogle(account?.idToken!!)
                     if (result.resultCode == Activity.RESULT_OK) {
                         handleSignData(result.data)
                     } else {
@@ -159,10 +156,10 @@ class MainActivity : AppCompatActivity() {
     fun buildGSOobject(): GoogleSignInOptions {
         val gso: GoogleSignInOptions = GoogleSignInOptions
             .Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken("441047295105-ke75dn4gsdr6p73lv1sovkk3g8vaormg.apps.googleusercontent.com")
             .requestEmail()
             .requestProfile()
             .requestScopes(Scope(DriveScopes.DRIVE_APPDATA))
+//            .requestIdToken("441047295105-ke75dn4gsdr6p73lv1sovkk3g8vaormg.apps.googleusercontent.com")
             .build()
         return gso
     }
@@ -276,7 +273,7 @@ class MainActivity : AppCompatActivity() {
                     Log.d(TAG, "handleSignData: ${it.exception.toString()}")
                     Toast.makeText(
                         this,
-                        "Error Occured $it.exception.toString()",
+                        "Error Occured ${it.exception.toString()}",
                         Toast.LENGTH_SHORT
                     ).show()
                 }

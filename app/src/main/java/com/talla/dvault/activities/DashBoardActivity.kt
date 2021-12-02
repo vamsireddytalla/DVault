@@ -107,7 +107,7 @@ class DashBoardActivity : AppCompatActivity() {
                 }
             }
         }
-        
+
         binding.linearLayout.setOnClickListener {
             if (isNightMode) {
                 lifecycleScope.launch(Dispatchers.Default) {
@@ -169,24 +169,32 @@ class DashBoardActivity : AppCompatActivity() {
         viewModel.getDashBoardCount().observe(this, Observer {
             Log.d(TAG, "onCreate: DashBoard Count ${it.toString()}")
             it?.let {
+                dashBoardCOuntRest()
                 it.forEach { dashModel ->
-                    if (dashModel.itemCatType == "Img") binding.totalImages.text = dashModel.count.toString()
+                    if (dashModel.itemCatType.contains("Img")) binding.totalImages.text = dashModel.count.toString()
                     if (dashModel.itemCatType == "Vdo") binding.totalVIdeos.text = dashModel.count.toString()
-                    if (dashModel.itemCatType == "Doc") binding.totalDocs.text = dashModel.count.toString()
+                    if (dashModel.itemCatType == "Doc") binding.totalVIdeos.text = dashModel.count.toString()
                     if (dashModel.itemCatType == "Aud") binding.totalAudios.text = dashModel.count.toString()
                 }
             }
         })
 
-
     }
 
-    fun appVersion(){
+    fun dashBoardCOuntRest(){
+        binding.totalImages.text="0"
+        binding.totalVIdeos.text="0"
+        binding.totalVIdeos.text="0"
+        binding.totalAudios.text="0"
+    }
+
+    fun appVersion() {
         try {
-            val pInfo: PackageInfo = this.getPackageManager().getPackageInfo(this.getPackageName(), 0)
+            val pInfo: PackageInfo =
+                this.getPackageManager().getPackageInfo(this.getPackageName(), 0)
             val version = pInfo.versionName
             Log.d(TAG, "appVersion: $version")
-            binding.appVersion.text= "App Version $version"
+            binding.appVersion.text = "App Version $version"
         } catch (e: PackageManager.NameNotFoundException) {
             e.printStackTrace()
         }
@@ -250,7 +258,11 @@ class DashBoardActivity : AppCompatActivity() {
         }
         customDialogProfileBinding.userName.text = user.userName
         customDialogProfileBinding.userEmail.text = user.userEmail
-        customDialogProfileBinding.lastLoggedin.text = this.resources.getString(R.string.last_login)+" "+DateUtills.convertMilToDate(this,user.userloginTime.toLong())
+        customDialogProfileBinding.lastLoggedin.text =
+            this.resources.getString(R.string.last_login) + " " + DateUtills.convertMilToDate(
+                this,
+                user.userloginTime.toLong()
+            )
         glide.load(user.userImage).into(customDialogProfileBinding.userProfilePic)
         customDialogProfileBinding.login.setOnClickListener(View.OnClickListener {
             val mGoogleSignInClient = GoogleSignIn.getClient(this, gso)
@@ -303,7 +315,7 @@ class DashBoardActivity : AppCompatActivity() {
     fun dialogIninit() {
         progressDialog = Dialog(this)
         val cloudDialogBinding = CloudLoadingBinding.inflate(this.layoutInflater)
-        val rotationAnimation= AnimationUtils.loadAnimation(this,R.anim.loading_anim)
+        val rotationAnimation = AnimationUtils.loadAnimation(this, R.anim.loading_anim)
         cloudDialogBinding.prog.startAnimation(rotationAnimation)
         progressDialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         progressDialog.setContentView(cloudDialogBinding.root)
@@ -321,7 +333,7 @@ class DashBoardActivity : AppCompatActivity() {
             progressDialog.dismiss()
         }
     }
-    
+
     private fun showLogOutAlert() {
         val alertDialogBuilder = AlertDialog.Builder(this)
         alertDialogBuilder.setTitle("Logout Alert!")
@@ -340,14 +352,19 @@ class DashBoardActivity : AppCompatActivity() {
         runBlocking {
             progressDialog.show()
             val deleteJob = lifecycleScope.launch(Dispatchers.Default) {
-                appSettingsPrefs.storeStringData(UserPreferences.LAST_BACKUP_TIME, "No BackUp found")
+                appSettingsPrefs.storeStringData(
+                    UserPreferences.LAST_BACKUP_TIME,
+                    "No BackUp found"
+                )
                 val pathsArray = arrayListOf<String>(
                     "app_Img",
                     "app_Vdo",
                     "app_Aud",
-                    "app_Doc")
+                    "app_Doc"
+                )
                 pathsArray.forEach {
-                    val basePath = this@DashBoardActivity.resources.getString(R.string.db_folders_path)
+                    val basePath =
+                        this@DashBoardActivity.resources.getString(R.string.db_folders_path)
                     Log.d(TAG, "showDataDeleteDialog: Directory $basePath")
                     val to = File("$basePath$it")
                     to.deleteRecursively()

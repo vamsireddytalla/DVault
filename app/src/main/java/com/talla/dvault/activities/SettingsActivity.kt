@@ -189,22 +189,35 @@ class SettingsActivity : AppCompatActivity() {
                     }
                 }
 
-                override fun storageQuote(usedStorage: String,totalStorage: String) {
+                override fun storageQuote(usedStorage: Long,totalStorage: Long) {
                     Log.d(TAG, "storageQuote: $totalStorage $usedStorage")
                    try {
-                       val usedSpaceInDrive: Int =Math.round(usedStorage.replace(Regex("""[^0-9.]"""), "").toFloat()).toInt()
-                       val totalSpaceInDrive=Math.round(totalStorage.replace(Regex("""[^0-9.]"""), "").toFloat()).toInt()
-                       Log.d(TAG, "storageQuote: ${usedSpaceInDrive}/$usedStorage/$totalStorage/$totalSpaceInDrive")
+//                       val usedSpaceInDrive: Int =Math.round(usedStorage.replace(Regex("""[^0-9.]"""), "").toFloat()).toInt()
+//                       Log.d(TAG, "storageQuote: ${usedSpaceInDrive}/$usedStorage/$totalStorage/$totalSpaceInDrive")
+                       val usedStorage1 = FileSize.bytesToHuman(usedStorage)
+                       val totalStorage1 = FileSize.bytesToHuman(totalStorage)
+                       var totalSpaceInDrive:Int=0
+                       var usedStoreAfterCal:Double=0.0
+                       totalStorage1?.let {
+                           totalSpaceInDrive=Math.round(it.replace(Regex("""[^0-9.]"""), "").toFloat()).toInt()
+                           if (totalStorage1.contains("Gb")){
+                               usedStoreAfterCal = usedStorage / 1024.0 / 1024.0 / 1024.0
+                           }else{
+                               usedStoreAfterCal = usedStorage / 1024.0 / 1024.0 / 1024.0 / 1024.0
+                           }
+                           Log.d(TAG, "storageQuote: ${Math.round(usedStoreAfterCal).toInt()}")
+                       }
                        val storageBinding=StorageLayoutBinding.bind(binding.root)
                        lifecycleScope.launch(Dispatchers.Main) {
+                           Log.d(TAG, "storageQuote: Main")
                            storageBinding.storageProgress.max=totalSpaceInDrive
-                           storageBinding.storageProgress.progress=usedSpaceInDrive
-                           storageBinding.totalSpace.text=totalStorage
-                           storageBinding.usedSpace.text= "$usedStorage Used"
+                           storageBinding.storageProgress.progress= Math.round(usedStoreAfterCal).toInt()
+                           storageBinding.totalSpace.text=totalStorage1
+                           storageBinding.usedSpace.text= "$usedStorage1 Used"
                        }
                    }catch (e:Exception){
                        e.printStackTrace()
-                       Log.d(TAG, "storageQuote: ${e.message}")
+                       Log.d(TAG, "storageQuote exception: ${e.message}")
                    }
                 }
 

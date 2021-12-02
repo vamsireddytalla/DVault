@@ -54,6 +54,8 @@ class VaultRepository @Inject constructor(private val appDao:DVaultDao)
 
     fun getDashBoardCount()=appDao.getDashBoardCount()
 
+    suspend fun getDashBoardCountManual()=appDao.getDashBoardCountManual()
+
 
     suspend fun createNewFolder(folderTable: FolderTable):Long
     {

@@ -249,4 +249,9 @@ interface DVaultDao {
     @Query("SELECT itemCatType, COUNT(*) as count FROM ItemModel GROUP BY itemCatType")
     fun getDashBoardCount():LiveData<List<DashBoardCount>>
 
+    @Transaction
+    @Query("SELECT itemCatType, COUNT(*) as count FROM ItemModel GROUP BY itemCatType")
+    suspend fun getDashBoardCountManual():List<DashBoardCount>
+
+
 }

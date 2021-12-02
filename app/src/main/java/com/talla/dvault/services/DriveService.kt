@@ -35,6 +35,7 @@ import com.google.api.client.googleapis.media.MediaHttpDownloader.DownloadState
 
 import com.google.api.client.googleapis.media.MediaHttpDownloaderProgressListener
 import com.google.api.client.googleapis.media.MediaHttpUploader
+import com.google.api.client.googleapis.media.MediaHttpUploader.MINIMUM_CHUNK_SIZE
 import com.google.api.client.googleapis.media.MediaHttpUploader.UploadState
 
 import com.google.api.client.googleapis.media.MediaHttpUploaderProgressListener
@@ -362,7 +363,6 @@ class DriveService : Service() {
         request?.let {
             val uploader: MediaHttpDownloader = it.mediaHttpDownloader
             uploader.isDirectDownloadEnabled = false
-            uploader.chunkSize = 10 * MediaHttpUploader.MINIMUM_CHUNK_SIZE
             val downloadListner = CustomProgressListener(
                 itemModel,
                 itemNo,
@@ -395,7 +395,7 @@ class DriveService : Service() {
             val uploader: MediaHttpUploader = it.mediaHttpUploader
             uploader.isDirectUploadEnabled = false
             Log.d(TAG, "uploadLargeFiles: Process One")
-            uploader.chunkSize = 8 * MediaHttpUploader.MINIMUM_CHUNK_SIZE
+//            uploader.chunkSize = 10 * MediaHttpUploader.MINIMUM_CHUNK_SIZE
             val listner: CustomUploadProgressListener =
                 CustomUploadProgressListener(itemModel, itemNo, fileSize!!)
             it.mediaHttpUploader?.progressListener = listner
@@ -519,10 +519,7 @@ class DriveService : Service() {
             it.about().get().setFields("user, storageQuota").execute()
         }
         about?.let {
-            val usedStorage = FileSize.bytesToHuman(about.storageQuota.usage)
-            val totalStorage = FileSize.bytesToHuman(about.storageQuota.limit)
-            settingsCallbackListner?.storageQuote(usedStorage.toString(), totalStorage.toString())
-            Log.d("MainActivity", "getTotalDriveStorages: ${usedStorage.toString()}, ${totalStorage.toString()}")
+            settingsCallbackListner?.storageQuote(about.storageQuota.usage,about.storageQuota.limit)
         }
     }
 
@@ -706,7 +703,7 @@ class DriveService : Service() {
 
     interface SettingsCalBack {
         fun fileServerDealing(progress: Int, mbCount: String, totalItems: String)
-        fun storageQuote(totalStorage: String, usedStorage: String)
+        fun storageQuote(totalStorage: Long, usedStorage: Long)
     }
 
 }

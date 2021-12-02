@@ -24,6 +24,7 @@ class MainViewModel @Inject constructor(
     private var dashMutableData: LiveData<List<CategoriesModel>> =
         MutableLiveData<List<CategoriesModel>>()
     private var dashBoardCountMutableData: LiveData<List<DashBoardCount>> = MutableLiveData()
+    private var imagesCount: LiveData<Int> = MutableLiveData()
 
     init {
         Log.d(TAG, " Init Executed ")
@@ -35,6 +36,13 @@ class MainViewModel @Inject constructor(
     fun getDashBoardCount(): LiveData<List<DashBoardCount>> {
          dashBoardCountMutableData = repository.getDashBoardCount()
         return dashBoardCountMutableData
+    }
+
+    suspend fun getDashBoardCountManual(): List<DashBoardCount> {
+        val res: Deferred<List<DashBoardCount>> = viewModelScope.async(Dispatchers.IO){
+            repository.getDashBoardCountManual()
+        }
+        return res.await()
     }
 
 

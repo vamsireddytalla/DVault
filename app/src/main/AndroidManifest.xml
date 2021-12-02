@@ -82,6 +82,11 @@
         <service android:name=".services.DriveService" />
         <receiver android:name=".BroadcastReceiver.FIleProcessingReceiver" />
         <receiver android:name=".BroadcastReceiver.ConnectivityReceiver" />
+
+        <meta-data
+            android:name="com.google.android.gms.wallet.api.enabled"
+            android:value="true" />
+
     </application>
 
 </manifest>
