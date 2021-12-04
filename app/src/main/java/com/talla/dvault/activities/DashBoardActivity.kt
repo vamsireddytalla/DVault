@@ -173,7 +173,7 @@ class DashBoardActivity : AppCompatActivity() {
                 it.forEach { dashModel ->
                     if (dashModel.itemCatType.contains("Img")) binding.totalImages.text = dashModel.count.toString()
                     if (dashModel.itemCatType == "Vdo") binding.totalVIdeos.text = dashModel.count.toString()
-                    if (dashModel.itemCatType == "Doc") binding.totalVIdeos.text = dashModel.count.toString()
+                    if (dashModel.itemCatType == "Doc") binding.totalDocs.text = dashModel.count.toString()
                     if (dashModel.itemCatType == "Aud") binding.totalAudios.text = dashModel.count.toString()
                 }
             }
@@ -204,7 +204,7 @@ class DashBoardActivity : AppCompatActivity() {
         lifecycleScope.launch(Dispatchers.Default) {
             withContext(Dispatchers.Main) {
                 user = viewModel.getUserObj()
-                binding.userName.text = user.userName
+                binding.userName.text = if(user.userName=="null") "Human" else user.userName
                 glide.load(user.userImage).into(binding.userProfilePic)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     binding.userProfilePic.clipToOutline = true
@@ -256,7 +256,7 @@ class DashBoardActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             customDialogProfileBinding.userProfilePic.clipToOutline = true
         }
-        customDialogProfileBinding.userName.text = user.userName
+        customDialogProfileBinding.userName.text = if(user.userName=="null") "Human" else user.userName
         customDialogProfileBinding.userEmail.text = user.userEmail
         customDialogProfileBinding.lastLoggedin.text =
             this.resources.getString(R.string.last_login) + " " + DateUtills.convertMilToDate(

@@ -59,13 +59,24 @@ class ExtraActivity : AppCompatActivity() {
         val mediaController = MediaController(this)
         mediaController.setAnchorView(binding.videoView)
         binding.videoView.setVideoPath(path)
-        binding.videoView.setMediaController(mediaController)
         binding.videoView.setMediaController(object : MediaController(this) {
             override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-                if (event.keyCode === KeyEvent.KEYCODE_BACK) (context as Activity).finish()
+                if (event.keyCode === KeyEvent.KEYCODE_BACK){
+                        (context as Activity).finish()
+                    return true
+                }
                 return super.dispatchKeyEvent(event)
             }
+
+            override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+                if ((keyCode == KeyEvent.KEYCODE_BACK)) {
+                    onBackPressed();
+                    finish();
+                }
+                return true
+            }
         })
+        binding.videoView.setMediaController(mediaController)
         binding.videoView.requestFocus()
         binding.videoView.start()
     }

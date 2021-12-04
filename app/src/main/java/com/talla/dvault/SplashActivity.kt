@@ -148,19 +148,24 @@ class SplashActivity : AppCompatActivity() {
 
     private fun requestPermissions() {
 
-        if (hasExternalStoragePermission()) {
-            runBlocking {
-                val res = viewModel.isLoggedInPerfectly()
-                Log.d(TAG, "IsLoggedIn Result: $res")
-                if (res >= 4 && isUserSignedIn()) {
-                    Log.d(TAG, "IsLoggedIn Perfectly: $res")
-                    openDashBoard()
-                } else {
-                    Log.d(TAG, "requestPermissions: Logout")
-                    openLoginScreen()
+        if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.R)
+        {
+            Toast.makeText(this, "Andorid 11 Support Comming Soon", Toast.LENGTH_SHORT).show()
+            showInConvinienceAlert()
+        }else{
+            if (hasExternalStoragePermission()) {
+                runBlocking {
+                    val res = viewModel.isLoggedInPerfectly()
+                    Log.d(TAG, "IsLoggedIn Result: $res")
+                    if (res >= 4 && isUserSignedIn()) {
+                        Log.d(TAG, "IsLoggedIn Perfectly: $res")
+                        openDashBoard()
+                    } else {
+                        Log.d(TAG, "requestPermissions: Logout")
+                        openLoginScreen()
+                    }
                 }
-            }
-        } else if (!hasExternalStoragePermission()) {
+            } else if (!hasExternalStoragePermission()) {
 
                 val permissionToRequest = mutableListOf<String>()
                 if (!readPermission) {
@@ -169,10 +174,9 @@ class SplashActivity : AppCompatActivity() {
                 if (!writePermission) {
                     permissionToRequest.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 }
-//                    if (permissionToRequest.isNotEmpty()) {
-//                        permissionLauncher.launch(permissionToRequest.toTypedArray())
-//                    }
                 ActivityCompat.requestPermissions(this, permissionToRequest.toTypedArray(), 0)
+            }
+        }
 
 //            if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.R)
 //            {
@@ -204,7 +208,6 @@ class SplashActivity : AppCompatActivity() {
 //                }
 //            }
 
-        }
 
     }
 
@@ -294,6 +297,18 @@ class SplashActivity : AppCompatActivity() {
             ?.addOnCompleteListener(
                 this
             ) { }
+    }
+
+    private fun showInConvinienceAlert() {
+        val alertDialogBuilder = AlertDialog.Builder(this)
+        alertDialogBuilder.setTitle("Sorry for Inconvinience !")
+        alertDialogBuilder.setMessage(getString(R.string.alert))
+        alertDialogBuilder.setCancelable(false)
+        alertDialogBuilder.setPositiveButton("Ok") { dialogInterface, i ->
+            dialogInterface.dismiss()
+            finish()
+        }
+        alertDialogBuilder.show()
     }
 
 }
