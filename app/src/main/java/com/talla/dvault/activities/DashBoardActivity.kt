@@ -53,6 +53,7 @@ import java.io.File
 import android.content.pm.PackageInfo
 import android.view.animation.AnimationUtils
 import com.talla.dvault.databinding.CloudLoadingBinding
+import com.talla.dvault.utills.sdk30AndUp
 
 private const val TAG = "DashBoardActivity"
 
@@ -75,6 +76,7 @@ class DashBoardActivity : AppCompatActivity() {
     private val viewModel: MainViewModel by viewModels()
     var isNightMode = false
     private lateinit var progressDialog: Dialog
+    val isSdk30=Build.VERSION.SDK_INT>=Build.VERSION_CODES.R
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -82,6 +84,12 @@ class DashBoardActivity : AppCompatActivity() {
         setContentView(binding.root)
         dialogIninit()
         if (InternetUtil.isInternetAvail(this)) {
+            if (isSdk30){
+                binding.commingSoon.visibility=View.VISIBLE
+                binding.docSelection.isClickable = true
+                binding.totalDocs.text = ""
+                binding.commingSoon.visibility = View.VISIBLE
+            }
             defaultCall()
         } else {
             checkInternetDialog()
@@ -147,9 +155,12 @@ class DashBoardActivity : AppCompatActivity() {
             startActivity(intent)
         }
         binding.docSelection.setOnClickListener {
-            val intent: Intent = Intent(this, FoldersActivity::class.java)
-            intent.putExtra(getString(R.string.cat_key), "Doc")
-            startActivity(intent)
+           if (!isSdk30)
+           {
+               val intent: Intent = Intent(this, FoldersActivity::class.java)
+               intent.putExtra(getString(R.string.cat_key), "Doc")
+               startActivity(intent)
+           }
         }
         binding.videoSelection.setOnClickListener {
             val intent: Intent = Intent(this, FoldersActivity::class.java)
@@ -171,21 +182,25 @@ class DashBoardActivity : AppCompatActivity() {
             it?.let {
                 dashBoardCOuntRest()
                 it.forEach { dashModel ->
-                    if (dashModel.itemCatType.contains("Img")) binding.totalImages.text = dashModel.count.toString()
-                    if (dashModel.itemCatType == "Vdo") binding.totalVIdeos.text = dashModel.count.toString()
-                    if (dashModel.itemCatType == "Doc") binding.totalDocs.text = dashModel.count.toString()
-                    if (dashModel.itemCatType == "Aud") binding.totalAudios.text = dashModel.count.toString()
+                    if (dashModel.itemCatType.contains("Img")) binding.totalImages.text =
+                        dashModel.count.toString()
+                    if (dashModel.itemCatType == "Vdo") binding.totalVIdeos.text =
+                        dashModel.count.toString()
+                    if (dashModel.itemCatType == "Doc") binding.totalDocs.text =
+                        dashModel.count.toString()
+                    if (dashModel.itemCatType == "Aud") binding.totalAudios.text =
+                        dashModel.count.toString()
                 }
             }
         })
 
     }
 
-    fun dashBoardCOuntRest(){
-        binding.totalImages.text="0"
-        binding.totalVIdeos.text="0"
-        binding.totalVIdeos.text="0"
-        binding.totalAudios.text="0"
+    fun dashBoardCOuntRest() {
+        binding.totalImages.text = "0"
+        binding.totalVIdeos.text = "0"
+        binding.totalVIdeos.text = "0"
+        binding.totalAudios.text = "0"
     }
 
     fun appVersion() {
@@ -204,7 +219,7 @@ class DashBoardActivity : AppCompatActivity() {
         lifecycleScope.launch(Dispatchers.Default) {
             withContext(Dispatchers.Main) {
                 user = viewModel.getUserObj()
-                binding.userName.text = if(user.userName=="null") "Human" else user.userName
+                binding.userName.text = if (user.userName == "null") "" else user.userName
                 glide.load(user.userImage).into(binding.userProfilePic)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     binding.userProfilePic.clipToOutline = true
@@ -256,7 +271,8 @@ class DashBoardActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             customDialogProfileBinding.userProfilePic.clipToOutline = true
         }
-        customDialogProfileBinding.userName.text = if(user.userName=="null") "Human" else user.userName
+        customDialogProfileBinding.userName.text =
+            if (user.userName == "null") "Human" else user.userName
         customDialogProfileBinding.userEmail.text = user.userEmail
         customDialogProfileBinding.lastLoggedin.text =
             this.resources.getString(R.string.last_login) + " " + DateUtills.convertMilToDate(

@@ -67,6 +67,13 @@ You can restore them when you reinstall.</string>
     <string name="so_far">Rate your experience using DVault so far</string>
     <string name="last_login">Last login</string>
     <string name="hyperlink"><a href="Privacy Policy">Privacy Policy</a></string>
+    <string name="if_you_wanna_use_permission">"You have Denied permissions if you want to use this Application You have to allow permissions in Settings manually."</string>
+    <string name="comming_soon">Coming Soon</string>
+    <string name="custom_key">Custom_Key</string>
+    <string name="Img">Img</string>
+    <string name="Aud">Aud</string>
+    <string name="Doc">Doc</string>
+    <string name="Vdo">Vdo</string>
 
 
     <string-array name="security_questions">

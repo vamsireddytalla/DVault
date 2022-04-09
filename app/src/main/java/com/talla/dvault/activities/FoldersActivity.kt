@@ -76,14 +76,9 @@ class FoldersActivity : AppCompatActivity(), FolderItemClick {
 
         binding.apply {
             createFolder.setOnClickListener {
-                showBottomSheetDialog(
-                    getString(R.string.create_folder),
-                    getString(R.string.create),
-                    "New Folder"
-                )
+                showBottomSheetDialog(getString(R.string.create_folder), getString(R.string.create), "New Folder")
             }
-            foldersAdapter =
-                FoldersAdapter(catType.toString(), this@FoldersActivity, this@FoldersActivity)
+            foldersAdapter = FoldersAdapter(catType.toString(), this@FoldersActivity, this@FoldersActivity)
             foldersRCV.adapter = foldersAdapter
         }
 
@@ -110,19 +105,19 @@ class FoldersActivity : AppCompatActivity(), FolderItemClick {
         var screenTitle: String? = null
 
         when (type) {
-            "Img" -> {
+            getString(R.string.Img) -> {
                 selectedColor = R.color.light_pink
                 screenTitle = "Images"
             }
-            "Aud" -> {
+            getString(R.string.Aud) -> {
                 selectedColor = R.color.light_yellow
                 screenTitle = "Audio"
             }
-            "Doc" -> {
+            getString(R.string.Doc) -> {
                 selectedColor = R.color.light_blue
                 screenTitle = "Documents"
             }
-            "Vdo" -> {
+            getString(R.string.Vdo) -> {
                 selectedColor = R.color.light_violet
                 screenTitle = "Videos"
             }

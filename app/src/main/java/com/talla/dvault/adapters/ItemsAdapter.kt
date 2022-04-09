@@ -39,8 +39,7 @@ class ItemsAdapter(
     var glide: RequestManager,
     val onclickListner: ItemAdapterClick,
     var folderObj: FolderTable
-) :
-    RecyclerView.Adapter<ItemsAdapter.MyViewHolder>() {
+) : RecyclerView.Adapter<ItemsAdapter.MyViewHolder>() {
 
 
     inner class MyViewHolder(binding: FileItemBinding) : RecyclerView.ViewHolder(binding.root) {
@@ -62,6 +61,7 @@ class ItemsAdapter(
                             FileSize.selectedUnlockItems.remove(obj)
                         } else {
                             obj.isSelected = true
+                            Log.d(TAG, "onLongClick: ${obj.toString()}")
                             FileSize.selectedUnlockItems.add(obj)
                         }
 
@@ -176,8 +176,8 @@ class ItemsAdapter(
 //                    glide.load(itemObj.itemCurrentPath).into(thumbNail)
 //                    thumbNail.scaleType = ImageView.ScaleType.FIT_XY
 //                }
-                glide.load(itemObj.itemCurrentPath).into(thumbNail)
                 thumbNail.scaleType = ImageView.ScaleType.FIT_XY
+                glide.load(itemObj.itemCurrentPath).into(thumbNail)
             } else {
                 thumbNail.scaleType = ImageView.ScaleType.FIT_CENTER
                 val drawableItem = AppCompatResources.getDrawable(mContext, R.drawable.cloud_down_icon)

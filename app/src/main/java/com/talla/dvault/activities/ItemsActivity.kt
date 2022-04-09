@@ -14,14 +14,18 @@ import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.IBinder
+import android.provider.MediaStore
 import android.util.Log
 import android.view.View
 import android.view.animation.AnimationUtils
+import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
+import androidx.core.net.toUri
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.RequestManager
@@ -42,12 +46,14 @@ import com.talla.dvault.interfaces.ItemAdapterClick
 import com.talla.dvault.services.FileCopyService
 import com.talla.dvault.utills.FileSize
 import com.talla.dvault.utills.InternetUtil
+import com.talla.dvault.utills.RealPathUtill
 import com.talla.dvault.viewmodels.ItemViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import javax.inject.Inject
 import java.io.*
 import java.lang.Exception
+import javax.xml.transform.Source
 
 private const val TAG = "ItemsActivity"
 
@@ -62,7 +68,7 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
     private lateinit var dialog: Dialog
     private var pos: Int? = null
     private lateinit var progressDialog: Dialog
-    private lateinit var cloudDialogBinding:CloudLoadingBinding
+    private lateinit var cloudDialogBinding: CloudLoadingBinding
     private var binder: FileCopyService.LocalBinder? = null
     private var serviceBinder: FileCopyService? = null
     private lateinit var deleteDialogBinding: DeleteDialogBinding
@@ -101,8 +107,8 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
             binding.titleScrnTitle.text = folderTable.folderName
             Log.d("FolderName", "onCreate: $folderTable.folderName")
             changeFolderColor(folderTable.folderCatType)
-            FileSize.OnLongItemClick=false
-            FileSize.SelectAll=false
+            FileSize.OnLongItemClick = false
+            FileSize.SelectAll = false
         }
         dialogInit()
 
@@ -111,69 +117,147 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
                 if (result.resultCode == Activity.RESULT_OK) {
                     val receivedData: Intent? = result.data
                     Log.d(TAG, "onCreate: ${receivedData?.data?.path.toString()}")
-                    if (null != receivedData) {
+                    receivedData?.let {
                         val sourceList = ArrayList<SourcesModel>()
                         if (null != receivedData.clipData) {
                             for (i in 0 until receivedData.clipData!!.itemCount) {
                                 val uri = receivedData.clipData!!.getItemAt(i).uri
-                                val sourceModel = SourcesModel(uri.toString(), folderTable)
+                                val fileRealPath: String? = RealPathUtill.getRealPath(this, uri!!)
+                                val file = File(fileRealPath)
+                                val filesize: Long = file.length()
+                                val fileMimeType = FileSize.getMimeType(file.toString()).toString()
+                                val sourceModel = SourcesModel(
+                                    fileRealPath!!,
+                                    file.name,
+                                    filesize,
+                                    fileMimeType,
+                                    folderTable
+                                )
                                 sourceList.add(sourceModel)
-
                             }
                         } else {
                             val uri: Uri? = receivedData.data
-                            val sourceModel = SourcesModel(uri.toString(), folderTable)
+                            Log.d(TAG, "Selected File path: $uri")
+                            val fileRealPath: String? = RealPathUtill.getRealPath(this, uri!!)
+                            Log.d(TAG, "Real Converted file path $fileRealPath")
+                            val file = File(fileRealPath)
+                            val filesize: Long = file.length()
+                            val fileMimeType = FileSize.getMimeType(file.toString()).toString()
+                            val sourceModel = SourcesModel(
+                                fileRealPath!!,
+                                file.name,
+                                filesize,
+                                fileMimeType,
+                                folderTable
+                            )
                             sourceList.add(sourceModel)
                         }
 
                         binder?.startFileCopyingService(sourceList)
                         showFileCopyDialog("Copy")
 
-                        //                        else{
-//                            startFileCopyService(sourceList)
-//                        }
-
-                    } else {
-                        showSnackBar("No File Selected !")
-                    }
+                    } ?: showSnackBar("No File Selected !")
                 } else {
                     Log.d(TAG, "onCreate: No Items Selected")
+                }
+            }
+
+        val sdk30ImgVdoRes =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { res ->
+                if (res.resultCode == Activity.RESULT_OK) {
+
+                    lifecycleScope.launch(Dispatchers.IO) {
+                        val resData: Intent? = res.data
+                        val sourceList = ArrayList<SourcesModel>()
+                        resData?.let { resultData ->
+                            Log.d(TAG, "onCreate: ${resultData.clipData}")
+                            resultData.clipData?.let { clip ->
+                                for (i in 0 until clip.itemCount) {
+                                    val uri = clip.getItemAt(i).uri
+                                    Log.d(TAG, "Multiple uris : $uri")
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                                        val sourceModel = sdk30Converters(uri)
+                                        sourceModel?.let { sourceList.add(it) }
+                                    }
+                                }
+                                Log.d(TAG, "Multiple Items: ${sourceList.toString()}")
+                                if (sourceList.isNotEmpty()) {
+                                    binder?.startFileCopyingService(sourceList)
+                                    withContext(Dispatchers.Main){
+                                        showFileCopyDialog("Copy")
+                                    }
+                                }
+                            }
+
+                        } ?: showSnackBar("No File Selected !")
+                    }
+
                 }
             }
 
         binding.plus.setOnClickListener {
             if (!FileSize.FILE_COPYING && !FileSize.UNLOCK_FILE_COPYING) {
 
-                val openFileIntent = Intent()
-                when (folderTable.folderCatType) {
-                    "Img" -> {
-                        openFileIntent.type = "image/*"
-                        Log.d(TAG, "Img")
+
+                if (FileSize.checkVersion30()) {
+                    when (folderTable.folderCatType) {
+                        "Img" -> {
+                            val collection = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+                            val pickIntent = Intent(Intent.ACTION_PICK, collection)
+                            pickIntent.type = "image/*"
+                            pickIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+                            sdk30ImgVdoRes.launch(Intent.createChooser(pickIntent, "Select Images"))
+                        }
+                        "Vdo" -> {
+                            val collection = MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+                            val pickIntent = Intent(Intent.ACTION_PICK, collection)
+                            pickIntent.type = "video/*"
+                            pickIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+                            sdk30ImgVdoRes.launch(Intent.createChooser(pickIntent, "Select Videos"))
+                        }
+                        "Aud" -> {
+                            Intent(this, CustomFilePickerActivity::class.java).apply {
+                                this.putExtra(resources.getString(R.string.custom_key), "Audios")
+                                startActivity(this)
+                            }
+                        }
+                        "Doc" -> {
+                            showSnackBar("Docs functionality Comming Soon")
+                        }
                     }
-                    "Aud" -> {
-                        openFileIntent.type = "audio/*"
-                        Log.d(TAG, "Aud")
+
+                } else {
+                    val openFileIntent = Intent()
+                    when (folderTable.folderCatType) {
+                        "Img" -> {
+                            openFileIntent.type = "image/*"
+                            Log.d(TAG, "Img")
+                        }
+                        "Aud" -> {
+                            openFileIntent.type = "audio/*"
+                            Log.d(TAG, "Aud")
+                        }
+                        "Doc" -> {
+                            val mimeTypes = arrayOf(
+                                "text/csv",
+                                "text/comma-separated-values",
+                                "application/*",
+                                "text/plain"
+                            )
+                            openFileIntent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes)
+                            openFileIntent.type = "*/*"
+                            Log.d(TAG, "Doc")
+                        }
+                        "Vdo" -> {
+                            openFileIntent.type = "video/*"
+                            Log.d(TAG, "Vdo")
+                        }
                     }
-                    "Doc" -> {
-                        val mimeTypes = arrayOf(
-                            "text/csv",
-                            "text/comma-separated-values",
-                            "application/*",
-                            "text/plain"
-                        )
-                        openFileIntent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes)
-                        openFileIntent.type = "*/*"
-                        Log.d(TAG, "Doc")
-                    }
-                    "Vdo" -> {
-                        openFileIntent.type = "video/*"
-                        Log.d(TAG, "Vdo")
-                    }
+                    openFileIntent.addCategory(Intent.CATEGORY_OPENABLE)
+                    openFileIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+                    openFileIntent.action = Intent.ACTION_GET_CONTENT
+                    res.launch(Intent.createChooser(openFileIntent, "Select Multiple Items"))
                 }
-                openFileIntent.addCategory(Intent.CATEGORY_OPENABLE)
-                openFileIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-                openFileIntent.action = Intent.ACTION_GET_CONTENT
-                res.launch(Intent.createChooser(openFileIntent, "Select Multiple Items"))
 
 
             } else {
@@ -228,6 +312,48 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
             }
         }
 
+    }
+
+    @RequiresApi(Build.VERSION_CODES.R)
+    suspend fun sdk30Converters(uri: Uri): SourcesModel? {
+        var sourceModel: SourcesModel? = null
+        Log.d(TAG, "sdk30Converters: ${folderTable.folderCatType}")
+        if (folderTable.folderCatType == getString(R.string.Img)) {
+            sourceModel = FileSize.imageConvertData(uri, this@ItemsActivity, folderTable)
+            Log.d(TAG, "image called ${sourceModel.toString()}")
+        } else {
+            sourceModel = FileSize.videoConvertData(uri, this@ItemsActivity, folderTable)
+            Log.d(TAG, "sdk30Converters: video called ${sourceModel.toString()}")
+        }
+        return sourceModel
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (FileSize.checkVersion30()) {
+            if (!FileSize.FILE_COPYING && !FileSize.UNLOCK_FILE_COPYING && folderTable.folderCatType == getString(
+                    R.string.Aud
+                ) && FileSize.selectedCustomItems.isNotEmpty()
+            ) {
+                val sourceList = ArrayList<SourcesModel>()
+                val sourceModelList = FileSize.selectedCustomItems
+                for (source in sourceModelList) {
+                    sourceList.add(
+                        SourcesModel(
+                            source.contentUri,
+                            source.name,
+                            source.size.toLong(),
+                            source.mimeType,
+                            folderTable
+                        )
+                    )
+                }
+                Log.d(TAG, "onResume: ")
+                //start service
+                binder?.startFileCopyingService(sourceList)
+                showFileCopyDialog("Copy")
+            }
+        }
     }
 
     fun selectALlCall() {
@@ -299,7 +425,10 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
                     copyDialog.progressFile.progress = progress
                     copyDialog.totalElapsed.text = mbCount
                     copyDialog.totalCount.text = totalItems
-                    if (mbCount == "Completed") dialog.dismiss()
+                    if (mbCount == "Completed") {
+                        showSnackBar(mbCount)
+                        dialog.dismiss()
+                    }
                 }
             }
 
@@ -315,6 +444,7 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
                     copyDialog.totalCount.text = totalItems
                     if (mbCount == "Completed") {
                         itemsAdapter.notifyDataSetChanged()
+                        showSnackBar(mbCount)
                         dialog.dismiss()
                     }
                 }
@@ -434,6 +564,7 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
             if (file.exists()) {
                 val isDeleted = file.delete()
                 if (isDeleted) viewModel.deleteItem(itemModel)
+                itemsAdapter.notifyDataSetChanged()
             }
         }
     }
@@ -471,23 +602,23 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
         //online Delete and local delete
         deleteDialogBinding.yes.setOnClickListener {
 
-                val fileProcess = FileSize.checkIsAnyProcessGoing()
-                if (fileProcess.isEmpty()) {
-                    runBlocking {
-                        dialog.dismiss()
-                        showProgressDialog()
-                        if (deleteDialogBinding.isServDel.isChecked) {
-                            Log.d(TAG, "showDeleteDialog: Server Delete")
-                            checkedServDelete(itemModel)
-                        } else {
-                            Log.d(TAG, "showDeleteDialog: Local Delete")
-                            localFileDelete(itemModel, false)
-                        }
-                    }
-                } else {
+            val fileProcess = FileSize.checkIsAnyProcessGoing()
+            if (fileProcess.isEmpty()) {
+                runBlocking {
                     dialog.dismiss()
-                    showSnackBar(fileProcess)
+                    showProgressDialog()
+                    if (deleteDialogBinding.isServDel.isChecked) {
+                        Log.d(TAG, "showDeleteDialog: Server Delete")
+                        checkedServDelete(itemModel)
+                    } else {
+                        Log.d(TAG, "showDeleteDialog: Local Delete")
+                        localFileDelete(itemModel, false)
+                    }
                 }
+            } else {
+                dialog.dismiss()
+                showSnackBar(fileProcess)
+            }
         }
         deleteDialogBinding.no.setOnClickListener {
             dialog.dismiss()
@@ -495,7 +626,7 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
         dialog.show()
     }
 
-    fun checkedServDelete(itemModel: ItemModel) {
+    suspend fun checkedServDelete(itemModel: ItemModel) {
         if (InternetUtil.isInternetAvail(this)) {
             lifecycleScope.launch(Dispatchers.IO) {
                 if (itemModel.serverId.isNotEmpty()) {
@@ -506,6 +637,7 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
                 }
             }
         } else {
+            stopProgressDialog()
             showSnackBar("Check Internet Connection")
         }
     }
@@ -526,7 +658,7 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
                     Log.d(TAG, "localFileDelete: if called")
                 } else {
                     Log.d(TAG, "localFileDelete: Else Called")
-                    itemsAdapter.notifyItemChanged(pos!!)
+                    itemsAdapter.notifyItemChanged(pos!!, itemModel)
                 }
                 stopProgressDialog()
             }

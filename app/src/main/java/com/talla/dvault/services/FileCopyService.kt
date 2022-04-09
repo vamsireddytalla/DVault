@@ -48,9 +48,11 @@ import android.app.NotificationChannel
 import androidx.core.app.NotificationCompat.PRIORITY_HIGH
 import androidx.core.app.NotificationCompat.PRIORITY_MIN
 import com.talla.dvault.database.entities.FolderTable
+import kotlin.math.log
 
 
 private const val TAG = "FileCopyService"
+
 @AndroidEntryPoint
 class FileCopyService : Service() {
 
@@ -89,14 +91,16 @@ class FileCopyService : Service() {
                     if (intent.extras != null) {
                         Log.d(TAG, "onStartCommand: ACTION_START_FOREGROUND_SERVICE")
                         sourceModelList?.clear()
-                        sourceModelList = intent.getSerializableExtra(this.resources.getString(R.string.fileCopy)) as ArrayList<SourcesModel>
+                        sourceModelList =
+                            intent.getSerializableExtra(this.resources.getString(R.string.fileCopy)) as ArrayList<SourcesModel>
                         Log.d(TAG, "Hash Code -> : ${sourceModelList.hashCode()}")
                         isInterrupted = false
                         createNotification(
                             FileSize.FILE_ADD_CHANNEl_ID,
                             FileSize.FILE_ADD_CHANNEL_NAME,
                             FileSize.FILE_NOTIFY_ID,
-                            FileSize.ACTION_STOP_FOREGROUND_SERVICE)
+                            FileSize.ACTION_STOP_FOREGROUND_SERVICE
+                        )
                         lockJob = GlobalScope.launch(Dispatchers.IO) {
                             sourceModelList?.let { sourceModel ->
                                 for ((index, source) in sourceModel.withIndex()) {
@@ -104,12 +108,12 @@ class FileCopyService : Service() {
                                         val itemModel = fromUriGetRealPath(source, index)
                                         if (!isInterrupted!!) {
                                             repository.insertSingleItem(itemModel)
-                                            Log.d(TAG, "onStartCommand: ${source.folderTable.folderCatType}")
                                         }
                                     } catch (e: Exception) {
                                         Log.d(TAG, "onStartCommand Exception: ${e.message}")
                                     }
                                 }
+                                FileSize.selectedCustomItems.clear()
                             }
                             fileCopyCallBack?.fileCopyCallBack(0, "Completed", "")
                             FileSize.FILE_COPYING = false
@@ -146,11 +150,15 @@ class FileCopyService : Service() {
                             itemModelList?.let { itemModel ->
                                 for ((index, source) in itemModel.withIndex()) {
                                     try {
-                                        Log.d(TAG, "onStartCommand: Action Unlock  ${itemModel.size}")
-                                        val folderObj=repository.getFolderObjWithFolderID(source.folderId)
+                                        Log.d(
+                                            TAG,
+                                            "onStartCommand: Action Unlock  ${itemModel.size}"
+                                        )
+                                        val folderObj =
+                                            repository.getFolderObjWithFolderID(source.folderId)
                                         unlockingFile(folderObj, source.itemName, index)
                                         if (!UNLOCK_INTERRUPT!!) {
-                                            if (source.serverId.isEmpty()){
+                                            if (source.serverId.isEmpty()) {
                                                 repository.deleteItem(source.itemId)
                                             }
                                             Log.d(TAG, "onStartCommand: ${source.itemMimeType}")
@@ -353,9 +361,9 @@ class FileCopyService : Service() {
     //Unlocking file from one place to other
     private fun unlockingFile(folderTable: FolderTable, itmName: String, itemNo: Int) {
 
-        val defLocation=this.resources.getString(R.string.db_folder_path)
-        val folderNameCreation="app_"+folderTable.folderCatType
-        val sourceLoc="$defLocation/$folderNameCreation/${folderTable.folderName}/$itmName"
+        val defLocation = this.resources.getString(R.string.db_folder_path)
+        val folderNameCreation = "app_" + folderTable.folderCatType
+        val sourceLoc = "$defLocation/$folderNameCreation/${folderTable.folderName}/$itmName"
         val sourceLo = File(sourceLoc)
         var finalDst: String? = null
         try {
@@ -370,10 +378,10 @@ class FileCopyService : Service() {
             val outStream: OutputStream = FileOutputStream(finalDst)
 
             val lenghtOfFile: Int = inStream.available()
-            val buf = ByteArray(1024*1024)
+            val buf = ByteArray(1024 * 1024)
             var len: Int
             var total: Long = 0
-            val fileTotalSize = getFileSize(sourceLo)
+            val fileTotalSize = getFileSize(sourceLo.length())
             while (inStream.read(buf).also { len = it } != -1) {
                 FileSize.UNLOCK_FILE_COPYING = true
                 total += len.toLong()
@@ -388,7 +396,7 @@ class FileCopyService : Service() {
                     "Unlock"
                 )
                 if (UNLOCK_INTERRUPT!!) {
-                    val fff=File(finalDst)
+                    val fff = File(finalDst)
                     fff.delete()
                     break
                 }
@@ -408,7 +416,7 @@ class FileCopyService : Service() {
             outStream.close()
         } catch (e: Exception) {
             e.printStackTrace()
-            val fff=File(finalDst)
+            val fff = File(finalDst)
             fff.delete()
             Log.d(TAG, "Unlock File Exception --> : ${e.message}")
         }
@@ -430,86 +438,89 @@ class FileCopyService : Service() {
     }
 
     private fun fromUriGetRealPath(sourcesModel: SourcesModel, itemNo: Int): ItemModel {
-        val fileRealPath: String? = RealPathUtill.getRealPath(this, sourcesModel.source.toUri())
-        val file = File(fileRealPath)
-        val filesize: Long = file.length()
-        Log.d(TAG, "File size : ${filesize}")
-        Log.d(TAG, "File Real Path : ${fileRealPath}")
-        val newFilePath: String = copyFile(fileRealPath.toString(), file.name, sourcesModel.folderTable, sourcesModel.source.toUri(), itemNo)
+
+        Log.d(TAG, "File size : ${sourcesModel.fileSize}")
+        Log.d(TAG, "File Name : ${sourcesModel.fileName}")
+        Log.d(TAG, "File Real Path : ${sourcesModel.sourceFilePath}")
+        val newFilePath = copyFile(sourcesModel, itemNo)
         Log.d(TAG, "File New Path : ${newFilePath}")
 
         return ItemModel(
-            itemName = file.name,
-            itemSize = filesize.toString(),
+            itemName = sourcesModel.fileName,
+            itemSize = sourcesModel.fileSize.toString(),
             itemCreatedAt = System.currentTimeMillis().toString(),
-            itemMimeType = FileSize.getMimeType(file.toString()).toString(),
+            itemMimeType = FileSize.getMimeType(sourcesModel.sourceFilePath).toString(),
             folderId = sourcesModel.folderTable.folderId.toString(),
-            itemCurrentPath = newFilePath.toString(),
+            itemCurrentPath = newFilePath,
             itemCatType = sourcesModel.folderTable.folderCatType
         )
     }
 
     //copying file from one place to other
-    private fun copyFile(
-        oldFileLoc: String,
-        fileName: String,
-        folderTable: FolderTable,
-        contentUri: Uri, itemNo: Int
-    ): String {
-        val newdir: File = this.getDir(folderTable.folderCatType, Context.MODE_PRIVATE)
+    private fun copyFile(sourcesModel: SourcesModel, itemNo: Int): String {
+        val newdir: File = this.getDir(sourcesModel.folderTable.folderCatType, Context.MODE_PRIVATE)
         val defLocation = this.resources.getString(R.string.db_folder_path)
-        val folderNameCreation = "app_" + folderTable.folderCatType
-        val sourceLoc = "$defLocation/$folderNameCreation/${folderTable.folderName}"
-        Log.d(TAG, "File Path "+sourceLoc.toString())
+        val loc = application.filesDir
+        Log.d(TAG, "copyFile: Loc   $loc")
+        val folderNameCreation = "app_" + sourcesModel.folderTable.folderCatType
+        val sourceLoc = "$defLocation/$folderNameCreation/${sourcesModel.folderTable.folderName}"
+        Log.d(TAG, "File Path " + sourceLoc.toString())
         if (!File(sourceLoc).exists()) {
             File(sourceLoc).mkdirs()
             Log.d(TAG, "createFolder: Creating")
         }
-        val to = File("$sourceLoc/$fileName")
-        val from = File(oldFileLoc)
-        Log.d(TAG, "Old File Location $oldFileLoc")
+        val to = File("$sourceLoc/${sourcesModel.fileName}")
+        val from = File(sourcesModel.sourceFilePath)
+        Log.d(TAG, "Old File Location ${sourcesModel.sourceFilePath}")
         try {
+            if (FileSize.checkVersion30()) {
+                sdk30AboveCopyFile(sourcesModel, itemNo, to)
+            } else {
+                val inStream: InputStream = FileInputStream(from)
+                val outStream: OutputStream = FileOutputStream(to)
 
-            val inStream: InputStream = FileInputStream(from)
-            val outStream: OutputStream = FileOutputStream(to)
-
-            val lenghtOfFile: Int = inStream.available()
-            val buf = ByteArray(1024 * 1024)
-            var len: Int
-            var total: Long = 0
-            val fileTotalSize = getFileSize(from)
-            while (inStream.read(buf).also { len = it } != -1) {
-                FileSize.FILE_COPYING = true
-                total += len.toLong()
-                val bytes: Int = (total * 100 / lenghtOfFile).toInt()
-                outStream.write(buf, 0, len)
-                val res = FileSize.bytesToHuman(total.toLong())
-                val totalItemsList = sourceModelList?.size
-                updateNotification(
-                    bytes,
-                    res + " / " + fileTotalSize.toString(),
-                    itemNo.toString() + "/" + totalItemsList, "Copy"
-                )
-                if (isInterrupted!!) {
-                    break
+                val lenghtOfFile: Int = inStream.available()
+                val buf = ByteArray(1024 * 1024)
+                var len: Int
+                var total: Long = 0
+                val fileTotalSize = getFileSize(sourcesModel.fileSize)
+                Log.d(TAG, "copyFile: File Size testing $fileTotalSize")
+                while (inStream.read(buf).also { len = it } != -1) {
+                    FileSize.FILE_COPYING = true
+                    total += len.toLong()
+                    val bytes: Int = (total * 100 / lenghtOfFile).toInt()
+                    outStream.write(buf, 0, len)
+                    val res = FileSize.bytesToHuman(total.toLong())
+                    val totalItemsList = sourceModelList?.size
+                    updateNotification(
+                        bytes,
+                        res + " / " + fileTotalSize.toString(),
+                        itemNo.toString() + "/" + totalItemsList,
+                        "Copy"
+                    )
+                    if (isInterrupted!!) {
+                        break
+                    }
+                    outStream.flush()
                 }
-                outStream.flush()
-            }
-            if (!isInterrupted!!) {
-                Log.d(TAG, "copyFile: Not Interupted")
-                val res = delete(this, from)
-                Log.d(TAG, "Delete File $res")
-                if (!res) {
-                    val newDel = from.delete()
-                    Log.d(TAG, "New Delete $newDel")
-                }
+                if (!isInterrupted!!) {
+                    Log.d(TAG, "copyFile: Not Interupted")
+                    val res = delete(this, from)
+                    Log.d(TAG, "Delete File $res")
+                    if (!res) {
+                        val newDel = from.delete()
+                        Log.d(TAG, "New Delete $newDel")
+                    }
 //                if (res) {
 //                    this.contentResolver.notifyChange(contentUri, null)
 //                }
+                }
+                inStream.close()
+                outStream.flush()
+                outStream.close()
             }
-            inStream.close()
-            outStream.flush()
-            outStream.close()
+
+
         } catch (e: Exception) {
             e.printStackTrace()
             Log.d(TAG, "copyFile: ${e.message}")
@@ -518,23 +529,61 @@ class FileCopyService : Service() {
         return to.toString()
     }
 
-    private fun getFileSize(file: File): String? {
+    private fun sdk30AboveCopyFile(sourcesModel: SourcesModel, itemNo: Int, to: File) {
+        val resolver = applicationContext.contentResolver
+        // "rw" for read-and-write;
+        // "rwt" for truncating or overwriting existing file contents.
+        val readOnlyMode = "rwt"
+        resolver.openInputStream(sourcesModel.sourceFilePath.toUri()).use { inputStream ->
+            // Perform operations on "stream".
+            // Perform operations on "pfd".
+            val file =
+                File(filesDir.absoluteFile.path + File.separator + "${sourcesModel.fileName}")
+            val optStream = FileOutputStream(to)
+            val buffers = ByteArray(1024 * 1024)
+            var len: Int
+            var total: Long = 0
+            val lenghtOfFile: Int = inputStream!!.available()
+            val fileTotalSize = getFileSize(sourcesModel.fileSize)
+            val totalItemsList = sourceModelList?.size
+            while (inputStream.read(buffers).also { len = it } != -1) {
+                FileSize.FILE_COPYING = true
+                val bytes: Int = (total * 100 / lenghtOfFile).toInt()
+                total += len.toLong()
+                optStream.write(buffers, 0, len)
+                val res = FileSize.bytesToHuman(total.toLong())
+                updateNotification(
+                    bytes,
+                    res + " / " + fileTotalSize.toString(),
+                    itemNo.toString() + "/" + totalItemsList,
+                    "Copy"
+                )
+                if (isInterrupted!!) {
+                    break
+                }
+            }
+            inputStream.close()
+            optStream.flush()
+            optStream.close()
+        }
+    }
+
+    private fun getFileSize(fileLength: Long): String? {
 
         val format: DecimalFormat = DecimalFormat("#.##")
         val MiB = (1024 * 1024).toLong()
         val GiB = (1024 * 1024 * 1024).toLong()
         val KiB: Long = 1024
-        Log.d(TAG, "getFileSize: $file")
-        require(file.isFile) { "Expected a file" }
-        val length = file.length().toDouble()
-        if (length > GiB) {
-            return format.format(length / GiB).toString() + " Gb"
-        } else if (length > MiB) {
-            return format.format(length / MiB).toString() + " Mb"
+        Log.d(TAG, "getFileSize: $fileLength")
+        //require(file.isFile) { "Expected a file" }
+        if (fileLength > GiB) {
+            return format.format(fileLength / GiB).toString() + " Gb"
+        } else if (fileLength > MiB) {
+            return format.format(fileLength / MiB).toString() + " Mb"
         }
-        return if (length > KiB) {
-            format.format(length / KiB).toString() + " Kb"
-        } else format.format(length).toString() + " B"
+        return if (fileLength > KiB) {
+            format.format(fileLength / KiB).toString() + " Kb"
+        } else format.format(fileLength).toString() + " B"
     }
 
     private fun stopForegroundService() {
@@ -574,5 +623,6 @@ class FileCopyService : Service() {
             startForeground(888, notification)
         }
     }
+
 
 }

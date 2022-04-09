@@ -30,9 +30,12 @@ import com.talla.dvault.activities.DashBoardActivity
 import com.talla.dvault.activities.PasswordActivity
 import com.talla.dvault.databinding.ActivitySplashBinding
 import com.talla.dvault.preferences.UserPreferences
+import com.talla.dvault.utills.sdk30AndUp
 import com.talla.dvault.viewmodels.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import java.lang.Exception
 import javax.inject.Inject
@@ -69,6 +72,7 @@ class SplashActivity : AppCompatActivity() {
                           Toast.makeText(this, "Permission Rejected", Toast.LENGTH_SHORT).show()
                       }
                }else{
+                   Toast.makeText(this, "else statement execute", Toast.LENGTH_SHORT).show()
                    Log.d(TAG, "onCreate: Line No 65")
                }
            }
@@ -90,6 +94,7 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun openDashBoard() {
+        Log.d(TAG, "openDashBoard: Called")
         runBlocking {
             val res = viewModel.isLockedOrNot()
             if (res) {
@@ -122,50 +127,32 @@ class SplashActivity : AppCompatActivity() {
 
 
     private fun hasExternalStoragePermission(): Boolean {
-
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R){
-//            return Environment.isExternalStorageManager()
-//        }else{
-//            val hasWritePermissions = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-//            val hasReadPermissions = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-//            readPermission=hasReadPermissions
-//            writePermission=hasWritePermissions
-//            return readPermission && writePermission
-//        }
-
-        val hasWritePermissions = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-        val hasReadPermissions = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-        readPermission=hasReadPermissions
-        writePermission=hasWritePermissions
-        return readPermission && writePermission
-
-//        readPermission = hasReadPermissions
-//        writePermission = hasWritePermissions || minSdk29
-//
-
-//        return readPermission && (writePermission || minSdk29)
+        writePermission = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+        readPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+        val sdkVersion=Build.VERSION.SDK_INT>=Build.VERSION_CODES.R
+        return readPermission && (writePermission || sdkVersion)
     }
 
     private fun requestPermissions() {
 
-        if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.R)
+        val sdkVersion=Build.VERSION.SDK_INT>=Build.VERSION_CODES.R
+        if (sdkVersion)
         {
-            Toast.makeText(this, "Andorid 11 Support Comming Soon", Toast.LENGTH_SHORT).show()
-            showInConvinienceAlert()
+            Log.d(TAG, "requestPermissions: If")
+//            Toast.makeText(this, "Andorid 11 Support Comming Soon", Toast.LENGTH_SHORT).show()
+//            showInConvinienceAlert()
+            val permissionToRequest = mutableListOf<String>()
+            if (readPermission && (writePermission || sdkVersion)) {
+                checkUserPerfection()
+            }else{
+                permissionToRequest.add(Manifest.permission.READ_EXTERNAL_STORAGE)
+                ActivityCompat.requestPermissions(this, permissionToRequest.toTypedArray(), 0)
+            }
         }else{
+            Log.d(TAG, "requestPermissions: Else")
             if (hasExternalStoragePermission()) {
-                runBlocking {
-                    val res = viewModel.isLoggedInPerfectly()
-                    Log.d(TAG, "IsLoggedIn Result: $res")
-                    if (res >= 4 && isUserSignedIn()) {
-                        Log.d(TAG, "IsLoggedIn Perfectly: $res")
-                        openDashBoard()
-                    } else {
-                        Log.d(TAG, "requestPermissions: Logout")
-                        openLoginScreen()
-                    }
-                }
-            } else if (!hasExternalStoragePermission()) {
+                checkUserPerfection()
+            } else {
 
                 val permissionToRequest = mutableListOf<String>()
                 if (!readPermission) {
@@ -211,6 +198,21 @@ class SplashActivity : AppCompatActivity() {
 
     }
 
+    fun checkUserPerfection()
+    {
+        runBlocking {
+            val res = viewModel.isLoggedInPerfectly()
+            Log.d(TAG, "IsLoggedIn Result: $res")
+            if (res >= 4 && isUserSignedIn()) {
+                Log.d(TAG, "IsLoggedIn Perfectly: $res")
+                openDashBoard()
+            } else {
+                Log.d(TAG, "requestPermissions: Logout")
+                openLoginScreen()
+            }
+        }
+    }
+
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -219,17 +221,31 @@ class SplashActivity : AppCompatActivity() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == 0 && grantResults.isNotEmpty()) {
+            var itmCount=0
             for (i in grantResults.indices) {
                 if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
                     Log.d(TAG, "Permission Accepted ${grantResults[i]}")
-                    requestPermissions()
+                    itmCount++
+                    if (grantResults.size==itmCount){
+                        checkUserPerfection()
+                    }
                 } else {
-
-                    val permission = ActivityCompat.shouldShowRequestPermissionRationale(
-                        this@SplashActivity,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE
-                    )
-                    if (permission) {
+                    var permission: Boolean = false
+                    val buildVersion=Build.VERSION.SDK_INT>=Build.VERSION_CODES.R
+                    if (buildVersion){
+                        permission=ActivityCompat.shouldShowRequestPermissionRationale(this@SplashActivity, Manifest.permission.READ_EXTERNAL_STORAGE)
+                    }else{
+                        permission=ActivityCompat.shouldShowRequestPermissionRationale(this@SplashActivity, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    }
+                    var booleanRes=false
+                    lifecycleScope.launch {
+                        userPreference.getBooleanData(UserPreferences.FIRST_TIME).catch { e->
+                            e.printStackTrace()
+                        }.collect {
+                            booleanRes=it
+                        }
+                    }
+                    if (permission && !booleanRes) {
                         Log.d(TAG, "onRequestPermissionsResult: Should Show Permission Rationale")
                         lifecycleScope.launch {
                             userPreference.saveBooleanData(UserPreferences.FIRST_TIME, true)
@@ -238,22 +254,14 @@ class SplashActivity : AppCompatActivity() {
                     } else {
                         Log.d(TAG, "onRequestPermissionsResult: Dont Ask Again")
                         lifecycleScope.launch(Dispatchers.Main) {
-                            val res: Unit =
-                                userPreference.getBooleanData(UserPreferences.FIRST_TIME).collect {
-                                    Log.d(TAG, "onRequestPermissionsResult: ${it}")
-                                    if (!it) {
+                                    Log.d(TAG, "onRequestPermissionsResult: ${booleanRes}")
+                                    if (!booleanRes) {
                                         requestPermissions()
                                     } else {
-                                        val builder: MaterialAlertDialogBuilder =
-                                            MaterialAlertDialogBuilder(
-                                                this@SplashActivity,
-                                                R.style.Theme_MaterialComponents_Light_Dialog_MinWidth
-                                            )
+                                        val builder: MaterialAlertDialogBuilder = MaterialAlertDialogBuilder(
+                                            this@SplashActivity, R.style.Theme_MaterialComponents_Light_Dialog_MinWidth)
                                         builder.setTitle("Requires Permission")
-                                        builder.setMessage(
-                                            "You have Denied permissions if you want to use this Application " +
-                                                    "You have to allow permissions in Settings manually."
-                                        )
+                                        builder.setMessage(getString(R.string.if_you_wanna_use_permission))
                                         builder.setCancelable(false)
                                         builder.setIcon(R.drawable.warning_icon)
                                         builder.setPositiveButton(
@@ -271,15 +279,14 @@ class SplashActivity : AppCompatActivity() {
                                             startActivity(i)
                                             finish()
                                         }
-                                        builder.setNegativeButton(
-                                            "Cancel"
+                                        builder.setNegativeButton("Cancel"
                                         ) { dialog, which ->
                                             dialog.cancel()
                                             finish()
                                         }
                                         builder.show()
                                     }
-                                }
+
 
                         }
                     }

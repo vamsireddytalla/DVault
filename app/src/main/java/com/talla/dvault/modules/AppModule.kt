@@ -2,6 +2,7 @@ package com.talla.dvault.modules
 
 import android.app.Application
 import android.app.Dialog
+import android.content.ContentResolver
 import android.content.Context
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestManager
@@ -30,6 +31,13 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
+
+    @Provides
+    @Singleton
+    fun getContentResolver(@ApplicationContext context: Context):ContentResolver
+    {
+        return context.contentResolver
+    }
 
     @Provides
     @Singleton

@@ -1,15 +1,28 @@
 package com.talla.dvault.utills
 
+import android.app.Activity
+import android.content.ContentUris
+import android.net.Uri
 import android.os.Build
 import java.text.DecimalFormat
 import android.os.Environment
 import android.os.StatFs
+import android.provider.MediaStore
 import android.util.Log
 import android.view.View
 import com.talla.dvault.database.entities.ItemModel
 import java.io.File
 import android.webkit.MimeTypeMap
+import androidx.annotation.RequiresApi
+import androidx.core.database.getStringOrNull
 import com.google.android.material.snackbar.Snackbar
+import com.talla.dvault.database.entities.FolderTable
+import com.talla.dvault.database.entities.SourcesModel
+import com.talla.dvault.models.CustomItemModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.FileOutputStream
+import java.lang.Exception
 
 object FileSize {
     fun floatForm(d: Double): String {
@@ -17,10 +30,12 @@ object FileSize {
     }
 
     var OnLongItemClick:Boolean=false
+    var customLongItemClick:Boolean=false
     var SelectAll:Boolean=false
     var backUpRestoreEnabled:Boolean=false
     var selectedUnlockItems: MutableSet<ItemModel> = mutableSetOf()
     var selectedBackRestore: MutableSet<String> = mutableSetOf()
+    var selectedCustomItems: MutableSet<CustomItemModel> = mutableSetOf()
     const val ACTION_START_FOREGROUND_SERVICE = "ACTION_START_FOREGROUND_SERVICE"
     const val ACTION_STOP_FOREGROUND_SERVICE = "ACTION_STOP_FOREGROUND_SERVICE"
     const val ACTION_UNLOCK_START_FOREGROUND_SERVICE = "ACTION_UNLOCK_START_FOREGROUND_SERVICE"
@@ -39,6 +54,7 @@ object FileSize {
     var FILE_COPYING:Boolean = false
     var UNLOCK_FILE_COPYING:Boolean = false
     var settingsBRSelected:String=""
+
 
     fun bytesToHuman(size: Long): String? {
         val Kb = (1 * 1024).toLong()
@@ -110,6 +126,98 @@ object FileSize {
             returnMsg="Some Files are Unlocking.Please Wait!"
         }
         return returnMsg
+    }
+
+    fun checkVersion30() : Boolean{
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
+    }
+
+    @RequiresApi(Build.VERSION_CODES.R)
+    suspend fun imageConvertData(uri: Uri,context:Activity,folderTable:FolderTable):SourcesModel? {
+      var sourceModel:SourcesModel?=null
+        withContext(Dispatchers.IO) {
+
+            val projection = arrayOf(
+                MediaStore.Images.Media._ID,
+                MediaStore.Images.Media.DISPLAY_NAME,
+                MediaStore.Images.Media.WIDTH,
+                MediaStore.Images.Media.HEIGHT,
+                MediaStore.Images.Media.SIZE,
+                MediaStore.Images.Media.MIME_TYPE,
+                MediaStore.Images.Media.ALBUM
+            )
+            context.contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
+                val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+                val displayNameColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME)
+                val widthColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.WIDTH)
+                val heightColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.HEIGHT)
+                val size = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.SIZE)
+                val mime_type = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.MIME_TYPE)
+                val albumColumn: Int = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.ALBUM)
+
+
+                while (cursor.moveToNext()) {
+                    val id = cursor.getLong(idColumn)
+                    val displayName = cursor.getString(displayNameColumn)
+                    val width = cursor.getInt(widthColumn)
+                    val height = cursor.getInt(heightColumn)
+                    val sizee = cursor.getInt(size)
+                    val mime = cursor.getString(mime_type)
+                    val albumColumn = cursor.getStringOrNull(albumColumn)
+                    val contentUri = ContentUris.withAppendedId(
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                        id
+                    )
+                    sourceModel=SourcesModel(contentUri.toString(),displayName,sizee.toLong(),mime, folderTable)
+                }
+
+            }
+        }
+        return sourceModel
+    }
+
+    @RequiresApi(Build.VERSION_CODES.R)
+    suspend fun videoConvertData(uri: Uri,context:Activity,folderTable:FolderTable):SourcesModel? {
+        var sourceModel:SourcesModel?=null
+        withContext(Dispatchers.IO) {
+
+            val projection = arrayOf(
+                MediaStore.Video.Media._ID,
+                MediaStore.Video.Media.DISPLAY_NAME,
+                MediaStore.Video.Media.WIDTH,
+                MediaStore.Video.Media.HEIGHT,
+                MediaStore.Video.Media.SIZE,
+                MediaStore.Video.Media.MIME_TYPE,
+                MediaStore.Video.Media.ALBUM
+            )
+            context.contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
+                val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media._ID)
+                val displayNameColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DISPLAY_NAME)
+                val widthColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.WIDTH)
+                val heightColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.HEIGHT)
+                val size = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.SIZE)
+                val mime_type = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.MIME_TYPE)
+                val albumColumn: Int = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.ALBUM)
+
+
+                while (cursor.moveToNext()) {
+                    val id = cursor.getLong(idColumn)
+                    val displayName = cursor.getString(displayNameColumn)
+                    val width = cursor.getInt(widthColumn)
+                    val height = cursor.getInt(heightColumn)
+                    val sizee = cursor.getInt(size)
+                    val mime = cursor.getString(mime_type)
+                    val albumColumn = cursor.getStringOrNull(albumColumn)
+                    val contentUri = ContentUris.withAppendedId(
+                        MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+                        id
+                    )
+                    sourceModel=SourcesModel(contentUri.toString(),displayName,sizee.toLong(),mime, folderTable)
+                }
+
+            }
+        }
+        return sourceModel
     }
 
 }
