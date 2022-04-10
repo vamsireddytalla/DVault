@@ -16,7 +16,7 @@
         android:layout_height="wrap_content"
         android:fontFamily="@font/poppins_bold"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-        android:text="Delete Folder"
+        android:text="Delete Item"
         android:textColor="@color/hello_color" />
 
    <LinearLayout

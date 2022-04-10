@@ -263,6 +263,7 @@ class FoldersActivity : AppCompatActivity(), FolderItemClick {
         deleteDialogBinding = DeleteDialogBinding.inflate(layoutInflater)
         dialog.setContentView(deleteDialogBinding.root)
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        deleteDialogBinding.MainHeading.text=getString(R.string.delete_folder)
         deleteDialogBinding.fileName.text = itemName
         //online Delete and local delete
         deleteDialogBinding.yes.setOnClickListener {

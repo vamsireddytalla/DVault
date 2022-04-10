@@ -77,6 +77,9 @@ You can restore them when you reinstall.</string>
     <string name="user_delete_description">Some files already added to DVault app.But still available in your local phone. if you give permission we will delete those unwanted files</string>
     <string name="unwanted_files">Deleted Un-wanted files from Phone Successully</string>
     <string name="error_occured">Error Occured</string>
+    <string name="delete_item">Delete Item</string>
+    <string name="delete_folder">Delete Folder</string>
+    <string name="adding_files_to_dvault">Adding Files to DVault</string>
 
 
     <string-array name="security_questions">

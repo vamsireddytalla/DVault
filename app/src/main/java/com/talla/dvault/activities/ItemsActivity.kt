@@ -455,12 +455,13 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
                     dialog.dismiss()
                 }
                 lifecycleScope.launch(Dispatchers.Main) {
-                    copyDialog.addingVaultTitle.text = "Adding Files to DVault"
+                    copyDialog.addingVaultTitle.text = getString(R.string.adding_files_to_dvault)
                     copyDialog.progressFile.progress = progress
                     copyDialog.totalElapsed.text = mbCount
                     copyDialog.totalCount.text = totalItems
                     if (mbCount == "Completed") {
                         showSnackBar(mbCount)
+                        checkIsAnyFileDelete()
                         dialog.dismiss()
                     }
                 }
@@ -632,6 +633,7 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
         deleteDialogBinding = DeleteDialogBinding.inflate(layoutInflater)
         dialog.setContentView(deleteDialogBinding.root)
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        deleteDialogBinding.MainHeading.text=getString(R.string.delete_item)
         deleteDialogBinding.fileName.text = itemModel.itemName
         //online Delete and local delete
         deleteDialogBinding.yes.setOnClickListener {
