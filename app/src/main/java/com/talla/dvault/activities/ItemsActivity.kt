@@ -20,9 +20,11 @@ import android.view.View
 import android.view.animation.AnimationUtils
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.net.toUri
@@ -38,6 +40,7 @@ import com.google.api.client.json.jackson2.JacksonFactory
 import com.google.api.services.drive.Drive
 import com.google.api.services.drive.DriveScopes
 import com.talla.dvault.adapters.ItemsAdapter
+import com.talla.dvault.database.entities.DeleteFilesTable
 import com.talla.dvault.database.entities.FolderTable
 import com.talla.dvault.database.entities.ItemModel
 import com.talla.dvault.database.entities.SourcesModel
@@ -63,6 +66,8 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
     private lateinit var folderTable: FolderTable
     private lateinit var itemsAdapter: ItemsAdapter
     private var itemsList: List<ItemModel> = ArrayList()
+    private var urisList = mutableListOf<Uri>()
+    private lateinit var intentSenderLauncher: ActivityResultLauncher<IntentSenderRequest>
 
     //    private var mBound: Boolean = false
     private lateinit var dialog: Dialog
@@ -183,7 +188,7 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
                                 Log.d(TAG, "Multiple Items: ${sourceList.toString()}")
                                 if (sourceList.isNotEmpty()) {
                                     binder?.startFileCopyingService(sourceList)
-                                    withContext(Dispatchers.Main){
+                                    withContext(Dispatchers.Main) {
                                         showFileCopyDialog("Copy")
                                     }
                                 }
@@ -192,6 +197,15 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
                         } ?: showSnackBar("No File Selected !")
                     }
 
+                }
+            }
+
+        intentSenderLauncher = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) {
+                if (it.resultCode == RESULT_OK) {
+                    lifecycleScope.launch { viewModel.deleteBasedOnCat(folderTable.folderCatType) }
+                    showSnackBar(getString(R.string.unwanted_files))
+                } else {
+                    showSnackBar(getString(R.string.error_occured))
                 }
             }
 
@@ -294,6 +308,15 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
                 }
             })
 
+        viewModel.getDeleteItemsOnCategory(folderTable.folderCatType).observe(this) {
+            if (it.isNotEmpty()) {
+                for (i in it){
+                 urisList.add(i.toUri())
+                }
+               if (FileSize.selectedCustomItems.isNotEmpty())  checkIsAnyFileDelete()
+            }
+        }
+
         binding.selectAll.setOnClickListener {
             selectALlCall()
         }
@@ -312,6 +335,17 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
             }
         }
 
+    }
+
+    private fun checkIsAnyFileDelete() {
+        if (FileSize.checkVersion30()) {
+            when(folderTable.folderCatType){
+                getString(R.string.Img) -> showSdk30DeleteDialog("Delete Images",getString(R.string.user_delete_description))
+                getString(R.string.Vdo) -> showSdk30DeleteDialog("Delete Videos",getString(R.string.user_delete_description))
+                getString(R.string.Aud) -> showSdk30DeleteDialog("Delete Audios",getString(R.string.user_delete_description))
+            }
+
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.R)
@@ -688,6 +722,48 @@ class ItemsActivity : AppCompatActivity(), ItemAdapterClick {
 
     suspend fun stopProgressDialog() {
         progressDialog.dismiss()
+    }
+
+    fun showSdk30DeleteDialog(title: String, description: String) {
+        val alertDialogBuilder = AlertDialog.Builder(this)
+        alertDialogBuilder.setTitle(title)
+        alertDialogBuilder.setMessage(description)
+        alertDialogBuilder.setCancelable(false)
+        alertDialogBuilder.setPositiveButton("Yes") { dialogInterface, i ->
+            lifecycleScope.launch { deletePhotoFromExternalStorage() }
+            dialogInterface.dismiss()
+        }
+        alertDialogBuilder.setNegativeButton("No") { dialogInterface, i ->
+            dialogInterface.dismiss()
+        }
+        alertDialogBuilder.show()
+
+    }
+
+    private suspend fun deletePhotoFromExternalStorage() {
+        withContext(Dispatchers.IO) {
+            try {
+                contentResolver.delete(urisList.get(0), null, null)
+                Log.d(TAG, "deletePhotoFromExternalStorage: Only try block is executed")
+            } catch (e: SecurityException) {
+                Log.d(TAG, "deletePhotoFromExternalStorage: Exception Occured")
+                val intentSender = when {
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> {
+
+                        MediaStore.createDeleteRequest(
+                            contentResolver,
+                            urisList
+                        ).intentSender
+                    }
+                    else -> null
+                }
+                intentSender?.let { sender ->
+                    intentSenderLauncher.launch(
+                        IntentSenderRequest.Builder(sender).build()
+                    )
+                }
+            }
+        }
     }
 
 }

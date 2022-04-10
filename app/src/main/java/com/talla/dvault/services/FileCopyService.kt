@@ -47,6 +47,7 @@ import android.app.NotificationManager
 import android.app.NotificationChannel
 import androidx.core.app.NotificationCompat.PRIORITY_HIGH
 import androidx.core.app.NotificationCompat.PRIORITY_MIN
+import com.talla.dvault.database.entities.DeleteFilesTable
 import com.talla.dvault.database.entities.FolderTable
 import kotlin.math.log
 
@@ -108,6 +109,11 @@ class FileCopyService : Service() {
                                         val itemModel = fromUriGetRealPath(source, index)
                                         if (!isInterrupted!!) {
                                             repository.insertSingleItem(itemModel)
+                                            if (FileSize.checkVersion30()) {
+                                                repository.insertDeleteFileTable(
+                                                    DeleteFilesTable(source.sourceFilePath,source.folderTable.folderCatType)
+                                                )
+                                            }
                                         }
                                     } catch (e: Exception) {
                                         Log.d(TAG, "onStartCommand Exception: ${e.message}")

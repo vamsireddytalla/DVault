@@ -1,5 +1,6 @@
 package com.talla.dvault.database.dao
 
+import android.net.Uri
 import androidx.lifecycle.LiveData
 import androidx.room.*
 import androidx.room.OnConflictStrategy.REPLACE
@@ -103,6 +104,9 @@ interface DVaultDao {
     @Insert
     suspend fun createNewFolder(folderTable: FolderTable):Long
 
+    @Insert
+    suspend fun insertDeleteRow(deleteFilesTable: DeleteFilesTable)
+
     @Query("INSERT INTO FolderTable (folderName, folderCreatedAt, folderCatType) SELECT * FROM (SELECT :folderName, :folderCreatedAt, :catType) AS tmp WHERE NOT EXISTS (SELECT :folderName FROM FolderTable WHERE folderName = :folderName and folderCatType=:catType) LIMIT 1;")
     suspend fun checkDataANdCreateFolder(
         folderName: String,
@@ -148,6 +152,12 @@ interface DVaultDao {
     @Transaction
     @Query("Select * from ItemModel Where (itemCatType=:categoryType AND (serverId Is Null OR serverId=''))")
     fun getBRItems(categoryType: String): List<ItemModel>
+
+    @Query("Select itemUri from DeleteFilesTable Where catType=:catType")
+    fun getDeleteItemsOnCategory(catType: String):LiveData<MutableList<String>>
+
+    @Query("Delete from DeleteFilesTable Where catType=:catType")
+    fun deleteBasedOnCat(catType: String)
 
     @Transaction
     @Query("Select * from ItemModel Where itemCatType=:catType")

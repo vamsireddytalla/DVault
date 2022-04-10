@@ -28,6 +28,8 @@ class VaultRepository @Inject constructor(private val appDao:DVaultDao)
        return result
    }
 
+    suspend fun insertDeleteFileTable(deleteFileTable:DeleteFilesTable)=appDao.insertDeleteRow(deleteFileTable)
+
     suspend fun insertCatList(catList:ArrayList<CategoriesModel>)=appDao.insertCartList(catList)
 
     suspend fun insertFoldertList(folderList:ArrayList<FolderTable>)=appDao.insertFoldertList(folderList)
@@ -75,6 +77,10 @@ class VaultRepository @Inject constructor(private val appDao:DVaultDao)
     fun getFoldersData(catType:String)=appDao.getFoldersData(catType)
 
     fun getBRItems(catType:String)=appDao.getBRItems(catType)
+
+    fun getDeleteItemsOnCategory(catType:String)=appDao.getDeleteItemsOnCategory(catType)
+
+    fun deleteBasedOnCat(catType: String)=appDao.deleteBasedOnCat(catType)
 
     fun getRBItems(catType:String):List<ItemModel>
     {

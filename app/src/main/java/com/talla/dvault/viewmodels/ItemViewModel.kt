@@ -1,10 +1,12 @@
 package com.talla.dvault.viewmodels
 
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.talla.dvault.database.entities.DeleteFilesTable
 import com.talla.dvault.database.entities.FolderTable
 import com.talla.dvault.database.entities.ItemModel
 import com.talla.dvault.database.relations.FolderAndItem
@@ -24,6 +26,7 @@ class ItemViewModel @Inject constructor(private val repository:VaultRepository) 
     private var itemsMutableLiveData: LiveData<List<ItemModel>> = MutableLiveData()
     private var itemsWithFolderLiveData: LiveData<FolderAndItem> = MutableLiveData()
     private var selectedItems: MutableLiveData<String> = MutableLiveData()
+    private var deleteTableLiveData:LiveData<MutableList<String>> = MutableLiveData()
 
 
     init {
@@ -63,6 +66,19 @@ class ItemViewModel @Inject constructor(private val repository:VaultRepository) 
     {
         repository.getFolderAndItemWithFolderId(folderId).also { itemsWithFolderLiveData = it }
         return itemsWithFolderLiveData
+    }
+
+    fun getDeleteItemsOnCategory(catType: String):LiveData<MutableList<String>>
+    {
+        repository.getDeleteItemsOnCategory(catType).also { deleteTableLiveData=it }
+        return deleteTableLiveData
+    }
+
+    suspend fun deleteBasedOnCat(catType: String){
+        viewModelScope.async(Dispatchers.Default)
+        {
+              repository.deleteBasedOnCat(catType)
+        }
     }
 
 
